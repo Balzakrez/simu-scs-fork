@@ -64,13 +64,13 @@ else
   mkdir -p ${LEOSATELLITES_ROOT}/physicallayer/apskradio
 fi
 pushd ${LEOSATELLITES_ROOT}/physicallayer
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/propagation/SatellitePropagation.cc -P propagation
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/propagation/SatellitePropagation.h -P propagation
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/propagation/SatellitePropagation.ned -P propagation
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/unitdisk/SatelliteUnitDiskTransmission.cc -P unitdisk
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/unitdisk/SatelliteUnitDiskTransmission.h -P unitdisk
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/apskradio/SatelliteApskScalarTransmission.cc -P apskradio
-wget https://github.com/Avian688/leosatellites/raw/master/src/physicallayer/apskradio/SatelliteApskScalarTransmission.h -P apskradio
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/propagation/SatellitePropagation.cc -P propagation
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/propagation/SatellitePropagation.h -P propagation
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/propagation/SatellitePropagation.ned -P propagation
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/unitdisk/SatelliteUnitDiskTransmission.cc -P unitdisk
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/unitdisk/SatelliteUnitDiskTransmission.h -P unitdisk
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/apskradio/SatelliteApskScalarTransmission.cc -P apskradio
+wget https://raw.githubusercontent.com/Avian688/leosatellites/v2.0.0/src/physicallayer/apskradio/SatelliteApskScalarTransmission.h -P apskradio
 popd
 
 pushd ${LEOSATELLITES_ROOT}
