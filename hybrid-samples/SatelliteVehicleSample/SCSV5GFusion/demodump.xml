@@ -1,0 +1,309 @@
+<config>
+   <interface hosts="SV5GFusion4.satellite[0]" names="cnl0" address="10.1.0.1" netmask="255.255.255.248" metric="4"/>
+   <interface hosts="SV5GFusion4.satellite[1]" names="cnl0" address="10.1.0.2" netmask="255.255.255.248" metric="8"/>
+   <interface hosts="SV5GFusion4.MCC[0]" names="wlan0" address="10.1.0.3" netmask="255.255.255.248" metric="4"/>
+   <interface hosts="SV5GFusion4.satellite[0]" names="cnl1" address="10.1.0.9" netmask="255.255.255.248" metric="4"/>
+   <interface hosts="SV5GFusion4.satellite[1]" names="cnl1" address="10.1.0.10" netmask="255.255.255.248" metric="8"/>
+   <interface hosts="SV5GFusion4.GS[0]" names="wlan0" address="10.1.0.11" netmask="255.255.255.248" metric="8"/>
+   <interface hosts="SV5GFusion4.MCC[0]" names="ppp0" address="10.1.0.17" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.routerFL" names="ppp0" address="10.1.0.18" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.MCC[0]" names="eth0" address="10.1.0.21" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.GS[0]" names="ppp0" address="10.1.0.25" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.router" names="ppp0" address="10.1.0.26" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.GS[0]" names="eth0" address="10.1.0.29" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.routerFL" names="ppp1" address="10.1.0.33" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.upf" names="ppp0" address="10.1.0.34" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.upf" names="ppp1" address="10.1.0.37" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.router2" names="ppp0" address="10.1.0.38" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.upf" names="pppIf" address="10.1.0.41" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.router2" names="ppp1" address="10.1.0.45" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.server" names="ppp0" address="10.1.0.46" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.router" names="ppp1" address="10.1.0.49" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.pgw" names="pppIf" address="10.1.0.50" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.pgw" names="ppp0" address="10.1.0.53" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.eNB" names="pppIf" address="10.1.0.54" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.eNB" names="cellular" address="10.1.0.57" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SV5GFusion4.node[0]" names="cellular" address="10.0.3.12" netmask="255.0.0.0" metric="0"/>
+   <interface hosts="SV5GFusion4.node[1]" names="cellular" address="10.0.3.55" netmask="255.0.0.0" metric="0"/>
+   <interface hosts="SV5GFusion4.node[2]" names="cellular" address="10.0.3.98" netmask="255.0.0.0" metric="0"/>
+   <interface hosts="SV5GFusion4.node[3]" names="cellular" address="10.0.3.141" netmask="255.0.0.0" metric="0"/>
+   <interface hosts="SV5GFusion4.eNB" names="pppMEHostIf" address="10.1.0.61" netmask="255.255.255.252" metric="1"/>
+   <multicast-group hosts="SV5GFusion4.satellite[0]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.satellite[1]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.MCC[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.satellite[0]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.satellite[1]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.GS[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.MCC[0]" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.routerFL" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.MCC[0]" interfaces="eth0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.GS[0]" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.router" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.GS[0]" interfaces="eth0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.routerFL" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.upf" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.upf" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.router2" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.upf" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.router2" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.server" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.router" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.pgw" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.pgw" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.eNB" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.eNB" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.node[0]" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.node[1]" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.node[2]" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.node[3]" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="SV5GFusion4.eNB" interfaces="pppMEHostIf" address="224.0.0.1 224.0.0.2"/>
+   <wireless interfaces="SV5GFusion4.satellite[0]%cnl0 SV5GFusion4.satellite[1]%cnl0 SV5GFusion4.MCC[0]%wlan0"/>
+   <wireless interfaces="SV5GFusion4.satellite[0]%cnl1 SV5GFusion4.satellite[1]%cnl1 SV5GFusion4.GS[0]%wlan0"/>
+   <wireless interfaces="SV5GFusion4.eNB%cellular SV5GFusion4.node[0]%cellular SV5GFusion4.node[1]%cellular SV5GFusion4.node[2]%cellular SV5GFusion4.node[3]%cellular"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.3" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[0]" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.3" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.11" netmask="255.255.255.255" gateway="*" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.3" interface="cnl0" metric="0"/>
+   <route hosts="SV5GFusion4.satellite[1]" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.11" interface="cnl1" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.1" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.2" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.18" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.MCC[0]" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.2" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.10" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.26" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.10" interface="wlan0" metric="0"/>
+   <route hosts="SV5GFusion4.GS[0]" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.26" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.17" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.34" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.34" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.34" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.34" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.34" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.34" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.routerFL" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.17" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.33" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.38" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.38" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.38" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.upf" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.33" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.37" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.1.0.44" netmask="255.255.255.252" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router2" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.37" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.server" destination="10.1.0.44" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.server" destination="*" netmask="*" gateway="10.1.0.45" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.25" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.50" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.53" netmask="255.255.255.255" gateway="10.1.0.50" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.54" netmask="255.255.255.255" gateway="10.1.0.50" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.50" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.50" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.router" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.50" interface="ppp1" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.49" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.54" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.54" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.61" netmask="255.255.255.255" gateway="10.1.0.54" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.49" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.pgw" destination="10.0.0.0" netmask="255.0.0.0" gateway="10.1.0.54" interface="ppp0" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.3" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.10" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.11" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.17" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.18" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.21" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.25" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.26" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.29" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.33" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.34" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.37" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.38" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.41" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.50" netmask="255.255.255.255" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.53" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.1.0.44" netmask="255.255.255.252" gateway="10.1.0.53" interface="pppIf" metric="0"/>
+   <route hosts="SV5GFusion4.eNB" destination="10.0.0.0" netmask="255.0.0.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[0]" destination="10.0.0.0" netmask="255.0.0.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[0]" destination="*" netmask="*" gateway="10.1.0.57" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[1]" destination="10.0.0.0" netmask="255.0.0.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[1]" destination="*" netmask="*" gateway="10.1.0.57" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[2]" destination="10.0.0.0" netmask="255.0.0.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[2]" destination="*" netmask="*" gateway="10.1.0.57" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[3]" destination="10.0.0.0" netmask="255.0.0.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SV5GFusion4.node[3]" destination="*" netmask="*" gateway="10.1.0.57" interface="cellular" metric="0"/>
+</config>

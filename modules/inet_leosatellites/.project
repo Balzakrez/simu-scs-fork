@@ -5,6 +5,7 @@
 	<projects>
 		<project>inet</project>
 		<project>leosatellites</project>
+		<project>veins</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

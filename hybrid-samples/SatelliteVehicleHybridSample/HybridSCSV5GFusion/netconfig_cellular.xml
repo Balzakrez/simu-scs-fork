@@ -1,0 +1,10 @@
+<!-- netconfig_cellular.xml -->
+<config>
+    <!-- Configurazione generica e permissiva -->
+    <!-- '255.x.x.x' permette al configuratore di adattare la maschera se serve,
+         evitando conflitti su link punto-multipunto -->
+    <interface hosts='**' address='10.x.x.x' netmask='255.x.x.x'/>
+    
+    <!-- Routing basato sugli hop per la parte terrestre -->
+    <autoroute metric='hopCount'/>
+</config>
