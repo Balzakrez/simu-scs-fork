@@ -4,6 +4,7 @@ package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 
 //custom imports
 import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X;
+//import scs_optional.veins_inet_scs.HybridCarV2X;
 
 // scs
 import scs.base.LaserSatellite;
@@ -23,27 +24,27 @@ import inet.networklayer.ipv4.RoutingTableRecorder;
 import inet_leosatellites.networklayer.configurator.ipv4.SatelliteNetworkConfiguratorScs;
 
 // simu5G
+// ! import simu5g.nodes.Ue;
+// ! import simu5g.nodes.Upf;
+// ! import simu5g.nodes.NR.gNodeB;
 import simu5g.world.radio.LteChannelControl;
 import simu5g.common.carrierAggregation.CarrierAggregation;
 import simu5g.nodes.PgwStandard;
 import simu5g.common.binder.Binder;
 import simu5g.nodes.eNodeB;
-// ! import simu5g.nodes.Ue;
-// ! import simu5g.nodes.Upf;
-// ! import simu5g.nodes.NR.gNodeB;
 
 //scs_utils
 import scs_utils.converter.PositionConverter;
 
 //veins + scs_optional
 // ! import scs_optional.node.UECar;
+// ! import scs_optional.veins_inet_scs.InetCar;
 import scs_optional.veins_inet_scs.VeinsInetManager;
-import scs_optional.veins_inet_scs.InetCar;
 import scs_optional.veins_scs.visualizer.RoadsINETCanvasVisualizer;
 import org.car2x.veins.visualizer.roads.RoadsCanvasVisualizer;
 
 // SV5GFusion4 Network 
-network SV5GFusion4
+network HybridFusionNet
 {
     parameters:
         int numOfSats = default(1); 

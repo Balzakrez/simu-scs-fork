@@ -4,8 +4,7 @@
     <interface hosts='node[*]' names='wlan0' address='10.1.0.x' netmask='255.255.255.0'/>
     
     <!-- 2. Configura l'interfaccia del SATELLITE verso i veicoli (cnl1) -->
-    <!-- Assicurati che cnl1 sia quella a 10.825GHz definita nell'INI -->
-    <interface hosts='satellite[*]' names='cnl1' address='10.1.0.1' netmask='255.255.255.0'/>
+    <interface hosts='satellite[*]' names='cnl1' address='10.1.0.x' netmask='255.255.255.0'/>
     
     <!-- 3. Configura il resto (Backhaul/Feeder link verso MCC) su un'altra subnet -->
     <interface hosts='**' address='10.2.x.x' netmask='255.255.x.x'/>

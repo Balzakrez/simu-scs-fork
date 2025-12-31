@@ -14,6 +14,7 @@
 **/out
 **/todo
 **/results
+**/temp
 
 Makefile
 # demodump.xml

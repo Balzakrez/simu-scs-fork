@@ -50,7 +50,7 @@ namespace inet {
     }
 
     
-    void SatelliteNetworkConfiguratorScs::handleMessage(cMessage *msg) {
+    void SatelliteNetworkConfiguratorScs::handleMessage(cMessage *msg) {    
         if (msg == timer) {
             cXMLElementList autorouteElements = configuration->getChildrenByTagName("autoroute");
             if (autorouteElements.size() == 0) {
@@ -58,8 +58,9 @@ namespace inet {
                 reinvokeConfigurator(topology, &defaultAutorouteElement);
             }
             else {
-                for (auto & autorouteElement : autorouteElements)
+                for (auto & autorouteElement : autorouteElements){
                     reinvokeConfigurator(topology, autorouteElement);
+                }
             }
             scheduleAt(simTime() + timerInterval, timer);
         }
@@ -71,28 +72,32 @@ namespace inet {
         for (int i = 0; i < topology.getNumNodes(); i++) {
             Node *node = (Node *)topology.getNode(i);
             node->interfaceInfos.clear();
+            if (node->getModule() == nullptr) continue;
             Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+            // Clear routing table 
             for(int j = 0; j < routingTable->getNumRoutes(); j++){
                 bool check = routingTable->deleteRoute(routingTable->getRoute(j));
             }
+            // Clear multicast routing table
             for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++){
                 node->routingTable->deleteMulticastRoute(node->routingTable->getMulticastRoute(m));
             }
+            // Clear static routes
             std::for_each(node->staticRoutes.begin(), node->staticRoutes.end(), []( Ipv4Route* route) { delete route; });
             node->staticRoutes.clear();
+            
         }
+        // Clear links and interfaces from topology
         std::for_each(topology.linkInfos.begin(), topology.linkInfos.end(), []( LinkInfo* link) { delete link; });
-        for( auto & p : topology.interfaceInfos ) 
-            delete p.second;
+        for(auto & p : topology.interfaceInfos) delete p.second;
 
         topology.linkInfos.clear();
         topology.interfaceInfos.clear();
         topology.clear();
-
+            
         // 2. Re-extract topology
         SatelliteNetworkConfigurator::extractTopology(topology);
-
-        // Note: Non-Veins nodes with already assigned IP addresses will keep them
+        
         // Lambda to check if a node is a Veins node
         auto isVeinsNode = [](Node *node) {
             if (node->getModule() == nullptr) return false;
@@ -106,13 +111,11 @@ namespace inet {
             if (isVeinsNode(node)) {
                 for (auto& entry : node->interfaceInfos) {
                     InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
-
                     // Set default unspecified IP address and netmask
                     info->address = 0;
                     info->addressSpecifiedBits = 0xFFFFFFFF;
                     info->netmask = 0;
                     info->netmaskSpecifiedBits = 0xFFFFFFFF;
-                    
                     // Retrieve real IP address from interface protocol data if available
                     if (info && info->networkInterface) {
                         auto *ipv4Data = info->networkInterface->getProtocolData<Ipv4InterfaceData>();
@@ -137,7 +140,7 @@ namespace inet {
             dumpConfiguration();
     }
 
-   
+
     bool SatelliteNetworkConfiguratorScs::isValidVeinsPosition(const inet::Coord& pos) {
         // Check for NaN or infinity
         if (std::isnan(pos.x) || std::isnan(pos.y) || std::isinf(pos.x) || std::isinf(pos.y)) {
@@ -196,12 +199,19 @@ namespace inet {
                 // Case 1.A: Satellite -> Vehicle (Veins)
                 // ========================================
                 if(veins::VeinsInetMobility *destVeins = dynamic_cast<veins::VeinsInetMobility*>(rxMob)) { 
+
+                    // Check that the Veins vehicle module is still valid
+                    if(!destVeins->getParentModule() || destVeins->isTerminated()) {
+                        std::cerr << "  Dest vehicle module deleted/invalid" << std::endl;
+                        return INFINITY;
+                    }
+
                     // Get vehicle Cartesian position
                     inet::Coord pos = destVeins->getCurrentPosition();
 
                     // Validate position
                     if(!isValidVeinsPosition(pos)) {
-                        EV_WARN << "SAT->VEC: " << destVeins->getFullPath() << " has invalid position" << std::endl;
+                        EV_WARN << "SAT->VEC: " << sourceSat->getFullPath() <<  " -> " << destVeins->getFullPath() << ": Invalid position" << std::endl;
                         return INFINITY;
                     }
 
@@ -215,7 +225,7 @@ namespace inet {
                              << "km), Elev: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°" << std::endl;
 
                     if (!sourceSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_DETAIL << "SAT->VEC: Link not reachable to " << destVeins->getFullPath() << std::endl;
+                        EV_DETAIL << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Link not reachable" << std::endl;
                         return INFINITY;
                     }
 
@@ -224,16 +234,17 @@ namespace inet {
 
                     // Validate distance: LEO satellites typically have a max range of ~2000 km from vehicles
                     if(std::isnan(distKm) || distKm < 0 || distKm > 2000.0) { 
-                        EV_WARN << "SAT->VEC: Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
+                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
                         return INFINITY;
                     }
                     
                     // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
                     
-                    EV_DETAIL << "SAT->VEC: " << destVeins->getFullPath() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
-
+                    EV_DETAIL << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
+                                << " | Dist: " << distKm  << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
+                    
+                    
                     return delay; 
                 }
                 // ========================================
@@ -246,33 +257,33 @@ namespace inet {
 
                     // Validate distance: LEO satellites typically have a max range of ~2500 km from GS
                     if(std::isnan(distKm) || distKm < 0 || distKm > 2500.0) {
-                        EV_WARN << "SAT->GS: Invalid distance " << distKm << " km to " << destGS->getFullPath() << std::endl;
+                        EV_WARN << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << std::endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->GS: " << destGS->getFullName() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() 
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
 
                     return delay;
                 }
                 // ========================================
                 // CASE 1.C: Satellite -> Satellite 
                 // ========================================
-                else if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)){
+                else if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)) {
 
                     // Calculate distance Satellite <-> Satellite (in km)
                     double distKm = sourceSat->getDistance(destSat->getLatitude(), destSat->getLongitude(), destSat->getAltitude());
 
                     // Validate distance: Inter-Satellite Links typically have a max range of ~5000 km from SAT
                     if(std::isnan(distKm) || distKm < 0 || distKm > 5000.0) {  
-                        EV_WARN << "SAT->SAT: Invalid ISL distance " << distKm << " km (max 5000km)" << std::endl;
+                        EV_WARN << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km (max 5000km)" << std::endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->SAT: " << destSat->getFullName() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() 
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
                     
                     return delay;
                 }
@@ -282,6 +293,11 @@ namespace inet {
             // ========================================
             else if(veins::VeinsInetMobility *sourceVeins = dynamic_cast<veins::VeinsInetMobility*>(txMob)) 
             {
+                // Check that the Veins vehicle module is still valid
+                if(!sourceVeins->getParentModule() || sourceVeins->isTerminated()) {
+                    std::cerr << "  Source vehicle module deleted/invalid" << std::endl;
+                    return INFINITY;
+                }
                 // ========================================
                 // Case 2.A: Vehicle -> Satellite
                 // ========================================
@@ -289,20 +305,20 @@ namespace inet {
 
                     // Get vehicle Cartesian position
                     inet::Coord pos = sourceVeins->getCurrentPosition();
-
+           
                     // Validate position
                     if(!isValidVeinsPosition(pos)) {
-                        EV_WARN << "VEC->SAT: " << sourceVeins->getFullPath() << " has invalid position" << std::endl;
+                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid position" << std::endl;
                         return INFINITY;
                     }
 
                     // Convert X,Y -> Lat,Lon using PositionConverter
                     double vehLon = posConverter->convertPosXToLongitude(pos.x);
                     double vehLat = posConverter->convertPosYToLatitude(pos.y);
-                   
+               
                     if (!destSat->isReachable(vehLat, vehLon, 0.0)) {   
-                       EV_DETAIL << "VEC->SAT: Link not reachable from " << sourceVeins->getFullPath() << std::endl;
-                       return INFINITY;
+                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Link not reachable" << std::endl;
+                        return INFINITY;
                     }
 
                     // Calculate distance Satellite <-> Vehicle (in km)
@@ -310,15 +326,24 @@ namespace inet {
 
                     // Validate distance: LEO satellites typically have a max range of ~2000 km from vehicles
                     if(std::isnan(distKm) || distKm < 0 || distKm > 2000.0) { 
-                        EV_WARN << "VEC->SAT: Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
+                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
                         return INFINITY;
                     }
 
                     // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
 
-                    EV_DETAIL << "VEC->SAT: " << sourceVeins->getFullPath() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
+                    EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
+                    
+                    Ipv4Address satIP;
+                    if (link->destinationInterfaceInfo->networkInterface) {
+                        auto *ipv4Data = link->destinationInterfaceInfo->networkInterface->getProtocolData<Ipv4InterfaceData>();
+                        if (ipv4Data) {
+                            satIP = ipv4Data->getIPAddress();
+                        }
+                    }
+                    
                     return delay;
                 }
                 // ========================================
@@ -355,13 +380,13 @@ namespace inet {
 
                     // Validate distance: LEO satellites typically have a max range of ~2500 km from GS
                     if(std::isnan(distKm) || distKm < 0 || distKm > 2500.0) {
-                        EV_WARN << "GS->SAT: Invalid distance " << distKm << " km (max 2500km for LEO)" << std::endl;
+                        EV_WARN << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance "<< distKm << " km (max 2500km for LEO)" << std::endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "GS->SAT: " << sourceGS->getFullName() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() 
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
 
                     return delay;
                 }
@@ -374,13 +399,13 @@ namespace inet {
                     double distKm = sourceGS->getDistance(destGS->getLUTPositionY(), destGS->getLUTPositionX(), 0.0);
 
                     if(std::isnan(distKm) || distKm < 0) {
-                        EV_WARN << "GS->GS: Invalid distance to " << destGS->getFullPath() << std::endl;
+                        EV_WARN << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << std::endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "GS->GS: " << sourceGS->getFullName() << " | Dist: " << distKm 
-                              << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() 
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
 
                     return delay;
                 }

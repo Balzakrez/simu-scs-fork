@@ -1,5 +1,6 @@
 // File: HybridCarV2X.ned
 package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
+//package scs_optional.veins_inet_scs;
 
 import simu5g.stack.LteNicUe;
 import inet.node.inet.StandardHost;
