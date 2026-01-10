@@ -1,0 +1,48 @@
+<!-- netconfig_hybrid.xml -->
+<!-- 
+    Network configuration for HYBRID scenario with both Satellite (wlan0) and Cellular interfaces.
+    The HybridInterfaceManager enables/disables interfaces dynamically, 
+    and the configurator recalculates routes based on which interfaces are UP.
+-->
+<config>
+    <!-- ========================================================================
+         SUBNET 1: SATELLITE SERVICE LINK (10.1.x.x)
+         Vehicle wlan0 <-> Satellite cnl1
+         ======================================================================== -->
+    <!-- Vehicle satellite interface (wlan0) -->
+    <interface hosts='node[*]' names='wlan0' address='10.1.0.x' netmask='255.255.255.0'/>
+    
+    <!-- Satellite service link interface (cnl1) -->
+    <interface hosts='satellite[*]' names='cnl1' address='10.1.0.x' netmask='255.255.255.0'/>
+
+    <!-- ========================================================================
+         SUBNET 2: SATELLITE BACKHAUL/FEEDER LINK (10.2.x.x)
+         Satellite cnl0 <-> MCC wlan <-> routerFL
+         ======================================================================== -->
+    <interface hosts='satellite[*]' names='cnl0' address='10.2.0.x' netmask='255.255.0.0'/>
+    <interface hosts='MCC[*]' names='wlan0' address='10.2.0.x' netmask='255.255.0.0'/>
+
+    <!-- ========================================================================
+         SUBNET 3: CELLULAR NETWORK (10.3.x.x)
+         Vehicle cellular <-> eNB <-> PGW
+         ======================================================================== -->
+    <interface hosts='node[*]' names='cellular' address='10.3.0.x' netmask='255.255.255.0'/>
+
+    <!-- ========================================================================
+         WIRED BACKBONE: Use flexible addressing (10.x.x.x)
+         Handles all ppp interfaces for:
+         - server <-> internetRouter
+         - internetRouter <-> pgw
+         - pgw <-> eNB  
+         - internetRouter <-> routerFL
+         - routerFL <-> MCC
+         ======================================================================== -->
+    <interface hosts='**' address='10.x.x.x' netmask='255.x.x.x'/>
+
+    <!-- ========================================================================
+         ROUTING: Use propagation delay as metric
+         This is important for satellite links where delay varies with distance.
+         When an interface goes DOWN, the configurator will exclude it from routing.
+         ======================================================================== -->
+    <autoroute metric='propagationDelay'/>
+</config>

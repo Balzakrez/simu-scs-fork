@@ -1,0 +1,29 @@
+# Patch for INET AckingMac.cc
+# Fixes crash when sender module is deleted before ACK is processed
+# (common in dynamic scenarios with Veins/SUMO vehicles)
+#
+# Apply with: patch -u -t -p1 -d external/inet < patches/inet_ackingmac.patch
+
+diff -upr -U3 a/src/inet/linklayer/acking/AckingMac.cc b/src/inet/linklayer/acking/AckingMac.cc
+--- a/src/inet/linklayer/acking/AckingMac.cc
++++ b/src/inet/linklayer/acking/AckingMac.cc
+@@ -144,9 +144,16 @@ void AckingMac::handleLowerPacket(Packet *packet)
+         bool needsAck = !(dest.isBroadcast() || dest.isMulticast() || dest.isUnspecified()); // same condition as in sender
+         if (needsAck) {
+             int senderModuleId = macHeader->getSrcModuleId();
+-            AckingMac *senderMac = check_and_cast<AckingMac *>(getSimulation()->getModule(senderModuleId));
+-            if (senderMac->useAck)
+-                senderMac->acked(packet);
++            cModule *senderModule = getSimulation()->getModule(senderModuleId);
++            // Check if sender module still exists (may have been deleted in dynamic scenarios like Veins/SUMO)
++            if (senderModule != nullptr) {
++                AckingMac *senderMac = check_and_cast<AckingMac *>(senderModule);
++                if (senderMac->useAck)
++                    senderMac->acked(packet);
++            }
++            else {
++                EV_WARN << "Sender module (id=" << senderModuleId << ") no longer exists, skipping ACK\n";
++            }
+         }
+ 
+         // decapsulate and attach control info

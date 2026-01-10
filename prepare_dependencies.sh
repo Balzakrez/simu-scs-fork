@@ -177,3 +177,10 @@ wget https://raw.githubusercontent.com/inet-framework/os3/master/images/os3/weat
 popd
 
 patch -u -t -p1 external/simu5G/.project < patches/simu5G.patch
+
+# ==============================================================================
+# INET PATCH: Fix AckingMac crash with dynamic nodes (Veins/SUMO)
+# This patch fixes a crash that occurs when a sender module is deleted
+# before the receiver processes the ACK (common with Veins vehicles)
+# ==============================================================================
+patch -u -t -p1 -d external/inet < patches/inet_ackingmac.patch

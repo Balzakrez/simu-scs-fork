@@ -4,6 +4,7 @@ package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 
 import simu5g.stack.LteNicUe;
 import inet.node.inet.StandardHost;
+//import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridInterfaceManager;
 
 module HybridCarV2X extends StandardHost
 {
@@ -15,6 +16,11 @@ module HybridCarV2X extends StandardHost
         // ========================================
         bool hasCellular = default(true); // Enable/disable cellular connectivity
 
+        // ========================================
+        // Hybrid Interface Switching Configuration 
+        // ========================================
+        bool enableSwitching = default(true); // Enable/disable HybridInterfaceManager
+        
         // ========================================
         // Network Layer Configuration
         // ========================================
@@ -55,53 +61,17 @@ module HybridCarV2X extends StandardHost
         *.routingTableModule = default(absPath(".ipv4.routingTable"));
         *.interfaceTableModule = default(absPath(".interfaceTable"));
 
-        // ========================================
-        // Statistics & Signals
-        // ========================================
-        // @signal[packetSent](type=inet::Packet);
-        // @signal[packetReceived](type=inet::Packet);
-        
-        // @statistic[packetReceived](
-        //     title="Packets Received"; 
-        //     source=packetReceived; 
-        //     record=count,"sum(packetBytes)","vector(packetBytes)"; 
-        //     interpolationmode=none
-        // );
-        
-        // @statistic[throughput](
-        //     title="Throughput"; 
-        //     unit=bps; 
-        //     source="throughput(packetReceived)"; 
-        //     record=vector
-        // );
-        
-        // @statistic[packetSent](
-        //     title="Packets Sent"; 
-        //     source=packetSent; 
-        //     record=count,"sum(packetBytes)","vector(packetBytes)"; 
-        //     interpolationmode=none
-        // );
-        
-        // @statistic[rcvdPkLifetime](
-        //     title="Received Packet Lifetime"; 
-        //     source="dataAge(packetReceived)"; 
-        //     unit=s; 
-        //     record=stats,vector; 
-        //     interpolationmode=none
-        // );
-        
-        // @statistic[endToEndDelay](
-        //     title="End-to-End Delay";
-        //     source="dataAge(packetReceived)";
-        //     unit=s;
-        //     record=histogram,vector,stats;
-        //     interpolationmode=none
-        // );
-
     gates:
         input lteRadioIn @directIn; // LTE radio input (only used if hasCellular=true)
      
     submodules:
+        // ========================================
+        // Hybrid Interface Switching Manager
+        // ========================================
+        interfaceManager: HybridInterfaceManager if enableSwitching {
+            @display("p=100,400");
+        }
+        
         // ========================================
         // Cellular NIC (conditional, only if hasCellular=true)
         // ========================================

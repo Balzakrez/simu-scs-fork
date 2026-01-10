@@ -68,15 +68,61 @@ namespace inet {
 
 
     void SatelliteNetworkConfiguratorScs::reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) {
+        EV_INFO << "reinvokeConfigurator @ t=" << simTime() << endl;
+        
+        // Lambda to check if a node is a Veins/Hybrid vehicle node
+        auto isVeinsNode = [](cModule *mod) {
+            if (mod == nullptr) return false;
+            if (mod->getSubmodule("mobility") == nullptr) return false;
+            return (dynamic_cast<veins::VeinsInetMobility*>(mod->getSubmodule("mobility"))) != nullptr;
+        };
+        
+        // Lambda to check if a route is a cellular DEFAULT route (not specific routes)
+        // We only preserve the default route (0.0.0.0/0) via cellular
+        // Specific routes will be recalculated by the configurator
+        auto isCellularDefaultRoute = [](Ipv4Route *route) {
+            if (route == nullptr || route->getInterface() == nullptr) return false;
+            // Must be a default route (destination and netmask unspecified)
+            if (!route->getDestination().isUnspecified() || !route->getNetmask().isUnspecified()) {
+                return false;
+            }
+            std::string ifName = route->getInterface()->getInterfaceName();
+            return (ifName == "cellular" || ifName.find("lte") != std::string::npos);
+        };
+        
         // 1. Clean routing tables and topology
         for (int i = 0; i < topology.getNumNodes(); i++) {
             Node *node = (Node *)topology.getNode(i);
             node->interfaceInfos.clear();
             if (node->getModule() == nullptr) continue;
             Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
-            // Clear routing table 
-            for(int j = 0; j < routingTable->getNumRoutes(); j++){
-                bool check = routingTable->deleteRoute(routingTable->getRoute(j));
+            
+            // Per i veicoli, preserva SOLO la default route cellular
+            bool isVehicle = isVeinsNode(node->getModule());
+            
+            // DEBUG: log route count before clearing
+            if (isVehicle) {
+                EV_DETAIL << "Clearing routes for " << node->getModule()->getFullName() 
+                          << " (currently has " << routingTable->getNumRoutes() << " routes)" << endl;
+            }
+            
+            // Clear routing table (ma preserva la default route cellular per veicoli)
+            int deleted = 0;
+            for(int j = routingTable->getNumRoutes() - 1; j >= 0; j--){
+                Ipv4Route *route = routingTable->getRoute(j);
+                if (isVehicle && isCellularDefaultRoute(route)) {
+                    EV_DETAIL << "Preserving cellular DEFAULT route for " 
+                              << node->getModule()->getFullName() << endl;
+                    continue; // Do not delete this route
+                }
+                routingTable->deleteRoute(route);
+                deleted++;
+            }
+            
+            if (isVehicle && deleted > 0) {
+                EV_DETAIL << "Deleted " << deleted << " routes from " 
+                          << node->getModule()->getFullName() << ", remaining: " 
+                          << routingTable->getNumRoutes() << endl;
             }
             // Clear multicast routing table
             for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++){
@@ -97,25 +143,18 @@ namespace inet {
             
         // 2. Re-extract topology
         SatelliteNetworkConfigurator::extractTopology(topology);
-        
-        // Lambda to check if a node is a Veins node
-        auto isVeinsNode = [](Node *node) {
-            if (node->getModule() == nullptr) return false;
-            if (node->getModule()->getSubmodule("mobility") == nullptr) return false;
-            return (dynamic_cast<veins::VeinsInetMobility*>(node->getModule()->getSubmodule("mobility"))) != nullptr;
-        };
 
         // 3. Handle IP addresses for dynamic nodes (SUMO/Veins)
         for (int i = 0; i < topology.getNumNodes(); i++) {
             Node *node = (Node *)topology.getNode(i);
-            if (isVeinsNode(node)) {
+            if (isVeinsNode(node->getModule())) {
                 for (auto& entry : node->interfaceInfos) {
                     InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
                     // Set default unspecified IP address and netmask
-                    info->address = 0;
-                    info->addressSpecifiedBits = 0xFFFFFFFF;
-                    info->netmask = 0;
-                    info->netmaskSpecifiedBits = 0xFFFFFFFF;
+                    info->address = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
+                    info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
+                    info->netmask = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
+                    info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
                     // Retrieve real IP address from interface protocol data if available
                     if (info && info->networkInterface) {
                         auto *ipv4Data = info->networkInterface->getProtocolData<Ipv4InterfaceData>();
@@ -131,8 +170,32 @@ namespace inet {
         // 4. Recalculate routing
         SatelliteNetworkConfigurator::addStaticRoutes(topology, autorouteElement);
         SatelliteNetworkConfigurator::configureAllRoutingTables();
+        
+        // 5. Post-processing: remove routes via interfaces without carrier (for vehicles)
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            if (isVeinsNode(node->getModule())) {
+                Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+                if (routingTable) {
+                    int removed = 0;
+                    for (int r = routingTable->getNumRoutes() - 1; r >= 0; r--) {
+                        Ipv4Route *route = routingTable->getRoute(r);
+                        NetworkInterface *routeIf = route->getInterface();
+                        if (routeIf && !routeIf->hasCarrier()) {
+                            routingTable->deleteRoute(route);
+                            removed++;
+                        }
+                    }
+                    if (removed > 0) {
+                        EV_DETAIL << "Post-processing: removed " << removed 
+                                  << " routes via no-carrier interfaces for " << node->getModule()->getFullName() 
+                                  << " (remaining: " << routingTable->getNumRoutes() << ")" << endl;
+                    }
+                }
+            }
+        }
 
-        // 5. Debug output
+        // 6. Debug output
         if (par("dumpTopology").boolValue())
             dumpTopology(topology);
 
@@ -162,6 +225,32 @@ namespace inet {
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
             return parseCostAttribute(costAttribute);
+
+        // ========================================
+        // CHECK INTERFACE STATE: If either interface is DOWN or has no carrier, return INFINITY
+        // isUp() = administrative state, hasCarrier() = physical connectivity
+        // This ensures that disabled interfaces are excluded from routing
+        // ========================================
+        if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
+            auto *srcIf = link->sourceInterfaceInfo->networkInterface;
+            if (!srcIf->isUp() || !srcIf->hasCarrier()) {
+                EV_DETAIL << "Wireless link excluded: source interface " 
+                          << srcIf->getInterfaceName() 
+                          << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
+                          << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
+                return INFINITY;
+            }
+        }
+        if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
+            auto *dstIf = link->destinationInterfaceInfo->networkInterface;
+            if (!dstIf->isUp() || !dstIf->hasCarrier()) {
+                EV_DETAIL << "Wireless link excluded: destination interface " 
+                          << dstIf->getInterfaceName() 
+                          << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
+                          << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
+                return INFINITY;
+            }
+        }
         
         if (!strcmp(metric, "hopCount"))
             return 1;
@@ -169,9 +258,28 @@ namespace inet {
         // Calculate propagation delay (used to determine if link exists)
         if (!strcmp(metric, "propagationDelay")) {
             
+            // ========================================
+            // NULL POINTER SAFETY CHECKS
+            // Verify all required pointers are valid before accessing them
+            // ========================================
+            if (!link->sourceInterfaceInfo || !link->destinationInterfaceInfo) {
+                EV_DETAIL << "Link has null interface info, skipping" << endl;
+                return INFINITY;
+            }
+            if (!link->sourceInterfaceInfo->node || !link->destinationInterfaceInfo->node) {
+                EV_DETAIL << "Link interface has null node, skipping" << endl;
+                return INFINITY;
+            }
+            
             // Get transmitter and receiver modules
             cModule *transmitterModule = link->sourceInterfaceInfo->node->module;
             cModule *receiverModule = link->destinationInterfaceInfo->node->module;
+            
+            // Verify modules are valid and not deleted
+            if (!transmitterModule || !receiverModule) {
+                EV_DETAIL << "TX or RX module is null or deleted, skipping link" << endl;
+                return INFINITY;
+            }
             
             // Get mobility modules
             cModule* txMob = transmitterModule->getSubmodule("mobility");
@@ -202,7 +310,7 @@ namespace inet {
 
                     // Check that the Veins vehicle module is still valid
                     if(!destVeins->getParentModule() || destVeins->isTerminated()) {
-                        std::cerr << "  Dest vehicle module deleted/invalid" << std::endl;
+                        EV_WARN << "Dest vehicle module deleted/invalid" << endl;
                         return INFINITY;
                     }
 
@@ -295,7 +403,7 @@ namespace inet {
             {
                 // Check that the Veins vehicle module is still valid
                 if(!sourceVeins->getParentModule() || sourceVeins->isTerminated()) {
-                    std::cerr << "  Source vehicle module deleted/invalid" << std::endl;
+                    EV_WARN << "Source vehicle module deleted/invalid" << endl;
                     return INFINITY;
                 }
                 // ========================================
@@ -335,14 +443,6 @@ namespace inet {
 
                     EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
                         << " | Dist: " << distKm << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
-                    
-                    Ipv4Address satIP;
-                    if (link->destinationInterfaceInfo->networkInterface) {
-                        auto *ipv4Data = link->destinationInterfaceInfo->networkInterface->getProtocolData<Ipv4InterfaceData>();
-                        if (ipv4Data) {
-                            satIP = ipv4Data->getIPAddress();
-                        }
-                    }
                     
                     return delay;
                 }
@@ -429,42 +529,67 @@ namespace inet {
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
             return parseCostAttribute(costAttribute);
-        else {
-            Topology::Link *linkOut = static_cast<Topology::Link *>(static_cast<Topology::Link *>(link));
-            if (!strcmp(metric, "hopCount"))
-                return 1;
-            else if (!strcmp(metric, "delay")) {
-                cDatarateChannel *transmissionChannel = dynamic_cast<cDatarateChannel *>(linkOut->getLinkOutLocalGate()->findTransmissionChannel());
-                if (transmissionChannel != nullptr)
-                    return transmissionChannel->getDelay().dbl();
-                else
-                    return minLinkWeight;
+        
+        // ========================================
+        // CHECK INTERFACE STATE: If either interface is DOWN or has no carrier, return INFINITY
+        // isUp() = administrative state, hasCarrier() = physical connectivity
+        // This ensures that disabled interfaces are excluded from routing
+        // ========================================
+        if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
+            auto *srcIf = link->sourceInterfaceInfo->networkInterface;
+            if (!srcIf->isUp() || !srcIf->hasCarrier()) {
+                EV_DETAIL << "Wired link excluded: source interface " 
+                          << srcIf->getInterfaceName() 
+                          << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
+                          << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
+                return INFINITY;
             }
-            else if (!strcmp(metric, "dataRate")) {
-                cChannel *transmissionChannel = linkOut->getLinkOutLocalGate()->findTransmissionChannel();
-                if (transmissionChannel != nullptr) {
-                    double dataRate = transmissionChannel->getNominalDatarate();
-                    return dataRate != 0 ? 1 / dataRate : minLinkWeight;
-                }
-                else
-                    return minLinkWeight;
+        }
+        if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
+            auto *dstIf = link->destinationInterfaceInfo->networkInterface;
+            if (!dstIf->isUp() || !dstIf->hasCarrier()) {
+                EV_DETAIL << "Wired link excluded: destination interface " 
+                          << dstIf->getInterfaceName() 
+                          << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
+                          << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
+                return INFINITY;
             }
-            else if (!strcmp(metric, "errorRate")) {
-                cDatarateChannel *transmissionChannel = dynamic_cast<cDatarateChannel *>(linkOut->getLinkOutLocalGate()->findTransmissionChannel());
-                if (transmissionChannel != nullptr) {
-                    inet::L3NetworkConfiguratorBase::InterfaceInfo *sourceInterfaceInfo = link->sourceInterfaceInfo;
-                    double bitErrorRate = transmissionChannel->getBitErrorRate();
-                    double packetErrorRate = 1.0 - pow(1.0 - bitErrorRate, sourceInterfaceInfo->networkInterface->getMtu());
-                    return minLinkWeight - log(1 - packetErrorRate);
-                }
-                else
-                    return minLinkWeight;
-            }
-            else if (!strcmp(metric, "propagationDelay")) {
-                    return minLinkWeight;
+        }
+        
+        Topology::Link *linkOut = static_cast<Topology::Link *>(static_cast<Topology::Link *>(link));
+        if (!strcmp(metric, "hopCount"))
+            return 1;
+        else if (!strcmp(metric, "delay")) {
+            cDatarateChannel *transmissionChannel = dynamic_cast<cDatarateChannel *>(linkOut->getLinkOutLocalGate()->findTransmissionChannel());
+            if (transmissionChannel != nullptr)
+                return transmissionChannel->getDelay().dbl();
+            else
+                return minLinkWeight;
+        }
+        else if (!strcmp(metric, "dataRate")) {
+            cChannel *transmissionChannel = linkOut->getLinkOutLocalGate()->findTransmissionChannel();
+            if (transmissionChannel != nullptr) {
+                double dataRate = transmissionChannel->getNominalDatarate();
+                return dataRate != 0 ? 1 / dataRate : minLinkWeight;
             }
             else
-                throw cRuntimeError("Unknown metric");
+                return minLinkWeight;
         }
+        else if (!strcmp(metric, "errorRate")) {
+            cDatarateChannel *transmissionChannel = dynamic_cast<cDatarateChannel *>(linkOut->getLinkOutLocalGate()->findTransmissionChannel());
+            if (transmissionChannel != nullptr) {
+                inet::L3NetworkConfiguratorBase::InterfaceInfo *sourceInterfaceInfo = link->sourceInterfaceInfo;
+                double bitErrorRate = transmissionChannel->getBitErrorRate();
+                double packetErrorRate = 1.0 - pow(1.0 - bitErrorRate, sourceInterfaceInfo->networkInterface->getMtu());
+                return minLinkWeight - log(1 - packetErrorRate);
+            }
+            else
+                return minLinkWeight;
+        }
+        else if (!strcmp(metric, "propagationDelay")) {
+                return minLinkWeight;
+        }
+        else
+            throw cRuntimeError("Unknown metric");
     }
 } // namespace inet
