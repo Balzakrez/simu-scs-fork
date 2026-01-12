@@ -78,6 +78,7 @@ wget https://github.com/Avian688/leosatellites/raw/master/src/package.ned -O pac
 popd
 
 patch -u -t -p1 -d ${LEOSATELLITES_ROOT} < patches/leosatellites.patch
+patch -u -t -p1 -d ${LEOSATELLITES_ROOT} < patches/leosatellites_stdout.patch
 
 OS3_LIBNORAD_ROOT=modules/os3/src/os3/libnorad
 

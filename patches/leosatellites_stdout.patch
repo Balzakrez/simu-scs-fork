@@ -1,0 +1,17 @@
+# Patch for LEO Satellites SatelliteNetworkConfigurator.cc
+# Comments out debug std::cout statement that floods console output
+#
+# Apply with: patch -u -t -p1 -d external/leosatellites < patches/leosatellites_stdout.patch
+
+diff -upr -U3 a/src/leosatellites/networklayer/configurator/ipv4/SatelliteNetworkConfigurator.cc b/src/leosatellites/networklayer/configurator/ipv4/SatelliteNetworkConfigurator.cc
+--- a/src/leosatellites/networklayer/configurator/ipv4/SatelliteNetworkConfigurator.cc
++++ b/src/leosatellites/networklayer/configurator/ipv4/SatelliteNetworkConfigurator.cc
+@@ -516,7 +516,7 @@ void SatelliteNetworkConfigurator::addStaticRoutes(Topology& topology, cXMLElem
+                             else {
+                                 sourceNode->staticRoutes.push_back(route);
+                                 EV_DEBUG << "Adding route " << sourceInterfaceEntry->getInterfaceFullPath() << " -> " << destinationInterfaceEntry->getInterfaceFullPath() << " as " << route->str() << endl;
+-                                std::cout << "Adding route " << sourceInterfaceEntry->getInterfaceFullPath() << " -> " << destinationInterfaceEntry->getInterfaceFullPath() << " as " << route->str() << endl;
++                                //std::cout << "Adding route " << sourceInterfaceEntry->getInterfaceFullPath() << " -> " << destinationInterfaceEntry->getInterfaceFullPath() << " as " << route->str() << endl;
+                             }
+                         }
+                     }

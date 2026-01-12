@@ -7,7 +7,10 @@
 diff -upr -U3 a/src/inet/linklayer/acking/AckingMac.cc b/src/inet/linklayer/acking/AckingMac.cc
 --- a/src/inet/linklayer/acking/AckingMac.cc
 +++ b/src/inet/linklayer/acking/AckingMac.cc
-@@ -144,9 +144,16 @@ void AckingMac::handleLowerPacket(Packet *packet)
+@@ -146,9 +146,16 @@ void AckingMac::handleLowerPacket(Packet *packet)
+     if (!dropFrameNotForUs(packet)) {
+         // send Ack if needed
+         auto dest = macHeader->getDest();
          bool needsAck = !(dest.isBroadcast() || dest.isMulticast() || dest.isUnspecified()); // same condition as in sender
          if (needsAck) {
              int senderModuleId = macHeader->getSrcModuleId();

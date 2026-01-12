@@ -1,259 +1,275 @@
-# LEO Satellite Communication Simulation Framework for Connected Vehicles
+# simu-scs-fork
 
-# 1. Overview
+Fork of the [simu-scs](https://github.com/ToyotaInfoTech/simu-scs) LEO Satellite Communication Simulation Framework with patches and improvements for hybrid satellite-cellular vehicular networks.
 
-- This is a simulation framework designed for evaluating satellite communications on the OMNeT++ / OMNEST network simulator. This framework is built upon the following state-of-the-art OMNeT++ modules, maintained by the research community:
-  - INET (https://github.com/inet-framework/inet)
-  - OS3 (https://github.com/inet-framework/os3)
-  - leosatellites (https://github.com/Avian688/leosatellites)          
-  - Veins (https://github.com/sommer/veins)
-  - Simu5G (https://github.com/Unipisa/Simu5G)
-- INET is used as the basis of wireless communication models, and we extend them with additional propagation characteristics. The key extensions include free space path loss, propagation, and beam width models. The Apsk scalar radio medium model is utilized in this context. Various RadioMedium parameters, such as transmission power, antenna gain, noise levels, and SNR functions, are specifically initialized for satellite communication.
-- The satellite mobility model is derived from the OS3 framework. Satellite orbit calculations reference the SGP4 orbit arithmetic model and/or use two-line element (TLE) information.
-- We use Veins to interface OMNeT++ and the SUMO road traffic simulator. 
-- Additionally, Simu5G is utilized for simulating 5G communication between ground base stations and user equipment (UE) models.
+## Overview
 
-Detailed design of this simulator and selected results from our simulations can be found in the following research publication:
+This fork extends the original simu-scs framework with the following key features:
+
+- **HybridCarV2X module** - Vehicles can communicate via both satellite and cellular interfaces
+- **Direct V2Sat communication** - Vehicles equipped with satellite antennas can transmit directly to LEO satellites
+- **Interface switching strategies** - Dynamic selection between terrestrial and non-terrestrial networks based on configurable criteria
+
+Based on the research framework described in:
+> Jing Ma, Lei Zhong, and Ryokichi Onishi, "LEO Satellite Communication Simulation Framework for Connected Vehicles," IEEE GLOBECOM 2023.
+
+---
+
+## Prerequisites
+
+### System Requirements
+
+- **Operating System**: Linux (Ubuntu 20.04+ recommended) or WSL2
+- **OMNeT++ 6.0.3**
+- **SUMO 1.18**
+- **Git** with submodule support
+- **Build tools**: See detailed dependencies below
+
+**Framework Dependencies** (auto-installed by `prepare_dependencies.sh`):
+- INET Framework 4.4.1
+- Veins 5.2
+- Simu5G 1.2.1
+- leosatellites (master + v2.0.0 physicallayer)
+- os3 (master)
+
+### OMNeT++ 6.0.3 Installation
+
+#### 1. Install System Dependencies
+
+```bash
+# Core build tools and libraries
+sudo apt install -y make diffutils pkg-config ccache clang lld gdb lldb \
+    bison flex perl sed gawk python3 python3-pip python3-venv python3-dev \
+    libxml2-dev zlib1g-dev doxygen graphviz xdg-utils libdw-dev \
+    cmake wget
+
+# Java (required for OMNeT++ IDE)
+sudo apt install -y openjdk-17-jre openjdk-17-jdk
+
+# Qt5 libraries (for GUI)
+sudo apt install -y qtbase5-dev qtbase5-dev-tools libqt5svg5 qtwayland5 \
+    libwebkit2gtk-4.1-0 libqt5opengl5-dev
+
+# OpenSceneGraph (for 3D visualization)
+sudo apt install -y libopenscenegraph-dev
+
+# Clean up
+sudo apt clean
 ```
-Jing Ma, Lei Zhong, and Ryokichi Onishi, "LEO Satellite Communication Simulation Framework for Connected Vehicles," in Proceedings of the 2023 IEEE Global Communications Conference (GLOBECOM), pp.6603-6608, 2023. 
+
+**Verify Java installation:**
+```bash
+java -version
+# Should output: openjdk version "17.x.x" or similar
+```
+
+#### 2. Enable ptrace for Debugging (Optional but Recommended)
+
+```bash
+sudo nano /etc/sysctl.d/10-ptrace.conf
+# Change the line to: kernel.yama.ptrace_scope = 0
+# Save and exit, then reload:
+sudo sysctl --system
+```
+
+#### 3. Install Python Dependencies
+
+```bash
+python3 -m pip install numpy scipy pandas matplotlib posix_ipc --break-system-packages
+```
+
+#### 4. Download and Install OMNeT++ 6.0.3
+
+```bash
+# Download OMNeT++ 6.0.3 from https://github.com/omnetpp/omnetpp/releases/tag/omnetpp-6.0.3
+# Extract the archive
+tar xvfz omnetpp-6.0.3-linux-x86_64.tgz
+cd omnetpp-6.0.3
+
+# Set environment variables
+source setenv
+
+# Configure and build
+./configure
+make -j$(nproc)
+
+# Test installation
+cd samples/aloha
+./aloha
+```
+
+**Important**: Always run `source setenv` in each new terminal before working with OMNeT++, or add it to your `.bashrc`:
+
+```bash
+echo "source ~/omnetpp-6.0.3/setenv" >> ~/.bashrc
 ```
 
 ---
 
-# 2. Installation
+## Installation
 
-- Clone this git repository along with its external submodules. 
-  ```
-  git clone --recursive https://github.com/ToyotaInfoTech/simu-scs.git
-  ```
-- Run the following script to install dependencies. 
-  ```
-  cd simu-scs
-  ./prepare_dependencies.sh
-  ```
-- Launch OMNeT++ IDE and create a new OMNeT++ workspace. OMNeT++ IDE will ask you whether to install INET Framework and OMNeT++ programming examples. Uncheck both options and click "OK". 
-- On the OMNeT++ IDE window, select File->import… and chose “Existing projects into workspace”.
-- In the pop-up window, check the "select root directory" option, and click "Browse" button next to it. In the directory selection window, choose the `simu-scs/` directory that you have just cloned. 
-- Check all the projects in the project list, then click "Finish" to create the project.
-- Once the projects are imported, select "Project->Build all".
+### 1. Clone the Repository
 
----
+```bash
+git clone --recursive https://github.com/Balzakrez/simu-scs-fork.git
+cd simu-scs-fork
+```
 
-# 3. Architecture
+### 2. Install Dependencies
 
-- The following provides a high-level overview of the SimuSCS framework. 
+Run the `prepare_dependencies.sh` script to download and patch all external modules:
 
-  ![](images/image_1.jpg)
+```bash
+./prepare_dependencies.sh
+```
 
-## 3.1 SUMO cosimulation
+This script will:
+- Download **INET 4.4.1**, **Veins 5.2**, **Simu5G 1.2.1**
+- Download **leosatellites** (master + v2.0.0 physicallayer) and **os3** (master)
+- Apply compatibility patches for **leosatellites**, **INET**, **os3**, and **Simu5G**
 
-- The left side of the aforementioned diagram illustrates the SUMO environment. When conducting a simulation involving vehicle mobility, the SUMO application must be initiated prior to the OMNeT++ simulation. It is important to set the "num client" option to 1, as the OMNeT++ simulation will be running as a single client.
+### 3. Import into OMNeT++ IDE
 
-  ```
-  sumo-gui --remote-port 9999 --num-clients 1 -c config.sumocfg
-  ```
+1. Launch **OMNeT++ IDE** and create a new workspace
 
-- In simulations that involve both SUMO and OMNeT++, the Veins module links the vehicle mobility simulated by SUMO to the OMNeT++ simulation. The Veins module, utilizing the TraCI interface, tracks vehicle movements, relays location data to the OMNeT++ canvas, and displays these movements within the OMNeT++ environment. When incorporating the Simu5G module, simulations of vehicle mobility paired with 5G wireless communication can be executed.
-- Moreover, it is possible to run a SUMO traffic simulation scenario wherein the OMNeT++ canvas simultaneously displays the SUMO map. For setting up your traffic simulation scenario in SUMO, you should configure it using files like *.sumocfg, .rou.xml, and construct the road situation with .net and .poly.xml files.
+2. When OMNeT++ prompts to install INET Framework and examples:
+   - ⚠️ **DO NOT INSTALL** - Uncheck both options and click OK
+   - Reason: This project uses a specific INET 4.4.1 version (auto-installed by `prepare_dependencies.sh`)
+   - Installing the default INET will break the build
 
-## 3.2 Veins vehicle
+3. Go to **File → Import → Existing Projects into Workspace**
+4. Select the `simu-scs-fork/` directory as root directory
+5. **Check all projects** in the list and click **Finish**
+6. Wait for the IDE to complete indexing before building
 
-- Veins uses the TraCI interface to connect the vehicle locations from SUMO (expressed in longitude and latitude coordinates) to vehicle mobility in OMNeT++. These global coordinates are essential for calculating the distance between the satellite and the vehicle. SCS facilitates wireless communication links from the ground station to the satellite, and from the satellite to the user device. Veins, in conjunction with Simu5G, then establishes a link between the user device and the UE terminal.
-- On the OMNeT++ canvas, the SUMO map and satellite Earth  map are displayed side by side, with visualized communication links drawn by the OMNeT++ module.
+### 4. Build the Project
 
-  ![](images/image_2.jpg)
-
-- In the *.ini file for the simulation, specify the Veins manager and typename as shown below.
-
-  ```
-  *.manager.moduleType = "org.scs.veins_inet.InetCar"
-  *.node[*].mobility.typename = "VeinsInetMobility"
-  ```
-
-## 3.3 Satellite coordinate system
-
-- The global map used by the SimuSCS utilizes the WGS-72 World Geodetic System coordinates. In the figure below,  the semimajor axis (a) is 6,378.135 km, and the semiminor axis (b) is 6,356.752 km.
-- The Earth-Centered Inertial coordinate system（cECI) has the Earth’s center as its origin. The Z-axis points toward the North Pole. The X-axis is aligned with the direction of the Sun at the vernal equinox, intersecting the ecliptic and equator. The Y-axis, following the right-hand rule, is orthogonally aligned. This coordinate system remains fixed and does not change with the Earth’s rotation.<br>Satellite orbit calculations use this cECI coordinate system.
-
-  ![](images/image_3.jpg)
-
-## 3.4 Satellite system mobility
-
-- Orbit calculation
-  - The OS3 library provides the North American Aerospace Defense (NORAD) Simplified General Perturbation 4 (SGP4) model. This model uses Kepler’s laws and orbit information (such as the number of orbits, date, and time) to calculate satellite orbits. An example setup in the .ini file is shown below.
-
-    ```
-    *.satellite[*].NoradModule.TLEfile = "starlink2023.txt"
-    *.satellite[*].mobility.targetyear = 123
-    *.satellite[*].mobility.targetmonth = 2
-    *.satellite[*].mobility.targetday = 2
-    *.satellite[*].mobility.targethour = 12
-    *.satellite[*].mobility.targetsec = 10
-    *.satellite[*].mobility.targetwday = 4
-    *.satellite[*].mobility.targetyday = 60
-    *.satellite[*].mobility.enableRepeatCycle = 1
-    *.satellite[*].satelliteName = "STARLINK-3308"
-    *.satellite[*].mobility.cycleTime = 360
-    .satellite[*].mobility.targetmin = 8
-    ```
-
-  - "targetyear,"  "targetmonth," "targetday," "targethour," "targetmin," "targetsec," "targetwday," "targetyday" are target epoch time. Set "enableRepeatCycle" as 0 for not repeat, 1 for repeat after cycle is over. "cycleTime" is repeat cycle time.
-- Satellite TLE
-  - TLE is a two-line format that represents the orbital information of space objects, monitored and published by NORAD. By entering this data into a text file and setting the file name in the .ini file as the parameter "TLEfile," the SCS calculates the satellite’s orbit based on the specified TLE set.
-- As it calculates the orbit position, SCS maps the satellite’s mobility on the OMNeT++ canvas. An example of an orbit trajectory, indicated in green, is shown in the picture below. The size of the canvas can be adjusted by scaling the map size in the .ini file.
-
-  ![](images/image_4.jpg)
-
-- To set up the OMNeT++ canvas with the SUMO map, follow the instructions below.
-
-  ![](images/image_5.jpg)
-
-  ```
-  *.Pos.offsetX = 1080
-  *.Pos.offset_x = 1770
-  *.Pos.offset_y = 181
-  *.Pos.mapx = 2160
-  *.Pos.mapy = 1080
-  *.Pos.mapx2 = 255
-  *.Pos.mapy2 = 255
-  *.Pos.emapx = 1080
-  *.Pos.emapy = 1080
-  ```
-
-## 3.5 Multiple beam
-
-- The satellite beam positions are mapped as illustrated. Corresponding to satellite mobility, the ground station’s position is associated with the beam’s position. Radio channels, including the frequency reuse factor, are assigned for each beam coordinate position. These settings are configured in the .ini file.
-
-  ![](images/image_6.jpg)
-
-  <strong>.ini file</strong>
-
-  ```
-  *.satellite[*].numBeamInterfaces = 2           # numOfChannels + 1
-  *.satellite[*].numSubChannels = 1
-  *.satellite[*].bm.numBeamInterfaces = 2      # numOfChannels + 1
-  *.satellite[*].bm.numSubChannels = 1
-  *.satellite[*].numWlanInterfaces = 2
-  ```
-
-## 3.6 RF Link
-
-- Satellite communication path loss
-  - The signal attenuation between the satellite and ground terminal is calculated based on 3GPP TR38.811, Chapter 6.6.2. The path loss is composed of several components as shown below.
-
-    $$PL=PL_b+PL_g+PL_s+PL_e$$
-
-    The basic path loss accounts for free space propagation, clutter loss, and shadow fading. For more details, refer to TR38.811. The free space loss formula is:
-
-    $$FSPL(d,f_c)=32.45+20log_{10}?(f_c)+20log_{10}?(d)$$
-
-    where the distance $d$ between the satellite and terminal is measured in meters, and the radio frequency $f_c$ is in GHz.<br>
-    The parameters for shadow fading, clutter loss, scintillation, atmospheric, and building loss are provided in an XML configuration file named plConfig.xml. This file should be located in the same folder as the running simulation. Specify the file name in the .ini file, as shown in the example below.
-
-    ```
-    **.<radiomedium>.pathLoss.typename = "SatellitePathloss"
-    **.<radiomedium>. pathLoss.plConfig = xmldoc("plConfig.xml")
-    ```
-
-- Satellite communication propagation
-  - The signal propagation time between the satellite and ground terminal depends on the distance. The satellite’s position is calculated using the OS3 library from orbit calculations. The satellite’s height, as given by the simulation parameter, is used to determine the distance. This distance is then divided by the speed of light 'c" to calculate the propagation delay. For instance, the propagation time  for a LEO satellite at approximately 500 km height is approximately 40 ms.
-
-![](images/image_7.jpg)
-
-## 3.7 Satellite multiple access
-
-- SCS simulates FDMA. In the .ini file, radio mediums are assigned to each channel, with each medium connecting to a dedicated ground station module. The setup in the .ini file is demonstrated below.
-
-  ```
-  *.GroundStation[0].wlan[*].radio.radioMediumModule = "radioMedium[0]"
-  *.GroundStation[1].wlan[*].radio.radioMediumModule = "radioMedium[1]"
-  *.GroundStation[2].wlan[*].radio.radioMediumModule = "radioMedium[2]"
-  *.GroundStation[3].wlan[*].radio.radioMediumModule = "radioMedium[3]"
-  *.GroundStation[4].wlan[*].radio.radioMediumModule = "radioMedium[4]"
-  *.GroundStation[5].wlan[*].radio.radioMediumModule = "radioMedium[5]"
-  *.Satellite[0].cnl[*].radio.radioMediumModule = "radioMedium[0]"
-  *.Satellite[1].cnl[*].radio.radioMediumModule = "radioMedium[1]"
-  *.Satellite[2].cnl[*].radio.radioMediumModule = "radioMedium[2]"
-  *.Satellite[3].cnl[*].radio.radioMediumModule = "radioMedium[3]"
-  *.Satellite[4].cnl[*].radio.radioMediumModule = "radioMedium[4]"
-  *.Satellite[5].cnl[*].radio.radioMediumModule = "radioMedium[5]"
-  ```
-
-## 3.8 Satellite sim5G cosimulation
-
-- Utilizing the sim5G Project, the simulation can establish a 5G network for ground-level communication paths. Below is an example of 5G communication between UE and a server, incorporating a satellite communication path.
-
-  ![](images/image_8.jpg)
+In OMNeT++ IDE:
+```
+Project → Build All
+```
 
 ---
 
-# 4 Sample simulation
+## Project Structure
 
-SCS platform offers simple sample programs.
+```
+simu-scs-fork/
+├── external/                 # External dependencies (INET, Veins, Simu5G, leosatellites, os3)
+├── modules/                  # Custom modules (hybrid V2X, os3 integration)
+├── patches/                  # Compatibility patches
+├── samples-scs/              # Original simu-scs examples
+├── samples-scs-hybrid/       # Hybrid satellite-cellular scenarios
+├── README.md
+└── prepare_dependencies.sh   # Dependency setup script
+```
 
-## Satellite orbit mobility
+---
 
-- Abstract: Simulate orbit mobility of 1 to 4 satellites using SGP4 and TLE.
-- Folder: SatelliteOrbit.
-  - [STARLINK-2Sat]  User TLE to simulate to track 2 LEO satellite orbit.
-  - [STARLINK-4Sat]  User TLE to simulate to track 4 LEO satellite orbit.
-  - [SampleConfig4sat] User TLE to simulate to track 4 series of LEO satellite orbit near Japan.
-  - [NoradPlaneTest] 24 Planes, show top 20 Satellites from TLE file list. show 12 MMC locations.
-- Output sample:
-  - [STARLINK-4Sat]
+## Running Simulations
 
-    ![](images/image_9.jpg)
+### Simulation Modes
 
-## 4.2 Simple satellite communication test
+**QTENV** - GUI visualization (slower, good for debugging):
+- Shows vehicles, satellites, and network links visually
+- Interactive debugging capabilities
+- May crash with many nodes or on WSL without proper X11 setup
 
-- Abstract: Test UDP transmission for uplink/downlink throughput from ground station to satellite and vice versa.
-- Folder: SatelliteEvaluation.
-  - [MCC2SAT] Feeder link forward, send UDP continuous transfer in 75us cycle, from MissionControlCenter(MCC) to Satellite(SAT).
-  - [SAT2MCC] Feeder link return , send UDP continuous transfer in 75us , 
-    from SAT to MCC.
-  - [GS2SAT] Service link return, send UDP continuous transfer in 80us,
-    from GroudStation(GS) to SAT.
-  - [SAT2GS] Service link forward, send UDP continuous transfer in 80us,
-    from SAT to GS.
-  - [UDPBurstMCC2GS8] Feeder link full path. Send 8 burst UDP transfer in 
-    120us, from MCC, via SAT to GS.
-  - [UDPPacket6] Feeder link to 6 ground stations, send UDP continuous 
-    transfer in 1ms cycle, from 1 MCC, via SAT to 6 GSs.
-  - [UDPPacket8] Feeder link to 8 ground stations, send UDP continuous 
-    transfer in 1ms cycle, from 1 MCC, via SAT to 6 GSs.
-  - [UDPAppGS2MCC] Service , send UDP continuous transfer in 120us,
-    from 2 GSs, via SAT to 1 MCC.
+**CMDENV** - Command-line interface (faster, recommended for production):
+- No GUI overhead - significantly faster execution
+- Better for batch runs and parameter sweeps
+- Recommended for WSL environments
+- Outputs results to console and result files
 
-  ![](images/image_10.jpg)
+### Hybrid Satellite-Cellular Scenarios
 
-- Output sample:
-  - Condition. Transmitter, receiver bandwidth 500Mbps、app:UDPBasicApp. Send interval 75us
-  - Result observed max 468Mbps. Feeder link from MCC to Sat, Sat to MCC.
+These examples demonstrate the hybrid V2X communication system with interface switching.
 
-## 4.3 Multiple 5G UE communication through put test
+#### Setup
 
-- Abstract: Integrates with Sim5G simulation to assess satellite communication paths within 5G communication. The number of UEs is variable-dependent. Test throughput between UE and server, incorporating a satellite communication path.
-- Folder: SCS5GFusion
-  - [UDP5G]  VoIP UDP packet transfer from server to UE via satellite communication.
-  - [PacketSize_4375] UDP packet transfer from server to UE via satellite communication, with vary number 
-    of UE terminals, 2,5,10,20,50,100,200,500 to see through put.
-- Output log sample:
-  [PacketSize_4375] 
+All commands should be run from the hybrid sample directory:
+```bash
+cd samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion
+```
 
-  ![](images/image_11.jpg)
+#### Available Configurations
 
-## 4.4 Veins_sim5g simulation
+1. **CellularOnly** - Vehicles communicate only via 5G cellular network
+2. **SatelliteOnly** - Vehicles communicate only via satellite links
+3. **SatelliteOnlyBurstTraffic** - Satellite with burst traffic pattern
+4. **SatelliteOnlyVehicleTelemetryVariable** - Variable telemetry data rates
+5. **HybridSwitching** - Dynamic switching between cellular and satellite interfaces
 
-- Veins simu5g
-  - Abstract: Based on VS5G simulation, assign UE to the vehicle mobility module and use Veins to control mobility. The OMNeT++ canvas displays the SUMO map on the left for vehicle movement and an Earth map on the right to track satellite movement.
-  - Instruction
-    - Before you run this test, install SUMO application from "https://eclipse.dev/sumo/"
-    - On terminal, navigate to "sumodir" folder and run "sumoexe". SUMO application will start.
-    - On OMNeT++ IDE, from SCSV5GFution folder, run omnetpp.ini
-    - On the simulation panel, click run.
-    - On the SUMO application, click run
-  - Folder: SCSV5Gfusion.
-    - [UDP5GNode0] VoIP UDP packet transfer from server to UE on vehicle via satellite communication.
-  - Output sample:
+#### Running Hybrid Scenarios
 
-    ![](images/image_12.jpg)
+**Step 1**: Start SUMO
+```bash
+# Without GUI (recommended)
+sumo --remote-port 9999 --num-clients 1 -c config.sumocfg
+
+# Or with GUI
+sumo-gui --remote-port 9999 --num-clients 1 -c config.sumocfg
+```
+
+**Step 2**: Run simulation
+
+**With GUI visualization (QTENV):**
+```bash
+../../samples-scs-hybrid_dbg -u Qtenv -m omnetpp.ini
+```
+
+**Without GUI - HybridSwitching (CMDENV):**
+```bash
+../../samples-scs-hybrid_dbg -u Cmdenv -m -c HybridSwitching omnetpp.ini
+```
+
+> **Note**: For complete commands with all library paths and other configurations (CellularOnly, SatelliteOnly, SatelliteOnlyBurstTraffic, SatelliteOnlyVehicleTelemetryVariable), see `samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion/commands.sh`
+
+### Simulation Output
+
+Results are saved in the `results/` directory:
+- `.sca` files - Scalar results (statistics)
+- `.vec` files - Vector results (time series data)
+- `.vci` files - Vector index
+- `.elog` files - Event log (if enabled)
+
+Analyze results with OMNeT++ IDE Analysis Tool or export to CSV/MATLAB for custom analysis.
+
+---
+
+## Documentation
+
+For complete architecture details, RF link models, and sample simulations, refer to the [Original simu-scs Documentation](simu-scs-readme.md).
+
+---
+
+## Contributing
+
+This fork is part of ongoing research. Contributions and issue reports are welcome!
+
+## License
+
+This project inherits the LGPL-3.0 license from the original simu-scs framework.
+
+```
+Copyright (C) 2023 TOYOTA MOTOR CORPORATION
+SPDX-License-Identifier: LGPL-3.0-or-later
+```
+
+---
+
+## Credits
+
+- **Original Framework**: [simu-scs](https://github.com/ToyotaInfoTech/simu-scs) by Toyota InfoTech
+- **Fork Maintainer**: [Giuseppe Balzano](https://github.com/Balzakrez)
+- **Built on**: INET, os3, leosatellites, Veins, Simu5G
+
+---
+
+## Related Projects
+
+- **[INET Framework](https://github.com/inet-framework/inet)** - Foundation network simulation framework providing protocol implementations, physical layer models, and mobility support for OMNeT++
+- **[os3](https://github.com/inet-framework/os3)** - Satellite orbit simulation library providing SGP4 orbital mechanics and NORAD TLE support for LEO satellite modeling
+- **[leosatellites](https://github.com/Avian688/leosatellites)** - LEO satellite constellation framework with propagation models, network configurators, and satellite-specific physical layer implementations
+- **[Veins](https://github.com/sommer/veins)** - Vehicular network simulation framework with SUMO traffic simulator integration via TraCI protocol for realistic vehicle mobility
+- **[Simu5G](https://github.com/Unipisa/Simu5G)** - 5G NR/LTE network simulator providing cellular protocol stack, radio resource management, and end-to-end network simulation capabilities
