@@ -1,4 +1,4 @@
-# simu-scs-fork
+# simu-scs-hybrid
 
 Fork of the [simu-scs](https://github.com/ToyotaInfoTech/simu-scs) LEO Satellite Communication Simulation Framework with patches and improvements for hybrid satellite-cellular vehicular networks.
 
@@ -117,8 +117,8 @@ echo "source ~/omnetpp-6.0.3/setenv" >> ~/.bashrc
 ### 1. Clone the Repository
 
 ```bash
-git clone --recursive https://github.com/Balzakrez/simu-scs-fork.git
-cd simu-scs-fork
+git clone --recursive https://github.com/squidslab/simu-scs-hybrid.git
+cd simu-scs-hybrid
 ```
 
 ### 2. Install Dependencies
@@ -144,7 +144,7 @@ This script will:
    - Installing the default INET will break the build
 
 3. Go to **File → Import → Existing Projects into Workspace**
-4. Select the `simu-scs-fork/` directory as root directory
+4. Select the `simu-scs-hybrid/` directory as root directory
 5. **Check all projects** in the list and click **Finish**
 6. Wait for the IDE to complete indexing before building
 
@@ -159,7 +159,7 @@ Project → Build All
 
 ## Project Structure
 ```
-simu-scs-fork/
+simu-scs-hybrid/
 ├── external/                          # External dependencies
 │   ├── inet/                          # INET Framework 4.4.1
 │   ├── veins/                         # Veins 5.2
