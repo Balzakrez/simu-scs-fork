@@ -23,12 +23,6 @@
     <interface hosts='MCC[*]' names='wlan0' address='10.2.0.x' netmask='255.255.0.0'/>
 
     <!-- ========================================================================
-         SUBNET 3: CELLULAR NETWORK (10.3.x.x)
-         Vehicle cellular <-> eNB <-> PGW
-         ======================================================================== -->
-    <interface hosts='node[*]' names='cellular' address='10.3.0.x' netmask='255.255.255.0'/>
-
-    <!-- ========================================================================
          WIRED BACKBONE: Use flexible addressing (10.x.x.x)
          Handles all ppp interfaces for:
          - server <-> internetRouter

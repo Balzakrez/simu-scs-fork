@@ -1,0 +1,8 @@
+<!-- netconfig_cellular.xml -->
+<config>
+    <!-- Generic configuration and permissive -->
+    <interface hosts='**' address='10.x.x.x' netmask='255.x.x.x'/>
+    
+    <!-- Routing based on hop count for the terrestrial part -->
+    <autoroute metric='hopCount'/>
+</config>

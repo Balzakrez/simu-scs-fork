@@ -1,58 +1,58 @@
-// File: SV5GFusion4.ned
+//
+// File: SV5GFusion4.ned - Network definition for Hybrid Satellite-Vehicle 5G Fusion Sample
+// 
 
 package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 
 //custom imports
 import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X;
-//import scs_optional.veins_inet_scs.HybridCarV2X;
 
 // scs
-import scs.base.LaserSatellite;
 import scs.base.GroundStation;
+import scs.base.LaserSatellite;
 import scs.common.binder.SBinder;
 
 // inet
-import inet.physicallayer.wireless.common.contract.packetlevel.IRadioMedium;
-import inet.physicallayer.wireless.apsk.packetlevel.ApskScalarRadioMedium;
-import inet.visualizer.contract.IIntegratedVisualizer;
 import inet.node.inet.Router;
 import inet.node.ethernet.Eth10G;
 import inet.node.inet.StandardHost;
 import inet.networklayer.ipv4.RoutingTableRecorder;
+import inet.visualizer.contract.IIntegratedVisualizer;
+import inet.physicallayer.wireless.apsk.packetlevel.ApskScalarRadioMedium;
+import inet.physicallayer.wireless.common.contract.packetlevel.IRadioMedium;
 
 // inet_leosatellites
 import inet_leosatellites.networklayer.configurator.ipv4.SatelliteNetworkConfiguratorScs;
 
 // simu5G
-// ! import simu5g.nodes.Ue;
-// ! import simu5g.nodes.Upf;
-// ! import simu5g.nodes.NR.gNodeB;
-import simu5g.world.radio.LteChannelControl;
-import simu5g.common.carrierAggregation.CarrierAggregation;
+// import simu5g.nodes.Ue;
+// import simu5g.nodes.Upf;
+// import simu5g.nodes.NR.gNodeB;
+import simu5g.nodes.eNodeB;
 import simu5g.nodes.PgwStandard;
 import simu5g.common.binder.Binder;
-import simu5g.nodes.eNodeB;
+import simu5g.world.radio.LteChannelControl;
+import simu5g.common.carrierAggregation.CarrierAggregation;
 
 //scs_utils
 import scs_utils.converter.PositionConverter;
 
 //veins + scs_optional
-// ! import scs_optional.node.UECar;
-// ! import scs_optional.veins_inet_scs.InetCar;
+// import scs_optional.node.UECar;
+// import scs_optional.veins_inet_scs.InetCar;
 import scs_optional.veins_inet_scs.VeinsInetManager;
-import scs_optional.veins_scs.visualizer.RoadsINETCanvasVisualizer;
 import org.car2x.veins.visualizer.roads.RoadsCanvasVisualizer;
+import scs_optional.veins_scs.visualizer.RoadsINETCanvasVisualizer;
 
 // SV5GFusion4 Network 
 network HybridFusionNet
 {
     parameters:
-        int numOfSats = default(1); 
-        int numOfMCCs = default(1); 
-        int numOfServiceLinkChannels = default(1); 
+        int numOfSats = default(1); // Number of satellites
+        int numOfMCCs = default(1); // Number of Mission Control Centers
+        int numOfServiceLinkChannels = default(1); // Number of Service Link Channels (Satellite -> )
+        // int numOfCars = default(0); // Number of GroundStations (necessary)
     
-        int numOfCars = default(0); // Number of GroundStations (necessario solo per la compilazione)
-
         // int numOfUECar = default(4);
         // int numUe = default(4);
         // int numUeD2DTx = default(0);
@@ -74,8 +74,7 @@ network HybridFusionNet
         configurator: SatelliteNetworkConfiguratorScs {
             parameters:
                 @display("p=0,0;i=onedot");  
-                //maxValidDistanceKm = 3000.0km; // Distanza massima satellite-ground valida
-                //minElevationDeg = 25.0deg;      // Elevazione minima (opzionale, disabilita con -1) 
+                // Todo: Specify parameters for satellite-ground link (es. max distance, etc)
         }
 
         binder: Binder { 
@@ -135,20 +134,30 @@ network HybridFusionNet
         // ===========================================================================
 
         server: StandardHost {
-            @display("p=200,1100;is=n;i=device/server");
+            @display("p=100,1100;is=n;i=device/server");
         } 
 
         internetRouter: Router {
             @display("p=400,1100;i=device/smallrouter");
         } 
 
+        // 4G LTE Architecture
         pgw: PgwStandard {
             @display("p=700,800;is=s");
         }
-        
+
         eNB: eNodeB {
-                @display("p=2000,1100;is=s");
+                @display("p=2000,1000;is=s");
         }
+
+        // 5G Architecture
+        // upf: Upf { // 5G User Plane Function
+        //     @display("p=800,800");
+        // }
+        
+        // gNB: gNodeB { // 5G Base Station
+        //         @display("p=2000,1000;is=s");
+        // }
 
         routerFL: Router {
             @display("p=1100,1100;i=device/smallrouter");
@@ -156,14 +165,20 @@ network HybridFusionNet
 
    connections allowunconnected:  
 
-        // RAMO COMUNE: Router -> Server
+        // Router -> Server
         server.pppg++ <--> Eth10G <--> internetRouter.pppg++;
 
-        // RAMO TERRESTRE (5G): eNodeN -> PGW -> Internet
+        // Terrestrial (5G/TN): gNodeB -> upf -> Internet
+        // 5G Core
+        // internetRouter.pppg++ <--> Eth10G <--> upf.filterGate;
+        // upf.pppg++ <--> Eth10G <--> gNB.ppp; 
+
+        // Terrestrial (4G LTE/TN): gNodeB -> pgw -> Internet
+        // 4G LTE Core
         internetRouter.pppg++ <--> Eth10G <--> pgw.filterGate;
         pgw.pppg++ <--> Eth10G <--> eNB.ppp;
 
-        // RAMO SATELLITARE (NTN): MCC (Gateway) -> Router Feeder Link -> Internet
+        // Satellite (NTN): MCC (Gateway) -> Router Feeder Link -> Internet
         internetRouter.pppg++ <--> Eth10G <--> routerFL.pppg++;
         routerFL.pppg++ <--> Eth10G <--> MCC[0].pppg++; 
 }

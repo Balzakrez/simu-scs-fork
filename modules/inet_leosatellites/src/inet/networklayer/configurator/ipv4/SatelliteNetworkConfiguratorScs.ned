@@ -13,4 +13,7 @@ simple SatelliteNetworkConfiguratorScs extends SatelliteNetworkConfigurator
         @display("i=block/cogwheel");
 		addStaticRoutes = true;
 		optimizeRoutes = false;
+
+        // Disable default route addition for satellites to prevent interference with Veins nodes' routing
+        addDefaultRoutes = default(false); // This parameters is used only in addStaticRoutes() method
 }

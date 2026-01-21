@@ -2,21 +2,27 @@
 
 Fork of the [simu-scs](https://github.com/ToyotaInfoTech/simu-scs) LEO Satellite Communication Simulation Framework with patches and improvements for hybrid satellite-cellular vehicular networks.
 
+The original framework provides a comprehensive simulation environment for connected vehicles communicating via LEO satellites using the OMNeT++ simulator, INET framework, os3 satellite orbit library, and leosatellites LEO satellite communication module.
 ## Overview
-
-This fork extends the original simu-scs framework with the following key features:
-
-- **HybridCarV2X module** - Vehicles can communicate via both satellite and cellular interfaces
-- **Direct V2Sat communication** - Vehicles equipped with satellite antennas can transmit directly to LEO satellites
-- **Interface switching strategies** - Dynamic selection between terrestrial and non-terrestrial networks based on configurable criteria
 
 Based on the research framework described in:
 > Jing Ma, Lei Zhong, and Ryokichi Onishi, "LEO Satellite Communication Simulation Framework for Connected Vehicles," IEEE GLOBECOM 2023.
 
+This fork extends the original simu-scs framework with the following key features:
+1. **Direct V2Sat communication** - Vehicles equipped with satellite antennas can transmit directly to LEO satellites
+2. **HybridCarV2X module** - Dual-interface vehicle node supporting both satellite (Ku-band, 10.8 GHz) and cellular (5G NR via Simu5G) connectivity
+3. **HybridInterfaceManager** - Dynamic selection between terrestrial and non-terrestrial networks based on configurable criteria
+4. **Dynamic interface switching strategies**:
+    1. **Time-based**: Periodic switching logic
+    2. **Coverage-based**: Satellite visibility switching logic
+    3. **Energy-based**: Battery-aware switching logic
+5. **And more ...**
 ---
 
-## Prerequisites
+This fork can have bugs and is not an official release. It is used for research purposes only. <br>If you find any issues, please report them via GitHub Issues.
 
+---
+## Prerequisites
 ### System Requirements
 
 - **Operating System**: Linux (Ubuntu 20.04+ recommended) or WSL2
@@ -152,20 +158,85 @@ Project → Build All
 ---
 
 ## Project Structure
-
 ```
 simu-scs-fork/
-├── external/                 # External dependencies (INET, Veins, Simu5G, leosatellites, os3)
-├── modules/                  # Custom modules (hybrid V2X, os3 integration)
-├── patches/                  # Compatibility patches
-├── samples-scs/              # Original simu-scs examples
-├── samples-scs-hybrid/       # Hybrid satellite-cellular scenarios
-├── README.md
-└── prepare_dependencies.sh   # Dependency setup script
+├── external/                          # External dependencies
+│   ├── inet/                          # INET Framework 4.4.1
+│   ├── veins/                         # Veins 5.2
+│   ├── simu5g/                        # Simu5G 1.2.1
+│   ├── os3/                           # os3 (satellite orbit library)
+│   └── leosatellites/                 # leosatellites (LEO constellation framework)
+├── modules/                           # Custom satellite communication modules
+│   ├── inet_leosatellites/            # INET-leosatellites integration
+│   ├── os3/                           # os3 patched version
+│   ├── os3_leosatellites/             # os3-leosatellites integration
+│   ├── scs/                           # Satellite Communication System core
+│   └── scs_utils/                     # Utility modules (PositionConverter, etc.)
+├── patches/                           # Compatibility patches for external frameworks
+├── samples-scs/                       # Original simu-scs example simulations
+├── samples-scs-hybrid/                # Hybrid satellite-cellular implementations
+│   ├── images/                        # Documentation images
+│   ├── out/                           # Build output directory
+│   └── SatelliteVehicleHybridSample/
+│       └── HybridSCSV5GFusion/        # Main hybrid V2X project
+│           ├── config_networks/       # Network topology XMLs
+│           │   ├── netconfig_cellular.xml     # Cellular routing
+│           │   ├── netconfig_hybrid.xml       # Hybrid routing
+│           │   └── netconfig_satellite.xml    # Satellite routing
+│           ├── config_strategies/     # Switching strategy configs 
+│           │   ├── config_cellular_only.ini   # Cellular-only baseline
+│           │   ├── config_hybrid_coverage.ini # Coverage-based switching
+│           │   ├── config_hybrid_energy.ini   # Energy-aware switching
+│           │   ├── config_hybrid_time.ini     # Time-based switching
+│           │   └── config_satellite_only.ini  # Satellite-only baseline
+│           ├── dumps/                 # Debug routing dumps
+│           ├── src/                   # Source code
+│           │   ├── apps/              # Application layer
+│           │   ├── strategies/        # Switching strategies
+│           │   │   ├── CoverageBasedStrategy.cc
+│           │   │   ├── CoverageBasedStrategy.h
+│           │   │   ├── EnergyBasedStrategy.cc
+│           │   │   ├── EnergyBasedStrategy.h
+│           │   │   ├── ISwitchingStrategy.h       # Strategy interface
+│           │   │   ├── TimeBasedStrategy.cc
+│           │   │   └── TimeBasedStrategy.h
+│           │   ├── HybridInterfaceManager.cc
+│           │   ├── HybridInterfaceManager.h
+│           │   └── HybridInterfaceManager.ned
+│           ├── .cmdenv-log            # Command-line log
+│           ├── .qtenvrc               # Qtenv GUI settings
+│           ├── HybridCarV2X.ned       # Vehicle node definition
+│           ├── HybridFusionNet.ned    # Network topology
+│           ├── config_general.ini     # General parameters
+│           ├── config_5G.ini          # 5G cellular configuration
+│           ├── config_satellite.ini   # Satellite configuration
+│           ├── config_v2s.ini         # V2S configuration
+│           ├── config_stats.ini       # Statistics configuration
+│           ├── plConfig.xml           # Path loss model
+│           ├── starlink2023.txt       # TLE orbital data
+│           ├── commands.sh            # Run commands helper
+│           ├── omnetpp.ini            # Master configuration
+│           ├── package.ned            # NED package declaration
+│           ├── sumodir/               # SUMO traffic simulation
+│           │   ├── config.sumocfg             
+│           │   ├── routes.xml          
+│           │   └── network files...
+│           ├── results/               # Simulation results
+│           ├── out/                   # Build artifacts
+│           ├── .cproject              # Eclipse CDT project
+│           ├── .gitignore             # Git ignore rules
+│           ├── .oppbuildspec          # OMNeT++ build spec
+│           ├── .project               # Eclipse project file
+│           ├── .settings/             # IDE settings
+│           ├── Makefile               # Build makefile
+│           └── samples-scs-hybrid_dbg # Compiled executable (debug)
+├── .gitmodules                        # Git submodules configuration
+├── LICENSE.md                         # License information
+├── README.md                          # Main documentation
+├── simu-scs-readme.md                 # Original simu-scs docs
+└── prepare_dependencies.sh            # Dependency setup script
 ```
-
 ---
-
 ## Running Simulations
 
 ### Simulation Modes
@@ -175,7 +246,7 @@ simu-scs-fork/
 - Interactive debugging capabilities
 - May crash with many nodes or on WSL without proper X11 setup
 
-**CMDENV** - Command-line interface (faster, recommended for production):
+**CMDENV** - Command-line interface (faster, recommended):
 - No GUI overhead - significantly faster execution
 - Better for batch runs and parameter sweeps
 - Recommended for WSL environments
@@ -185,23 +256,38 @@ simu-scs-fork/
 
 These examples demonstrate the hybrid V2X communication system with interface switching.
 
-#### Setup
-
 All commands should be run from the hybrid sample directory:
 ```bash
-cd samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion
+samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion
 ```
 
 #### Available Configurations
 
-1. **CellularOnly** - Vehicles communicate only via 5G cellular network
-2. **SatelliteOnly** - Vehicles communicate only via satellite links
-3. **SatelliteOnlyBurstTraffic** - Satellite with burst traffic pattern
-4. **SatelliteOnlyVehicleTelemetryVariable** - Variable telemetry data rates
-5. **HybridSwitching** - Dynamic switching between cellular and satellite interfaces
+The simulation includes baseline scenarios and three switching strategy variants:
 
-#### Running Hybrid Scenarios
+##### Baseline Configurations
 
+| Configuration | Description | Purpose |
+|---------------|-------------|---------|
+| CellularOnly | Vehicles use only 5G cellular (Simu5G) | Terrestrial baseline |
+| SatelliteOnly | Vehicles use only LEO satellite (wlan0) | Non-terrestrial baseline |
+| SatelliteOnlyBurstTraffic | Vehicle sends to satellite with high-frequency bursts | Stress testing |
+| SatelliteOnlyVehicleTelemetryVariable | Vehicle sends variable-rate telemetry | Adaptive traffic |
+
+##### Switching Strategy Configurations
+
+| Configuration | Description| Purpose |
+|---------------|----------|----------|
+| TimeBasedSwitching | Vehicle switches interfaces periodically | Time-based switching |
+| CoverageBasedSwitching  | Vehicle preferring satellite (if available) | Coverage-based switching |
+| EnergyBasedSwitching | Vehicle switches based on battery level | Energy-based switching |
+
+### Running Simulations
+The are two ways to run the hybrid simulations: 
+- **manually** via terminal commands 
+- or using the **helper script** `run.sh`
+
+#### 1. Manually using Terminal Commands
 **Step 1**: Start SUMO
 ```bash
 # Without GUI (recommended)
@@ -213,17 +299,26 @@ sumo-gui --remote-port 9999 --num-clients 1 -c config.sumocfg
 
 **Step 2**: Run simulation
 
-**With GUI visualization (QTENV):**
+**Without GUI (CMDENV):**
+```bash
+../../samples-scs-hybrid_dbg -u Cmdenv -m -c ConfigName omnetpp.ini
+```
+**With GUI visualization (QTENV, not recommended):**
 ```bash
 ../../samples-scs-hybrid_dbg -u Qtenv -m omnetpp.ini
 ```
+These examples are toy-commands.
+> For complete commands with all library paths and other configurations, <br> see `samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion/commands.sh`
 
-**Without GUI - HybridSwitching (CMDENV):**
+### 2. Using the Helper Script
+There is a helper script `run.sh` to simplify running simulations with different configurations and options.
 ```bash
-../../samples-scs-hybrid_dbg -u Cmdenv -m -c HybridSwitching omnetpp.ini
+./run.sh -c <config> [options]
 ```
-
-> **Note**: For complete commands with all library paths and other configurations (CellularOnly, SatelliteOnly, SatelliteOnlyBurstTraffic, SatelliteOnlyVehicleTelemetryVariable), see `samples-scs-hybrid/SatelliteVehicleHybridSample/HybridSCSV5GFusion/commands.sh`
+Check all aviable options with:
+```bash
+./run.sh -help
+```
 
 ### Simulation Output
 
@@ -273,3 +368,13 @@ SPDX-License-Identifier: LGPL-3.0-or-later
 - **[leosatellites](https://github.com/Avian688/leosatellites)** - LEO satellite constellation framework with propagation models, network configurators, and satellite-specific physical layer implementations
 - **[Veins](https://github.com/sommer/veins)** - Vehicular network simulation framework with SUMO traffic simulator integration via TraCI protocol for realistic vehicle mobility
 - **[Simu5G](https://github.com/Unipisa/Simu5G)** - 5G NR/LTE network simulator providing cellular protocol stack, radio resource management, and end-to-end network simulation capabilities
+
+Version details and references:
+
+| Framework | Version | Purpose | Reference |
+|-----------|---------|---------|-----------|
+| **[INET](https://github.com/inet-framework/inet)** | 4.4.1 | Network protocols, mobility, physical layer | [inet-framework.org](https://inet.omnetpp.org/) |
+| **[os3](https://github.com/inet-framework/os3)** | master | SGP4 orbital mechanics, NORAD TLE | [inet-framework/os3](https://github.com/inet-framework/os3) |
+| **[leosatellites](https://github.com/Avian688/leosatellites)** | v2.0.0 (phy) + master | LEO constellation models, satellite configurator | [Avian688/leosatellites](https://github.com/Avian688/leosatellites) |
+| **[Veins](https://github.com/sommer/veins)** | 5.2 | SUMO integration, vehicular mobility | [veins.car2x.org](https://veins.car2x.org/) |
+| **[Simu5G](https://github.com/Unipisa/Simu5G)** | 1.2.1 | 5G NR/LTE cellular stack | [simu5g.org](http://simu5g.org/) |

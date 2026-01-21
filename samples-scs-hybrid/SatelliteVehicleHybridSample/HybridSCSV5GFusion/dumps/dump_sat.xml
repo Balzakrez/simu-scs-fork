@@ -2,55 +2,6 @@
    <interface hosts="HybridFusionNet.satellite[0]" names="cnl0" address="10.2.0.1" netmask="255.255.255.252" metric="4"/>
    <interface hosts="HybridFusionNet.MCC[0]" names="wlan0" address="10.2.0.2" netmask="255.255.255.252" metric="4"/>
    <interface hosts="HybridFusionNet.satellite[0]" names="cnl1" address="10.1.0.1" netmask="255.255.255.0" metric="14"/>
-   <interface hosts="HybridFusionNet.node[0]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[1]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[2]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[3]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[4]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[5]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[6]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[8]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[9]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[10]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[11]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[12]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[13]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[14]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[15]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[16]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[17]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[18]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[19]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[20]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[21]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[22]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[23]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[24]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[25]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[26]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[27]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[28]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[29]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[30]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[31]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[32]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[33]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[34]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[35]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[36]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[37]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[38]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[39]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[40]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[41]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[42]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[43]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[44]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[45]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[46]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[47]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[48]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
-   <interface hosts="HybridFusionNet.node[49]" names="wlan0" address="<unspec>" netmask="255.255.255.255" metric="100"/>
    <interface hosts="HybridFusionNet.MCC[0]" names="ppp0" address="10.2.0.5" netmask="255.255.255.252" metric="1"/>
    <interface hosts="HybridFusionNet.routerFL" names="ppp1" address="10.2.0.6" netmask="255.255.255.252" metric="1"/>
    <interface hosts="HybridFusionNet.MCC[0]" names="eth0" address="10.2.0.9" netmask="255.255.255.252" metric="1"/>
@@ -67,55 +18,6 @@
    <multicast-group hosts="HybridFusionNet.satellite[0]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.satellite[0]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[1]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[2]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[3]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[4]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[5]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[6]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[8]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[9]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[10]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[11]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[12]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[13]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[14]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[15]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[16]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[17]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[18]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[19]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[20]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[21]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[22]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[23]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[24]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[25]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[26]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[27]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[28]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[29]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[30]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[31]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[32]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[33]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[34]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[35]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[36]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[37]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[38]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[39]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[40]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[41]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[42]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[43]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[44]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[45]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[46]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[47]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[48]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.node[49]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.routerFL" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="eth0" address="224.0.0.1 224.0.0.2"/>
@@ -130,7 +32,7 @@
    <multicast-group hosts="HybridFusionNet.eNB" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="HybridFusionNet.eNB" interfaces="pppMEHostIf" address="224.0.0.1 224.0.0.2"/>
    <wireless interfaces="HybridFusionNet.satellite[0]%cnl0 HybridFusionNet.MCC[0]%wlan0"/>
-   <wireless interfaces="HybridFusionNet.satellite[0]%cnl1 HybridFusionNet.node[0]%wlan0 HybridFusionNet.node[1]%wlan0 HybridFusionNet.node[2]%wlan0 HybridFusionNet.node[3]%wlan0 HybridFusionNet.node[4]%wlan0 HybridFusionNet.node[5]%wlan0 HybridFusionNet.node[6]%wlan0 HybridFusionNet.node[8]%wlan0 HybridFusionNet.node[9]%wlan0 HybridFusionNet.node[10]%wlan0 HybridFusionNet.node[11]%wlan0 HybridFusionNet.node[12]%wlan0 HybridFusionNet.node[13]%wlan0 HybridFusionNet.node[14]%wlan0 HybridFusionNet.node[15]%wlan0 HybridFusionNet.node[16]%wlan0 HybridFusionNet.node[17]%wlan0 HybridFusionNet.node[18]%wlan0 HybridFusionNet.node[19]%wlan0 HybridFusionNet.node[20]%wlan0 HybridFusionNet.node[21]%wlan0 HybridFusionNet.node[22]%wlan0 HybridFusionNet.node[23]%wlan0 HybridFusionNet.node[24]%wlan0 HybridFusionNet.node[25]%wlan0 HybridFusionNet.node[26]%wlan0 HybridFusionNet.node[27]%wlan0 HybridFusionNet.node[28]%wlan0 HybridFusionNet.node[29]%wlan0 HybridFusionNet.node[30]%wlan0 HybridFusionNet.node[31]%wlan0 HybridFusionNet.node[32]%wlan0 HybridFusionNet.node[33]%wlan0 HybridFusionNet.node[34]%wlan0 HybridFusionNet.node[35]%wlan0 HybridFusionNet.node[36]%wlan0 HybridFusionNet.node[37]%wlan0 HybridFusionNet.node[38]%wlan0 HybridFusionNet.node[39]%wlan0 HybridFusionNet.node[40]%wlan0 HybridFusionNet.node[41]%wlan0 HybridFusionNet.node[42]%wlan0 HybridFusionNet.node[43]%wlan0 HybridFusionNet.node[44]%wlan0 HybridFusionNet.node[45]%wlan0 HybridFusionNet.node[46]%wlan0 HybridFusionNet.node[47]%wlan0 HybridFusionNet.node[48]%wlan0 HybridFusionNet.node[49]%wlan0"/>
+   <wireless interfaces="HybridFusionNet.satellite[0]%cnl1"/>
    <wireless interfaces="HybridFusionNet.eNB%cellular"/>
    <route hosts="HybridFusionNet.satellite[0]" destination="10.2.0.2" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
    <route hosts="HybridFusionNet.satellite[0]" destination="10.2.0.5" netmask="255.255.255.255" gateway="10.2.0.2" interface="cnl0" metric="0"/>
@@ -159,8 +61,21 @@
    <route hosts="HybridFusionNet.MCC[0]" destination="10.2.0.29" netmask="255.255.255.255" gateway="10.2.0.6" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.MCC[0]" destination="10.2.0.33" netmask="255.255.255.255" gateway="10.2.0.6" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.MCC[0]" destination="10.2.0.12" netmask="255.255.255.252" gateway="10.2.0.6" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.2.0.12" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="*" netmask="*" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.1" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.2" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.5" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.6" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.9" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.14" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.17" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.18" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.21" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.22" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.25" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.26" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.29" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.2.0.33" netmask="255.255.255.255" gateway="10.2.0.14" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.2.0.22" interface="ppp2" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.2.0.1" netmask="255.255.255.255" gateway="10.2.0.22" interface="ppp2" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.2.0.2" netmask="255.255.255.255" gateway="10.2.0.22" interface="ppp2" metric="0"/>
@@ -215,53 +130,4 @@
    <route hosts="HybridFusionNet.routerFL" destination="10.2.0.29" netmask="255.255.255.255" gateway="10.2.0.21" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.routerFL" destination="10.2.0.33" netmask="255.255.255.255" gateway="10.2.0.21" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.routerFL" destination="10.2.0.12" netmask="255.255.255.252" gateway="10.2.0.21" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.node[0]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[1]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[2]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[3]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[4]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[5]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[6]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[8]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[9]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[10]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[11]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[12]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[13]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[14]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[15]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[16]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[17]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[18]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[19]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[20]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[21]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[22]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[23]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[24]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[25]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[26]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[27]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[28]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[29]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[30]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[31]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[32]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[33]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[34]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[35]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[36]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[37]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[38]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[39]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[40]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[41]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[42]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[43]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[44]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[45]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[46]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[47]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[48]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.node[49]" destination="*" netmask="*" gateway="10.1.0.1" interface="wlan0" metric="0"/>
 </config>

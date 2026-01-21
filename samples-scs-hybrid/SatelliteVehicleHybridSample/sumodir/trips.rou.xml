@@ -5,7 +5,7 @@
     <trip id="t_2" depart="0.00" from="915486401#1" to="328071935#1" /> 
     <trip id="t_3" depart="0.00" from="915486401#1" to="328071935#1" />
     <trip id="t_4" depart="0.00" from="25944284#17" to="25831182" />
-    <!-- <trip id="t_5" depart="0.00" from="915486401#1" to="328071935#1" /> 
+    <trip id="t_5" depart="0.00" from="915486401#1" to="328071935#1" /> 
     <trip id="t_6" depart="0.00" from="25944284#17" to="25831182" />
     <trip id="t_7" depart="0.00" from="25944284#17" to="25831182" />
     <trip id="t_8" depart="0.00" from="25758205" to="915486399#2" />
@@ -49,5 +49,5 @@
     <trip id="t_46" depart="0.00" from="25758205" to="135176138#1" />
     <trip id="t_47" depart="0.00" from="25758205" to="135176138#1" />
     <trip id="t_48" depart="0.00" from="25944284#17" to="25831182" />
-    <trip id="t_49" depart="0.00" from="25944284#17" to="25831182" /> -->
+    <trip id="t_49" depart="0.00" from="25944284#17" to="25831182" />
 </routes>

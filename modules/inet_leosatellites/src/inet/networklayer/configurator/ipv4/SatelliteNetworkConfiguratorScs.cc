@@ -30,7 +30,6 @@ namespace inet {
         }
     }
 
-  
     void SatelliteNetworkConfiguratorScs::initialize(int stage) {   
         // Call base class initialize
         SatelliteNetworkConfigurator::initialize(stage);
@@ -42,14 +41,13 @@ namespace inet {
             );
             
             if (!posConverter) {
-                EV_WARN << "PositionConverter 'Pos' not found - Vehicle-to-Satellite links will not work" << std::endl;
+                throw cRuntimeError("PositionConverter 'Pos' not found - Vehicle-to-Satellite links will not work");
             } else {
-                EV_INFO << "PositionConverter successfully initialized" << std::endl;
+                EV_DETAIL << "PositionConverter successfully initialized" << endl;
             }
         }
     }
 
-    
     void SatelliteNetworkConfiguratorScs::handleMessage(cMessage *msg) {    
         if (msg == timer) {
             cXMLElementList autorouteElements = configuration->getChildrenByTagName("autoroute");
@@ -66,143 +64,11 @@ namespace inet {
         }
     }
 
-
-    void SatelliteNetworkConfiguratorScs::reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) {
-        EV_INFO << "reinvokeConfigurator @ t=" << simTime() << endl;
-        
-        // Lambda to check if a node is a Veins/Hybrid vehicle node
-        auto isVeinsNode = [](cModule *mod) {
-            if (mod == nullptr) return false;
-            if (mod->getSubmodule("mobility") == nullptr) return false;
-            return (dynamic_cast<veins::VeinsInetMobility*>(mod->getSubmodule("mobility"))) != nullptr;
-        };
-        
-        // Lambda to check if a route is a cellular DEFAULT route (not specific routes)
-        // We only preserve the default route (0.0.0.0/0) via cellular
-        // Specific routes will be recalculated by the configurator
-        auto isCellularDefaultRoute = [](Ipv4Route *route) {
-            if (route == nullptr || route->getInterface() == nullptr) return false;
-            // Must be a default route (destination and netmask unspecified)
-            if (!route->getDestination().isUnspecified() || !route->getNetmask().isUnspecified()) {
-                return false;
-            }
-            std::string ifName = route->getInterface()->getInterfaceName();
-            return (ifName == "cellular" || ifName.find("lte") != std::string::npos);
-        };
-        
-        // 1. Clean routing tables and topology
-        for (int i = 0; i < topology.getNumNodes(); i++) {
-            Node *node = (Node *)topology.getNode(i);
-            node->interfaceInfos.clear();
-            if (node->getModule() == nullptr) continue;
-            Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
-            
-            // Per i veicoli, preserva SOLO la default route cellular
-            bool isVehicle = isVeinsNode(node->getModule());
-            
-            // DEBUG: log route count before clearing
-            if (isVehicle) {
-                EV_DETAIL << "Clearing routes for " << node->getModule()->getFullName() 
-                          << " (currently has " << routingTable->getNumRoutes() << " routes)" << endl;
-            }
-            
-            // Clear routing table (ma preserva la default route cellular per veicoli)
-            int deleted = 0;
-            for(int j = routingTable->getNumRoutes() - 1; j >= 0; j--){
-                Ipv4Route *route = routingTable->getRoute(j);
-                if (isVehicle && isCellularDefaultRoute(route)) {
-                    EV_DETAIL << "Preserving cellular DEFAULT route for " 
-                              << node->getModule()->getFullName() << endl;
-                    continue; // Do not delete this route
-                }
-                routingTable->deleteRoute(route);
-                deleted++;
-            }
-            
-            if (isVehicle && deleted > 0) {
-                EV_DETAIL << "Deleted " << deleted << " routes from " 
-                          << node->getModule()->getFullName() << ", remaining: " 
-                          << routingTable->getNumRoutes() << endl;
-            }
-            // Clear multicast routing table
-            for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++){
-                node->routingTable->deleteMulticastRoute(node->routingTable->getMulticastRoute(m));
-            }
-            // Clear static routes
-            std::for_each(node->staticRoutes.begin(), node->staticRoutes.end(), []( Ipv4Route* route) { delete route; });
-            node->staticRoutes.clear();
-            
-        }
-        // Clear links and interfaces from topology
-        std::for_each(topology.linkInfos.begin(), topology.linkInfos.end(), []( LinkInfo* link) { delete link; });
-        for(auto & p : topology.interfaceInfos) delete p.second;
-
-        topology.linkInfos.clear();
-        topology.interfaceInfos.clear();
-        topology.clear();
-            
-        // 2. Re-extract topology
-        SatelliteNetworkConfigurator::extractTopology(topology);
-
-        // 3. Handle IP addresses for dynamic nodes (SUMO/Veins)
-        for (int i = 0; i < topology.getNumNodes(); i++) {
-            Node *node = (Node *)topology.getNode(i);
-            if (isVeinsNode(node->getModule())) {
-                for (auto& entry : node->interfaceInfos) {
-                    InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
-                    // Set default unspecified IP address and netmask
-                    info->address = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
-                    info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
-                    info->netmask = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
-                    info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
-                    // Retrieve real IP address from interface protocol data if available
-                    if (info && info->networkInterface) {
-                        auto *ipv4Data = info->networkInterface->getProtocolData<Ipv4InterfaceData>();
-                        if (ipv4Data && !ipv4Data->getIPAddress().isUnspecified()) {
-                            info->address = ipv4Data->getIPAddress().getInt();
-                            info->netmask = ipv4Data->getNetmask().getInt();
-                        }
-                    }
-                }
-            }
-        }
-        
-        // 4. Recalculate routing
-        SatelliteNetworkConfigurator::addStaticRoutes(topology, autorouteElement);
-        SatelliteNetworkConfigurator::configureAllRoutingTables();
-        
-        // 5. Post-processing: remove routes via interfaces without carrier (for vehicles)
-        for (int i = 0; i < topology.getNumNodes(); i++) {
-            Node *node = (Node *)topology.getNode(i);
-            if (isVeinsNode(node->getModule())) {
-                Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
-                if (routingTable) {
-                    int removed = 0;
-                    for (int r = routingTable->getNumRoutes() - 1; r >= 0; r--) {
-                        Ipv4Route *route = routingTable->getRoute(r);
-                        NetworkInterface *routeIf = route->getInterface();
-                        if (routeIf && !routeIf->hasCarrier()) {
-                            routingTable->deleteRoute(route);
-                            removed++;
-                        }
-                    }
-                    if (removed > 0) {
-                        EV_DETAIL << "Post-processing: removed " << removed 
-                                  << " routes via no-carrier interfaces for " << node->getModule()->getFullName() 
-                                  << " (remaining: " << routingTable->getNumRoutes() << ")" << endl;
-                    }
-                }
-            }
-        }
-
-        // 6. Debug output
-        if (par("dumpTopology").boolValue())
-            dumpTopology(topology);
-
-        if (par("dumpConfig").stringValue()[0])
-            dumpConfiguration();
+    bool SatelliteNetworkConfiguratorScs::isVeinsNode(cModule *mod){
+        if (mod == nullptr) { return false; }
+        if (mod->getSubmodule("mobility") == nullptr) { return false; }   
+        return (dynamic_cast<veins::VeinsInetMobility*>(mod->getSubmodule("mobility"))) != nullptr;
     }
-
 
     bool SatelliteNetworkConfiguratorScs::isValidVeinsPosition(const inet::Coord& pos) {
         // Check for NaN or infinity
@@ -219,18 +85,54 @@ namespace inet {
         }
         return true;
     }
-    
 
-    double SatelliteNetworkConfiguratorScs::computeWirelessLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
-        const char *costAttribute = parameters->getAttribute("cost");
-        if (costAttribute != nullptr)
-            return parseCostAttribute(costAttribute);
+    bool SatelliteNetworkConfiguratorScs::isProtectedRoute(Ipv4Route* route){
+        if (route == nullptr || route->getInterface() == nullptr) { return false; }   
+        std::string ifName = route->getInterface()->getInterfaceName();
+        // Preserve Default Routes for Cellular Interfaces
+        if (ifName == "cellular" || ifName.find("lte") != std::string::npos) { 
+            if (route->getDestination().isUnspecified() 
+                && route->getGateway().isUnspecified()
+                && route->getNetmask().isUnspecified()) {
+                    return true;
+                }
+        }
+        return false;
+    }
 
-        // ========================================
-        // CHECK INTERFACE STATE: If either interface is DOWN or has no carrier, return INFINITY
+    void SatelliteNetworkConfiguratorScs::validateVeinsNodeIp(){
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            if (isVeinsNode(node->getModule())) {
+                for (auto& entry : node->interfaceInfos) {
+                    InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
+                    if (info->networkInterface) {
+                        auto *ipv4Data = info->networkInterface->getProtocolData<Ipv4InterfaceData>();
+                        // Retrieve real IP address from interface protocol data if available
+                        if (ipv4Data && !ipv4Data->getIPAddress().isUnspecified()) {
+                            info->address = ipv4Data->getIPAddress().getInt();
+                            info->netmask = ipv4Data->getNetmask().getInt();
+                        }
+                        else {
+                            // Set default unspecified IP address and netmask
+                            info->address = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
+                            info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
+                            info->netmask = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
+                            info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
+                        }
+                    }
+                    else{
+                        throw cRuntimeError("Veins node interface has no Ipv4InterfaceData");
+                    }
+                }
+            }
+        }
+    }
+
+    bool SatelliteNetworkConfiguratorScs::isToExcludeLink(Link *link) {
+        // Exclude links with interfaces that are down or have no carrier
         // isUp() = administrative state, hasCarrier() = physical connectivity
         // This ensures that disabled interfaces are excluded from routing
-        // ========================================
         if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
             auto *srcIf = link->sourceInterfaceInfo->networkInterface;
             if (!srcIf->isUp() || !srcIf->hasCarrier()) {
@@ -238,7 +140,7 @@ namespace inet {
                           << srcIf->getInterfaceName() 
                           << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
                           << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
-                return INFINITY;
+                return true;
             }
         }
         if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
@@ -248,26 +150,127 @@ namespace inet {
                           << dstIf->getInterfaceName() 
                           << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
                           << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
-                return INFINITY;
+                return true;
             }
         }
+        return false;
+    }
+
+    void SatelliteNetworkConfiguratorScs::printRoutingTable(){
+        // Print routing table for all Veins nodes for debugging
+        for (int i = 0; i < this->topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            if (!isVeinsNode(node->getModule())) { continue; } // Only show vehicle nodes
+            if (node->getModule() == nullptr){ continue; } // Skip nodes without modules (should not happen)
+            Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+            if (routingTable == nullptr){ continue; } // Skip nodes without IPv4 routing table (should not happen)
+            std::string nodeName = node->getModule()->getFullPath();
+            std::cerr << " Node " << nodeName << " have these routes: " << std::endl;
+            if (routingTable->getNumRoutes() == 0) {
+                std::cerr << "  (no routes)" << std::endl;
+            }
+            for (int i = 0; i < routingTable->getNumRoutes(); i++){
+                Ipv4Route *route = routingTable->getRoute(i);
+                bool isProtected = isProtectedRoute(route);
+                std::cerr << "  Route[" << i << "]: " 
+                        << " source=" << nodeName << " "
+                        << " dest=" << route->getDestination() << "/netlen=" << route->getNetmask().getNetmaskLength()
+                        << " netmask=" << route->getNetmask()
+                        << " via " << route->getInterface()->getInterfaceName()
+                        << " gw=" << route->getGateway()
+                        << " PROTECTED=" << (isProtected ? "YES" : "NO")
+                        << endl;
+            }
+        }
+    }
+
+    void SatelliteNetworkConfiguratorScs::reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) {
+        EV_DETAIL << "\nReinvoking SatelliteNetworkConfiguratorScs at " << simTime() << endl;
+
+        // std::cerr << "BEFORE CLEARING ROUTING TABLE:" << std::endl;
+        // printRoutingTable();
+
+        // 1. Clean routing tables and topology
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            node->interfaceInfos.clear();
+            if (node->getModule() == nullptr){ continue; } // Skip nodes without modules (should not happen)
+            Ipv4RoutingTable *routingTable = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+            // 1.1 Clear routing table (but preserve the cellular default route for vehicles)
+            for(int j = routingTable->getNumRoutes() - 1; j >= 0; j--) {
+                Ipv4Route *route = routingTable->getRoute(j);
+
+                if (isProtectedRoute(route) && isVeinsNode(node->getModule())) { continue; }
+                
+                routingTable->deleteRoute(route);
+            }
+            // 1.2 Clear multicast routing table
+            for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++){
+                node->routingTable->deleteMulticastRoute(node->routingTable->getMulticastRoute(m));
+            }
+            // 1.3 Clear static routes
+            std::for_each(node->staticRoutes.begin(), node->staticRoutes.end(), []( Ipv4Route* route) { delete route; });
+            node->staticRoutes.clear();
+        }
+        // Clear links and interfaces from topology
+        std::for_each(topology.linkInfos.begin(), topology.linkInfos.end(), []( LinkInfo* link) { delete link; });
+        for(auto & p : topology.interfaceInfos) delete p.second;
+
+        topology.linkInfos.clear();
+        topology.interfaceInfos.clear();
+        topology.clear();
+            
+        // 2. Re-extract topology
+        SatelliteNetworkConfigurator::extractTopology(topology);
+
+        // 3. Validate IP addresses for dynamic nodes (SUMO/Veins)
+        this->validateVeinsNodeIp();
+
+        // 4. Recalculate routing
+        SatelliteNetworkConfigurator::addStaticRoutes(topology, autorouteElement);
+        SatelliteNetworkConfigurator::configureAllRoutingTables();
+
+        // 5. Remove unreachable routes (links with INFINITY weight in computeWirelessLinkWeight)
+        // this->removeWirelessUnreachableRoutes(autorouteElement); // not needed
+        // This is to prevent satellites from adding default routes that may interfere with Veins nodes' routing
+        // Already removed with addDefaultRoutes = default(false);
+
+        // std::cerr << "AFTER REINVOKING ROUTING TABLE:" << std::endl;
+        // printRoutingTable();
+
+        // 6. Debug output
+        if (par("dumpTopology").boolValue())
+            dumpTopology(topology);
+
+        if (par("dumpConfig").stringValue()[0])
+            dumpConfiguration();
+    }
+
+    double SatelliteNetworkConfiguratorScs::computeWirelessLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
+        EV_DETAIL << "Called computeWirelessLinkWeight between " << link->sourceInterfaceInfo->node->module->getFullName() << " and " << link->destinationInterfaceInfo->node->module->getFullName() << std::endl;
+
+        const char *costAttribute = parameters->getAttribute("cost");
+        if (costAttribute != nullptr)
+            return parseCostAttribute(costAttribute);
         
+
         if (!strcmp(metric, "hopCount"))
             return 1;
             
         // Calculate propagation delay (used to determine if link exists)
         if (!strcmp(metric, "propagationDelay")) {
-            
-            // ========================================
-            // NULL POINTER SAFETY CHECKS
-            // Verify all required pointers are valid before accessing them
-            // ========================================
+
             if (!link->sourceInterfaceInfo || !link->destinationInterfaceInfo) {
-                EV_DETAIL << "Link has null interface info, skipping" << endl;
+                EV_WARN << "Link has null interface info, skipping" << endl;
                 return INFINITY;
             }
             if (!link->sourceInterfaceInfo->node || !link->destinationInterfaceInfo->node) {
-                EV_DETAIL << "Link interface has null node, skipping" << endl;
+                EV_WARN << "Link interface has null node, skipping" << endl;
+                return INFINITY;
+            }
+            // Exclude links with interfaces that are down or have no carrier
+            if (isToExcludeLink(link)) {
+                EV_WARN<< "Link excluded based on interface state" << endl;
                 return INFINITY;
             }
             
@@ -277,22 +280,24 @@ namespace inet {
             
             // Verify modules are valid and not deleted
             if (!transmitterModule || !receiverModule) {
-                EV_DETAIL << "TX or RX module is null or deleted, skipping link" << endl;
+                EV_WARN << "TX or RX module is null or deleted, skipping link" << endl;
                 return INFINITY;
             }
+
+            EV_DETAIL << "Evaluating link: " << transmitterModule->getFullName() << " -> " << receiverModule->getFullName() << endl;
             
             // Get mobility modules
             cModule* txMob = transmitterModule->getSubmodule("mobility");
             cModule* rxMob = receiverModule->getSubmodule("mobility");
 
             if(!txMob || !rxMob) {
-                EV_DETAIL << "Mobility module missing in TX or RX" << std::endl;
+                EV_WARN << "Mobility module missing in TX or RX" << endl;
                 return INFINITY;
             }
-            
+
             // Ensure PositionConverter is available
             if(!posConverter) {
-                EV_WARN << "PositionConverter not available for Veins nodes" << std::endl;
+                EV_WARN << "PositionConverter not available for Veins nodes" << endl;
                 return INFINITY;
             }
 
@@ -302,15 +307,13 @@ namespace inet {
             // CASE 1: Satellite -> X \in {Vehicle, GroundStation, Satellite}
             // ========================================
             if(SatelliteMobility *sourceSat = dynamic_cast<SatelliteMobility*>(txMob)) {
-
                 // ========================================
                 // Case 1.A: Satellite -> Vehicle (Veins)
                 // ========================================
                 if(veins::VeinsInetMobility *destVeins = dynamic_cast<veins::VeinsInetMobility*>(rxMob)) { 
-
                     // Check that the Veins vehicle module is still valid
                     if(!destVeins->getParentModule() || destVeins->isTerminated()) {
-                        EV_WARN << "Dest vehicle module deleted/invalid" << endl;
+                        EV_WARN << "SAT->VEC: Dest vehicle module deleted/invalid" << endl;
                         return INFINITY;
                     }
 
@@ -319,7 +322,7 @@ namespace inet {
 
                     // Validate position
                     if(!isValidVeinsPosition(pos)) {
-                        EV_WARN << "SAT->VEC: " << sourceSat->getFullPath() <<  " -> " << destVeins->getFullPath() << ": Invalid position" << std::endl;
+                        EV_WARN << "SAT->VEC: " << sourceSat->getFullPath() <<  " -> " << destVeins->getFullPath() << ": Invalid position" << endl;
                         return INFINITY;
                     }
 
@@ -327,31 +330,29 @@ namespace inet {
                     double vehLon = posConverter->convertPosXToLongitude(pos.x);
                     double vehLat = posConverter->convertPosYToLatitude(pos.y);
 
-                    EV_TRACE << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
-                             << vehLon << "°), SAT: (" << sourceSat->getLatitude() << "°, " 
-                             << sourceSat->getLongitude() << "°, " << sourceSat->getAltitude() 
-                             << "km), Elev: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°" << std::endl;
+                    EV_DETAIL << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
+                            << vehLon << "°), SAT: (" << sourceSat->getLatitude() << "°, " 
+                            << sourceSat->getLongitude() << "°, " << sourceSat->getAltitude() 
+                            << "km), Elev: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°" << endl;
 
                     if (!sourceSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_DETAIL << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Link not reachable" << std::endl;
+                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Link not reachable" << endl;
                         return INFINITY;
                     }
 
                     // Calculate distance Satellite <-> Vehicle (in km)
                     double distKm = sourceSat->getDistance(vehLat, vehLon, 0.0);
 
-                    // Validate distance: LEO satellites typically have a max range of ~2000 km from vehicles
-                    if(std::isnan(distKm) || distKm < 0 || distKm > 2000.0) { 
-                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
+                    if(std::isnan(distKm) || distKm < 0) { 
+                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
                     
                     // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
-                    
-                    EV_DETAIL << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
-                                << " | Dist: " << distKm  << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
-                    
+                    EV_DETAIL << "SAT->VEC:" 
+                              << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
+                              << " | Dist: " << distKm  << "km, Delay: " << delay << "s" << endl;
                     
                     return delay; 
                 }
@@ -363,15 +364,16 @@ namespace inet {
                     // Calculate distance Satellite <-> GroundStation (in km)
                     double distKm = sourceSat->getDistance(destGS->getLUTPositionY(), destGS->getLUTPositionX(), 0.0);
 
-                    // Validate distance: LEO satellites typically have a max range of ~2500 km from GS
-                    if(std::isnan(distKm) || distKm < 0 || distKm > 2500.0) {
-                        EV_WARN << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << std::endl;
+                    if(std::isnan(distKm) || distKm < 0) {
+                        EV_WARN << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
 
+                    // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "SAT->GS:" 
+                            << sourceSat->getFullPath() << " -> " << destGS->getFullPath() 
+                            << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
 
                     return delay;
                 }
@@ -383,15 +385,17 @@ namespace inet {
                     // Calculate distance Satellite <-> Satellite (in km)
                     double distKm = sourceSat->getDistance(destSat->getLatitude(), destSat->getLongitude(), destSat->getAltitude());
 
-                    // Validate distance: Inter-Satellite Links typically have a max range of ~5000 km from SAT
-                    if(std::isnan(distKm) || distKm < 0 || distKm > 5000.0) {  
-                        EV_WARN << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km (max 5000km)" << std::endl;
+   
+                    if(std::isnan(distKm) || distKm < 0) {  
+                        EV_WARN << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
 
+                    // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
+                    EV_DETAIL << "SAT->SAT:" 
+                              << sourceSat->getFullPath() << " -> " << destSat->getFullPath() 
+                              << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
                     
                     return delay;
                 }
@@ -410,39 +414,42 @@ namespace inet {
                 // Case 2.A: Vehicle -> Satellite
                 // ========================================
                 if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)) {
-
                     // Get vehicle Cartesian position
                     inet::Coord pos = sourceVeins->getCurrentPosition();
            
                     // Validate position
                     if(!isValidVeinsPosition(pos)) {
-                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid position" << std::endl;
+                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid position" << endl;
                         return INFINITY;
                     }
 
                     // Convert X,Y -> Lat,Lon using PositionConverter
                     double vehLon = posConverter->convertPosXToLongitude(pos.x);
                     double vehLat = posConverter->convertPosYToLatitude(pos.y);
-               
+
                     if (!destSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Link not reachable" << std::endl;
+                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Link not reachable" << endl;
                         return INFINITY;
                     }
+
+                    EV_DETAIL << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
+                             << vehLon << "°), SAT: (" << destSat->getLatitude() << "°, " 
+                             << destSat->getLongitude() << "°, " << destSat->getAltitude() 
+                             << "km), Elev: " << destSat->getElevation(vehLat, vehLon, 0.0) << "°" << endl;
 
                     // Calculate distance Satellite <-> Vehicle (in km)
                     double distKm = destSat->getDistance(vehLat, vehLon, 0.0);
 
-                    // Validate distance: LEO satellites typically have a max range of ~2000 km from vehicles
-                    if(std::isnan(distKm) || distKm < 0 || distKm > 2000.0) { 
-                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km (max 2000km for LEO)" << std::endl;
+                    if(std::isnan(distKm) || distKm < 0) { 
+                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
 
                     // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
-
-                    EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s @ t=" << simTime() << std::endl;
+                    EV_DETAIL << "VEC->SAT:" 
+                            << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
+                            << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
                     
                     return delay;
                 }
@@ -452,6 +459,7 @@ namespace inet {
                 // This method is used for wireless links only between satellite and ground nodes (GS or Veins vehicles)
                 // ========================================
                 else if (GroundStationMobility *destGS = dynamic_cast<GroundStationMobility*>(rxMob)) {
+                    EV_DETAIL << "VEC -> GS: " << sourceVeins->getFullPath() << " -> " << destGS->getFullPath() << endl;
                     return INFINITY; // Disable Vehicle->GroundStation links in SatelliteNetworkConfigurator
                 }
                 // ========================================
@@ -460,6 +468,7 @@ namespace inet {
                 // This method is used for wireless links only between satellite and ground nodes (GS or Veins vehicles)
                 // ========================================
                 else if (veins::VeinsInetMobility *destVeins = dynamic_cast<veins::VeinsInetMobility*>(rxMob)) {
+                    EV_DETAIL << "VEC -> VEC: " << sourceVeins->getFullPath() << " -> " << destVeins->getFullPath() << endl;
                     return INFINITY; // Disable V2V links in SatelliteNetworkConfigurator
                 }
             }
@@ -478,15 +487,14 @@ namespace inet {
                     // but is not designed for orbital calculations.
                     double distKm = destSat->getDistance(sourceGS->getLUTPositionY(), sourceGS->getLUTPositionX(), 0.0); 
 
-                    // Validate distance: LEO satellites typically have a max range of ~2500 km from GS
-                    if(std::isnan(distKm) || distKm < 0 || distKm > 2500.0) {
-                        EV_WARN << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance "<< distKm << " km (max 2500km for LEO)" << std::endl;
+                    if(std::isnan(distKm) || distKm < 0) {
+                        EV_WARN << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance "<< distKm << " km" << endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
                     EV_DETAIL << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
 
                     return delay;
                 }
@@ -499,62 +507,34 @@ namespace inet {
                     double distKm = sourceGS->getDistance(destGS->getLUTPositionY(), destGS->getLUTPositionX(), 0.0);
 
                     if(std::isnan(distKm) || distKm < 0) {
-                        EV_WARN << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << std::endl;
+                        EV_WARN << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
 
                     delay = (distKm * 1000.0) / 299792458.0;
                     EV_DETAIL << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << std::endl;
+                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
 
                     return delay;
                 }
             }
             // Default for non-satellite or unidentified links (value is set to INFINITY)
-            EV_WARN << "Unhandled mobility case: TX=" << transmitterModule->getFullPath() 
-                    << " (" << (txMob ? txMob->getClassName() : "NULL") << "), RX=" 
-                    << receiverModule->getFullPath() << " (" << (rxMob ? rxMob->getClassName() : "NULL") 
-                    << ")" << std::endl;
+            EV_WARN << "Unhandled mobility case: "
+                << "TX=" << transmitterModule->getFullPath() << " (" << (txMob ? txMob->getClassName() : "NULL") << "), " 
+                << "RX=" << receiverModule->getFullPath() << " (" << (rxMob ? rxMob->getClassName() : "NULL") << ")" << endl;
             return INFINITY;
         }
         else {
             // For metrics other than propagationDelay (e.g., dataRate, errorRate)
-            EV_WARN << "Metric '" << metric << "' not implemented for wireless links, using minLinkWeight" << std::endl;
+            EV_WARN << "Metric '" << metric << "' not implemented for wireless links, using minLinkWeight" << endl;
             return minLinkWeight; // or use return SatelliteNetworkConfigurator::computeWirelessLinkWeight(link, metric, parameters);
         }
     }
 
-   
     double SatelliteNetworkConfiguratorScs::computeWiredLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
             return parseCostAttribute(costAttribute);
-        
-        // ========================================
-        // CHECK INTERFACE STATE: If either interface is DOWN or has no carrier, return INFINITY
-        // isUp() = administrative state, hasCarrier() = physical connectivity
-        // This ensures that disabled interfaces are excluded from routing
-        // ========================================
-        if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
-            auto *srcIf = link->sourceInterfaceInfo->networkInterface;
-            if (!srcIf->isUp() || !srcIf->hasCarrier()) {
-                EV_DETAIL << "Wired link excluded: source interface " 
-                          << srcIf->getInterfaceName() 
-                          << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
-                          << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
-                return INFINITY;
-            }
-        }
-        if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
-            auto *dstIf = link->destinationInterfaceInfo->networkInterface;
-            if (!dstIf->isUp() || !dstIf->hasCarrier()) {
-                EV_DETAIL << "Wired link excluded: destination interface " 
-                          << dstIf->getInterfaceName() 
-                          << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
-                          << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
-                return INFINITY;
-            }
-        }
         
         Topology::Link *linkOut = static_cast<Topology::Link *>(static_cast<Topology::Link *>(link));
         if (!strcmp(metric, "hopCount"))
@@ -587,9 +567,16 @@ namespace inet {
                 return minLinkWeight;
         }
         else if (!strcmp(metric, "propagationDelay")) {
+                EV_DETAIL << "Computing wired link weight (propagationDelay) for link from" 
+                  << (link->sourceInterfaceInfo && link->sourceInterfaceInfo->node && link->sourceInterfaceInfo->node->module ? link->sourceInterfaceInfo->node->module->getFullName() : "NULL") 
+                  << " to " 
+                  << (link->destinationInterfaceInfo && link->destinationInterfaceInfo->node && link->destinationInterfaceInfo->node->module ? link->destinationInterfaceInfo->node->module->getFullName() : "NULL") 
+                  << endl;
                 return minLinkWeight;
         }
         else
             throw cRuntimeError("Unknown metric");
     }
+
+
 } // namespace inet

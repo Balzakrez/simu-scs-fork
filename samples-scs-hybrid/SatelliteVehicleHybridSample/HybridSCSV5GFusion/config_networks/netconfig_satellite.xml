@@ -1,14 +1,14 @@
 <!-- netconfig_satellite.xml -->
 <config>
-    <!-- 1. Configura le interfacce dei VEICOLI su wlan0 (Service Link) -->
+    <!-- 1. Configure the VEHICLE interfaces on wlan0 (Service Link) -->
     <interface hosts='node[*]' names='wlan0' address='10.1.0.x' netmask='255.255.255.0'/>
     
-    <!-- 2. Configura l'interfaccia del SATELLITE verso i veicoli (cnl1) -->
+    <!-- 2. Configure the SATELLITE interface towards vehicles (cnl1) -->
     <interface hosts='satellite[*]' names='cnl1' address='10.1.0.x' netmask='255.255.255.0'/>
     
-    <!-- 3. Configura il resto (Backhaul/Feeder link verso MCC) su un'altra subnet -->
+    <!-- 3. Configure the rest (Backhaul/Feeder link towards MCC) on another subnet -->
     <interface hosts='**' address='10.2.x.x' netmask='255.255.x.x'/>
 
-    <!-- 4. Metrica Fondamentale: Senza questa, il C++ moddato non viene chiamato per il ritardo -->
+    <!-- 4. Fundamental Metric: Without this, the modified C++ is not called for delay -->
     <autoroute metric='propagationDelay'/>
 </config>

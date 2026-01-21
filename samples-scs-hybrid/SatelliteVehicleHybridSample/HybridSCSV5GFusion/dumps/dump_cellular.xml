@@ -45,8 +45,19 @@
    <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.10" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.10" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.16" netmask="255.255.255.252" gateway="10.0.0.10" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.16" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="*" netmask="*" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.10" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.18" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.21" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet.server" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.18" interface="ppp0" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp2" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp2" metric="0"/>
    <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.10" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp2" metric="0"/>

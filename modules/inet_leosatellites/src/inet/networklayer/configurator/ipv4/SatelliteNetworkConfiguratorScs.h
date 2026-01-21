@@ -33,7 +33,41 @@ namespace inet {
              * @param pos Position coordinates to validate
              * @return true if position is valid, false otherwise
              */
-            bool isValidVeinsPosition(const inet::Coord& pos);
+             bool isValidVeinsPosition(const inet::Coord& pos);
+
+            /**
+             * Checks if a module is a Veins node.
+             * @param mod Module to check
+             * @return true if module is a Veins node, false otherwise
+             */
+            bool isVeinsNode(cModule* mod);
+            /**
+             * Determines if a route is protected (should not be deleted).
+             * Protected routes include cellular and LTE interfaces.
+             * @param route Route to check
+             * @return true if route is protected, false otherwise
+             */
+            bool isProtectedRoute(Ipv4Route* route);
+
+            /**
+             * Validates IP configuration for Veins nodes.
+             * Ensures Veins nodes have valid IP addresses after configuration.
+             */
+            void validateVeinsNodeIp();
+            
+
+            /**
+             * Determines if a link should be excluded from routing.
+             * Excludes links with interfaces that are down or have no carrier.
+             * @param link Network link to evaluate
+             * @return true if link should be excluded, false otherwise
+             */
+            bool isToExcludeLink(Link *link);
+
+            /**
+             * Prints the current routing table for debugging.
+             */
+            void printRoutingTable();
 
         protected:
 
