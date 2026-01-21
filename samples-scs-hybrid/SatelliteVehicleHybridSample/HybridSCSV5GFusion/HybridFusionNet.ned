@@ -25,11 +25,10 @@ import inet.physicallayer.wireless.common.contract.packetlevel.IRadioMedium;
 import inet_leosatellites.networklayer.configurator.ipv4.SatelliteNetworkConfiguratorScs;
 
 // simu5G
-// import simu5g.nodes.Ue;
-// import simu5g.nodes.Upf;
-// import simu5g.nodes.NR.gNodeB;
-import simu5g.nodes.eNodeB;
-import simu5g.nodes.PgwStandard;
+import simu5g.nodes.Upf;
+import simu5g.nodes.NR.gNodeB;
+// import simu5g.nodes.eNodeB;
+// import simu5g.nodes.PgwStandard;
 import simu5g.common.binder.Binder;
 import simu5g.world.radio.LteChannelControl;
 import simu5g.common.carrierAggregation.CarrierAggregation;
@@ -38,8 +37,6 @@ import simu5g.common.carrierAggregation.CarrierAggregation;
 import scs_utils.converter.PositionConverter;
 
 //veins + scs_optional
-// import scs_optional.node.UECar;
-// import scs_optional.veins_inet_scs.InetCar;
 import scs_optional.veins_inet_scs.VeinsInetManager;
 import org.car2x.veins.visualizer.roads.RoadsCanvasVisualizer;
 import scs_optional.veins_scs.visualizer.RoadsINETCanvasVisualizer;
@@ -142,22 +139,22 @@ network HybridFusionNet
         } 
 
         // 4G LTE Architecture
-        pgw: PgwStandard {
-            @display("p=700,800;is=s");
-        }
-
-        eNB: eNodeB {
-                @display("p=2000,1000;is=s");
-        }
-
-        // 5G Architecture
-        // upf: Upf { // 5G User Plane Function
-        //     @display("p=800,800");
+        // pgw: PgwStandard {
+        //     @display("p=700,800;is=s");
         // }
-        
-        // gNB: gNodeB { // 5G Base Station
+
+        // eNB: eNodeB {
         //         @display("p=2000,1000;is=s");
         // }
+
+        // 5G Architecture
+        upf: Upf { // 5G User Plane Function
+            @display("p=800,800");
+        }
+        
+        gNB: gNodeB { // 5G Base Station
+                @display("p=2000,1000;is=s");
+        }
 
         routerFL: Router {
             @display("p=1100,1100;i=device/smallrouter");
@@ -169,14 +166,12 @@ network HybridFusionNet
         server.pppg++ <--> Eth10G <--> internetRouter.pppg++;
 
         // Terrestrial (5G/TN): gNodeB -> upf -> Internet
-        // 5G Core
-        // internetRouter.pppg++ <--> Eth10G <--> upf.filterGate;
-        // upf.pppg++ <--> Eth10G <--> gNB.ppp; 
+        internetRouter.pppg++ <--> Eth10G <--> upf.filterGate;
+        upf.pppg++ <--> Eth10G <--> gNB.ppp; 
 
         // Terrestrial (4G LTE/TN): gNodeB -> pgw -> Internet
-        // 4G LTE Core
-        internetRouter.pppg++ <--> Eth10G <--> pgw.filterGate;
-        pgw.pppg++ <--> Eth10G <--> eNB.ppp;
+        // internetRouter.pppg++ <--> Eth10G <--> pgw.filterGate;
+        // pgw.pppg++ <--> Eth10G <--> eNB.ppp;
 
         // Satellite (NTN): MCC (Gateway) -> Router Feeder Link -> Internet
         internetRouter.pppg++ <--> Eth10G <--> routerFL.pppg++;

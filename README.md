@@ -208,9 +208,10 @@ simu-scs-fork/
 │           ├── HybridCarV2X.ned       # Vehicle node definition
 │           ├── HybridFusionNet.ned    # Network topology
 │           ├── config_general.ini     # General parameters
-│           ├── config_5G.ini          # 5G cellular configuration
+│           ├── config_cellular5G.ini  # 5G cellular configuration
+│           ├── config_vcellular5G.ini # Vehicle/Node Configuration for 5G Communication
 │           ├── config_satellite.ini   # Satellite configuration
-│           ├── config_v2s.ini         # V2S configuration
+│           ├── config_v2satellite.ini # Vehicle/Node Configuration for V2S Communication
 │           ├── config_stats.ini       # Statistics configuration
 │           ├── plConfig.xml           # Path loss model
 │           ├── starlink2023.txt       # TLE orbital data

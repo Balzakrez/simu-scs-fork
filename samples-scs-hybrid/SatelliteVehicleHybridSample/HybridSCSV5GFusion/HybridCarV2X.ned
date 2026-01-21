@@ -1,9 +1,8 @@
 // File: HybridCarV2X.ned
 package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
-//package scs_optional.veins_inet_scs;
 
-import simu5g.stack.LteNicUe;
-// import simu5g.stack.NRNicUe;
+// import simu5g.stack.LteNicUe;
+import simu5g.stack.NRNicUe;
 import inet.node.inet.StandardHost;
 import SatelliteVehicleHybridSample.HybridSCSV5GFusion.src.HybridInterfaceManager;
 
@@ -35,9 +34,9 @@ module HybridCarV2X extends StandardHost
         string nodeType = default("UE"); // Node type for Simu5G 
 
         // 5G NR Parameters (required by Simy5G Binder)
-        // int nrMasterId = default(0); // gNodeB ID to connect to (not real parameter)
-        // int nrMacCellId = default(0); // Cell ID for 5G connection (not real parameter)
-        // int nrMacNodeId @mutable = default(0); // 5G MAC node ID (not real parameter)
+        int nrMasterId = default(0); // gNodeB ID to connect to (not real parameter)
+        int nrMacCellId = default(0); // Cell ID for 5G connection (not real parameter)
+        int nrMacNodeId @mutable = default(0); // 5G MAC node ID (not real parameter)
 
         // Legacy 4G/LTE parameters (for backward compatibility required by Simu5G Binder)
         int macNodeId @mutable = default(0); // MAC node ID (not real parameter)
@@ -71,10 +70,10 @@ module HybridCarV2X extends StandardHost
 
     gates:
         // Gate for 5G NR radio input (only used if hasCellular=true)
-        // input nrRadioIn @directIn; 
+        input nrRadioIn @directIn; 
 
         // Legacy 4G/LTE gate (optional, for backward compatibility)
-        input lteRadioIn @directIn; // Gate for LTE radio input (only used if hasCellular=true)
+        // input lteRadioIn @directIn; // Gate for LTE radio input (only used if hasCellular=true)
      
     submodules:
         // ========================================
@@ -87,13 +86,16 @@ module HybridCarV2X extends StandardHost
         // ========================================
         // Cellular NIC (conditional, only if hasCellular=true)
         // ========================================
-        // cellularNic: NRNicUe if hasCellular {
-        //     nodeType = parent.nodeType;
-        // }
 
-         cellularNic: LteNicUe if hasCellular {
+        // 5G NR Cellular NIC
+        cellularNic: NRNicUe if hasCellular {
             nodeType = parent.nodeType;
         }
+
+        // Legacy 4G/LTE Cellular NIC (for backward compatibility)
+        // cellularNic: LteNicUe if hasCellular {
+        //     nodeType = parent.nodeType;
+        // }
       
     connections allowunconnected:
         // ========================================
@@ -103,8 +105,8 @@ module HybridCarV2X extends StandardHost
         cellularNic.upperLayerIn <-- nl.out++ if hasCellular;
 
         // 5G NR Radio Connections 
-        // nrRadioIn --> cellularNic.nrRadioIn if hasCellular;
+        nrRadioIn --> cellularNic.nrRadioIn if hasCellular;
 
         // Legacy 4G/LTE Connections (optional, for backward compatibility)
-        lteRadioIn --> cellularNic.radioIn if hasCellular;
+        // lteRadioIn --> cellularNic.radioIn if hasCellular;
 }
