@@ -1,6 +1,6 @@
 //
 // CoverageBasedStrategy.cc
-//
+// Note: This strategy is a proof-of-concept for demonstration purposes.
 // Switching Logic
 // Goal: Prefer Satellite when available (or vice versa depending on requirements)
 // In this example: Prefer Satellite to offload terrestrial network.

@@ -20,7 +20,9 @@
 #include "strategies/ISwitchingStrategy.h"
 #include "strategies/TimeBasedStrategy.h"
 #include "strategies/CoverageBasedStrategy.h"
-#include "strategies/EnergyBasedStrategy.h"
+#include "strategies/EnergyAwareStrategy.h"
+
+#include "strategies/QoSBasedStrategy.h"
 
 using namespace omnetpp;
 using namespace inet;
@@ -34,9 +36,9 @@ using namespace inet;
  * state changes and recalculate routes accordingly.
  * 
  */
-class HybridInterfaceManager : public cSimpleModule
-{
-  protected:
+class HybridInterfaceManager : public cSimpleModule {
+
+private:
     // ========================================
     // Configuration Parameters
     // ========================================
@@ -63,12 +65,14 @@ class HybridInterfaceManager : public cSimpleModule
     // ========================================
 
     // Switching signals
-    simsignal_t interfaceSignalId;       
-    simsignal_t switchSignalId;            
+    simsignal_t lastInterfaceActiveSignalId;       
+    simsignal_t switchCountSignalId;            
 
     // Interface-specific metrics
     simsignal_t satUsageTimeSignalId;           
-    simsignal_t cellUsageTimeSignalId;         
+    simsignal_t cellUsageTimeSignalId;    
+
+    cMessage *switchGuardTimerMsg;   
 
     // Counters
     int totalSwitchesCount = 0; // Total number of switches performed
@@ -77,7 +81,7 @@ class HybridInterfaceManager : public cSimpleModule
     simtime_t cellTotalTime;    // Total time using cellular interface
    
   // **************************************************************************************
-  protected:
+protected:
     /**
      * Returns the number of initialization stages required.
      * Uses INET's NUM_INIT_STAGES for proper multi-stage initialization.
@@ -105,8 +109,13 @@ class HybridInterfaceManager : public cSimpleModule
      */
     virtual ISwitchingStrategy* createStrategy();
 
+    /**
+     * Finalization handler to record statistics.
+     */
+    virtual void finish() override;
+
   // **************************************************************************************
-  public:
+public:
     /**
      * Destructor.
      * Cancels and deletes the switch timer to prevent memory leaks.
@@ -114,46 +123,52 @@ class HybridInterfaceManager : public cSimpleModule
     virtual ~HybridInterfaceManager();
 
     /**
-     * Get interface pointers (for strategies that need them).
+     * Get Satellite interface pointers (for strategies that need them).
+     * @return Pointer to the satellite NetworkInterface
      */
     NetworkInterface* getSatelliteInterface() const { return satInterface; }
+    
+    /**
+     * Get Cellular interface pointers (for strategies that need them).
+     * @return Pointer to the cellular NetworkInterface
+     */
     NetworkInterface* getCellularInterface() const { return cellInterface; }
+
+    /**
+     * Get the currently active interface.
+     * @return Pointer to the currently active NetworkInterface
+     */
     NetworkInterface* getCurrentActiveInterface() const { return isSatState ? satInterface : cellInterface; }
 
     /**
-     * Perform interface switch (called by strategies).
+     * Perform hard interface switch (called by strategies).
+     * Packets may be lost during the switch due to hard switching logic.
      * @param toSatellite true to switch to satellite, false for cellular
      */
     void performSwitch(bool toSatellite);
     
     /**
+     * Complete the switch process by updating interface states and recording statistics.
+     */
+    void completeSwitch();
+
+    /**
      * Return current satellite state. Returns true if satellite, false if cellular.
+     * @return true if satellite interface is active, false if cellular interface is active
      */
     bool getSatelliteState() const { return isSatState; }
 
     
     // **************************************************************************************
-    protected:
+    private:
 
-    /**
-     * Apply current state to interfaces.
-     * Manages satellite carrier state and cellular routes based on isSatState.
-     * Note: Hard switching logic.
-     */
-    virtual void updateInterfaceStates();
-
-    /**
-     * Manage cellular default route.
-     * Adds the default route through the cellular interface if not existing.
-     */
-    virtual void ensureCellularDefaultRoute();
-
-    /**
-     * Manage satellite default route.
-     * Adds the default route through the satellite interface if not existing.
-     */
-    // virtual void ensureSatelliteDefaultRoute();
-   
+      /**
+       * Apply current state to interfaces.
+       * Manages satellite carrier state and cellular routes based on isSatState.
+       * Note: Hard switching logic, can loss packets during switch.
+       */
+      virtual void updateInterfaceStates();
+      
 };
 
 #endif

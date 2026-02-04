@@ -1,4 +1,7 @@
+// 
+// Copyright (C) 2026 Giuseppe Balzano
 //
+// Note: This strategy is a proof-of-concept for demonstration purposes.
 // CoverageBasedStrategy.h - Declaration of coverage-based switching strategy
 //
 

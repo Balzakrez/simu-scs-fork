@@ -1,14 +1,37 @@
-<!-- netconfig_satellite.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
 <config>
-    <!-- 1. Configure the VEHICLE interfaces on wlan0 (Service Link) -->
-    <interface hosts='node[*]' names='wlan0' address='10.1.0.x' netmask='255.255.255.0'/>
-    
-    <!-- 2. Configure the SATELLITE interface towards vehicles (cnl1) -->
-    <interface hosts='satellite[*]' names='cnl1' address='10.1.0.x' netmask='255.255.255.0'/>
-    
-    <!-- 3. Configure the rest (Backhaul/Feeder link towards MCC) on another subnet -->
-    <interface hosts='**' address='10.2.x.x' netmask='255.255.x.x'/>
+    <!-- ========================================================================
+        SATELLITE SERVICE LINK (10.3.x.x/24)
+        Vehicle wlan0 <-> Satellite cnl1
+        ======================================================================== -->
+    <!-- Check SatelliteNetworkConfiguratorScs for IP pool configuration (for node[*]) -->
+    <interface hosts='node[*]' names='wlan0' address='10.3.0.x' netmask='255.255.255.0'/>
+    <interface hosts='satellite[*]' names='cnl1' address='10.3.0.x' netmask='255.255.255.0'/>
 
-    <!-- 4. Fundamental Metric: Without this, the modified C++ is not called for delay -->
+    <!-- ========================================================================
+        CELLULAR NETWORK (10.4.x.x/24)
+        Vehicle cellular interface
+        ======================================================================== -->
+    <!-- Check SatelliteNetworkConfiguratorScs for IP pool configuration (for node[*]) -->
+    <interface hosts='node[*]' names='cellular' address='10.4.0.x' netmask='255.255.255.0'/>
+    <!-- <interface hosts='eNB' names='cellular' address='10.4.0.1' netmask='255.255.255.0'/> -->
+
+    <!-- ========================================================================
+        SATELLITE FEEDER LINK (10.2.x.x/16)
+        Satellite cnl0 <-> MCC wlan0
+        ======================================================================== -->
+    <interface hosts='satellite[*]' names='cnl0' address='10.2.0.x' netmask='255.255.0.0'/> 
+    <interface hosts='MCC[*]' names='wlan0' address='10.2.0.x' netmask='255.255.0.0'/>
+
+    <!-- ========================================================================
+        FLEXIBLE ADDRESSING FOR ALL OTHER INTERFACES (10.x.x.x)
+        This includes:
+        - All PPP connections (server, routers, upf, gNB, MCC)
+        - Any other interfaces not explicitly configured above
+        ======================================================================== -->
+    <interface hosts='**' address='10.x.x.x' netmask='255.x.x.x'/>
+    
+    
+    <!-- Autoroute handles all other routing automatically -->
     <autoroute metric='propagationDelay'/>
 </config>

@@ -1,4 +1,6 @@
 //
+// Copyright (C) 2026 Giuseppe Balzano
+// 
 // ISwitchingStrategy.h - Base interface for switching strategies
 //
 
@@ -51,6 +53,12 @@ class ISwitchingStrategy
      * Get strategy name for logging.
      */
     virtual const char* getStrategyName() const = 0;
+
+
+    /**
+     * Finalization handler to record statistics.
+     */
+    virtual void finish() {}
 
 
 

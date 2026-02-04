@@ -20,8 +20,7 @@ LIBS="-l ../../../external/inet/src/INET \
 -l ../../../external/simu5G/src/simu5g"
 
 # SUMO configuration
-SUMO_CONFIG="../sumodir/config.sumocfg"
-SUMO_PORT=9999
+SUMO_CONFIG="../sumodir/minato/config.sumocfg"
 
 # Function to display help
 show_help() {
@@ -36,6 +35,7 @@ show_help() {
     echo ""
     echo "- Optional parameters:"
     echo "      --sumo-gui     Use SUMO with GUI (default: no GUI)"
+    echo "      --sumo-port <port>  Set SUMO remote port (default: 9999)"
     echo "      --debug        Enable debug mode on errors"
     echo "      -t <time>      Set simulation time limit (e.g., 1000s, 10min)"
     echo "      -h, --help     Show this help message"
@@ -71,6 +71,8 @@ fi
 CONFIG=""
 EXTRA_OPTS="-m"
 SUMO_CMD="sumo"
+SUMO_PORT=9999  # Default, can be changed with --sumo-port
+
 
 # Parse arguments
 while [ $# -gt 0 ]; do
@@ -91,6 +93,14 @@ while [ $# -gt 0 ]; do
         --sumo-gui)
             SUMO_CMD="sumo-gui"
             shift
+            ;;
+        --sumo-port)
+            if [ -z "$2" ]; then
+                echo "ERROR: --sumo-port requires a port number"
+                exit 1
+            fi
+            SUMO_PORT=$2
+            shift 2
             ;;
         --debug)
             EXTRA_OPTS="$EXTRA_OPTS --debug-on-errors=true"
@@ -130,15 +140,22 @@ fi
 
 # Check if port is already in use
 if lsof -Pi :$SUMO_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo "WARNING: Port $SUMO_PORT is already in use!"
-    read -p "Kill existing process and continue? (y/n): " choice
-    if [ "$choice" == "y" ]; then
-        PID=$(lsof -t -i:$SUMO_PORT)
-        kill $PID 2>/dev/null
-        sleep 1
+    if [ -t 0 ]; then
+        # Interactive mode
+        echo "WARNING: Port $SUMO_PORT is already in use!"
+        read -p "Kill existing process and continue? (y/n): " choice
+        if [ "$choice" == "y" ]; then
+            kill $(lsof -t -i:$SUMO_PORT) 2>/dev/null
+            sleep 1
+        else
+            echo "Aborted."
+            exit 1
+        fi
     else
-        echo "Aborted."
-        exit 1
+        # Interactive mode not detected, auto-kill
+        echo "WARNING: Port $SUMO_PORT in use, killing process..."
+        kill $(lsof -t -i:$SUMO_PORT) 2>/dev/null
+        sleep 1
     fi
 fi
 
@@ -172,13 +189,16 @@ echo "Configuration: $CONFIG"
 echo "User interface: Cmdenv (no GUI)"
 echo ""
 
+# Export SUMO port for OMNeT++ modules
+export SUMO_PORT=$SUMO_PORT
+
 # Run OMNeT++ simulation
 $EXEC -u Cmdenv $EXTRA_OPTS -c $CONFIG \
     -n "$NED_PATH" \
     -x "$EXCLUDE" \
     --image-path="$IMAGE_PATH" \
+    --*.manager.port=$SUMO_PORT \
     $LIBS \
     omnetpp.ini
-
 echo ""
 echo "Simulation completed!"

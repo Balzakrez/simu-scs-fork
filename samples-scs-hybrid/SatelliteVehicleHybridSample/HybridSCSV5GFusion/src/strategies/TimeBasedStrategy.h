@@ -1,6 +1,8 @@
+// 
+// Copyright (C) 2026 Giuseppe Balzano
 //
+// Note: This strategy is a proof-of-concept for demonstration purposes.
 // TimeBasedStrategy.h - Time-based switching strategy
-//
 // Switches interfaces at fixed time intervals (original behavior).
 //
 
