@@ -1,6 +1,6 @@
 //
-// Copyright (C) 2004 OpenSim Ltd.
 // Copyright (C) 2023 TOYOTA MOTOR CORPORATION. ALL RIGHTS RESERVED.
+// Copyright (C) 2026 Giuseppe Balzano
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 // 
@@ -8,16 +8,26 @@
 // The original code can be found at `inet/networklayer/configurator/ipv4/L3NetworkConfiguratorBase.cc` of INET-4.4.1.
 
 #include "SatelliteNetworkConfiguratorScs.h"
+#include "inet/networklayer/ipv4/Ipv4RoutingTable.h"
 #include "veins_inet_scs/VeinsInetMobility.h" // from scs_optional
-#include "scs_utils/converter/PositionConverter.h"
+#include "scs_utils/converter/PositionConverter.h" // from scs_utils
+#include "leosatellites/mobility/NoradA.h"
 #include "leosatellites/mobility/SatelliteMobility.h"
 #include "leosatellites/mobility/GroundStationMobility.h"
-#include "inet/networklayer/ipv4/Ipv4RoutingTable.h"
+#include "leosatellites/networklayer/configurator/ipv4/MatcherOS3.h"
+#include "scs/common/beamInfo/BeamInfo.h" // from scs
+#include "common/binder/Binder.h" // from Simu5G
+#include "stack/mac/layer/LteMacBase.h" // from Simu5G
+
 
 Define_Module(inet::SatelliteNetworkConfiguratorScs);
 
 namespace inet {
 
+    SatelliteNetworkConfiguratorScs::~SatelliteNetworkConfiguratorScs() {
+        delete this->wlanPoolPtr;
+        delete this->cellularPoolPtr;
+    }
 
     static double parseCostAttribute(const char *costAttribute) {
         if (!strncmp(costAttribute, "inf", 3))
@@ -35,17 +45,318 @@ namespace inet {
         SatelliteNetworkConfigurator::initialize(stage);
         
         if (stage == INITSTAGE_LOCAL) {
+            // Setup wlanPool for wlan0: 10.3.0.0/24 (satellite)
+            this->wlanPoolPtr = new IpPool(Ipv4Address(10,3,0,0), Ipv4Address(255,255,255,0));
+
+            // Setup cellularPool for cellular: 10.4.0.0/24 (5G)
+            this->cellularPoolPtr = new IpPool(Ipv4Address(10,4,0,0), Ipv4Address(255,255,255,0));
+
             // Cache PositionConverter to avoid repeated lookups
-            posConverter = dynamic_cast<Satellite::PositionConverter*>(
-                getSimulation()->getSystemModule()->getSubmodule("Pos")
-            );
-            
-            if (!posConverter) {
-                throw cRuntimeError("PositionConverter 'Pos' not found - Vehicle-to-Satellite links will not work");
-            } else {
-                EV_DETAIL << "PositionConverter successfully initialized" << endl;
+            this->posConverterPtr = check_and_cast<Satellite::PositionConverter*>(getSimulation()->getSystemModule()->getSubmodule("Pos"));
+        }
+    }
+
+    Ipv4Address SatelliteNetworkConfiguratorScs::allocateIpFromPool(IpPool* poolPtr, int moduleId, std::map<int, uint32_t>& nodeToIpMap){
+        // Check if the node already has an assigned IP
+        auto it = nodeToIpMap.find(moduleId);
+        if (it != nodeToIpMap.end()) {
+            return Ipv4Address(it->second);
+        }
+        uint32_t newIp;
+        // 1. Try to reuse freed addresses first
+        if (!poolPtr->freeAddressesQueue.empty()){
+            newIp = poolPtr->freeAddressesQueue.front();
+            poolPtr->freeAddressesQueue.pop();
+        }
+        else { 
+            // 2. Otherwise allocate a new IP
+            if (poolPtr->nextAddress > poolPtr->maxHosts){
+                throw cRuntimeError("IP pool exhausted! No more addresses available in subnet");
+            }
+            uint32_t hostPort = poolPtr->nextAddress++; // Increment for next allocation
+            newIp = poolPtr->baseAddress | hostPort; // Combine network and host parts
+        }
+        // 3. Mark the new IP as used and map to node
+        poolPtr->usedAddressesSet.insert(newIp);
+        nodeToIpMap[moduleId] = newIp;
+        return Ipv4Address(newIp);
+    }
+
+    void SatelliteNetworkConfiguratorScs::releaseIpToPool(IpPool* poolPtr, int moduleId, std::map<int, uint32_t>& nodeToIpMap) {
+        // Check if the node has an assigned IP
+        auto it = nodeToIpMap.find(moduleId);
+        if (it == nodeToIpMap.end()) {
+            return; 
+        }
+        uint32_t ipToFree = it->second;
+        // 1. Remove from used set
+        poolPtr->usedAddressesSet.erase(ipToFree);
+        // 2. Add to free queue for reuse
+        poolPtr->freeAddressesQueue.push(ipToFree);
+        // 3. Remove from mapping
+        nodeToIpMap.erase(it);
+        EV_DETAIL << "Released IP: " << Ipv4Address(ipToFree) << " from module " << moduleId << std::endl;
+    }
+
+    void SatelliteNetworkConfiguratorScs::cleanupVeinsNode() {       
+        // Set for collecting unique Veins module IDs 
+        std::set<int> veinsModuleIdSet;
+        // 1. Collect all registered Veins module IDs from cellular map
+        for(auto& entry : this->nodeToCellularIpMap) {
+            veinsModuleIdSet.insert(entry.first);
+        }
+        // 2. Collect all registered Veins module IDs from wlan map
+        for(auto& entry : this->nodeToWlanIpMap) {
+            veinsModuleIdSet.insert(entry.first);
+        }
+        // Check each veins node for validity
+        for (auto it = veinsModuleIdSet.begin(); it != veinsModuleIdSet.end();) {
+            int moduleId = *it;
+            cModule* currNodeModule = getSimulation()->getModule(moduleId);
+            // If module is deleted or not a valid Veins node anymore
+            if (currNodeModule == nullptr || !isVeinsNode(currNodeModule)) {
+                unRegisterFromBinder(moduleId); // Module already destroyed, not needed
+                releaseIpToPool(this->wlanPoolPtr, moduleId, this->nodeToWlanIpMap);
+                releaseIpToPool(this->cellularPoolPtr, moduleId, this->nodeToCellularIpMap);
+                it = veinsModuleIdSet.erase(it);
+            }
+            else {
+                ++it;
             }
         }
+    }
+
+    void SatelliteNetworkConfiguratorScs::registerToBinder(const Ipv4Address newAddr, cModule* host) {
+        try {
+            Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
+            MacNodeId currMacNodeId = 0;
+            // Method 1: Try to find MacNodeId using cellularNic module
+            cModule* cellularNic = host->getSubmodule("cellularNic");
+            if (cellularNic != nullptr) {
+                cModule* macModule = cellularNic->getSubmodule("mac");
+                if (macModule != nullptr) {
+                    currMacNodeId = binder->getMacNodeIdFromOmnetId(macModule->getId());
+                    if (currMacNodeId > 0) {
+                        EV_DETAIL << "[registerToBinder] Method 1: Found MacNodeId " << currMacNodeId 
+                                << " using MAC module ID" << std::endl;
+                    }
+                }
+            }
+            // Method 2: Try to find MacNodeId from module parameter
+            if (currMacNodeId == 0 && host->hasPar("macNodeId")) {
+                currMacNodeId = host->par("macNodeId").intValue();
+                if (currMacNodeId > 0) {
+                    EV_DETAIL << "[registerToBinder] Method 2: Found MacNodeId " << currMacNodeId 
+                            << " from parameter" << std::endl;
+                }
+            }
+            
+            // Method 3: Try to find MacNodeId using IP (might already be mapped)
+            if (currMacNodeId == 0) {
+                currMacNodeId = binder->getMacNodeId(newAddr);
+                if (currMacNodeId > 0) {
+                    EV_DETAIL << "[registerToBinder] Method 3: Found MacNodeId " << currMacNodeId 
+                            << " from IP mapping" << std::endl;
+                }
+            }
+            
+            // Method 4: Manual registration (last fallback)
+            if (currMacNodeId == 0) {
+                int masterId = host->hasPar("masterId") ? host->par("masterId").intValue() : 1;
+                int cellId = host->hasPar("macCellId") ? host->par("macCellId").intValue() : 1;
+                
+                EV_DETAIL << "[registerToBinder] Method 4: No MacNodeId found, registering manually" << std::endl;
+                
+                currMacNodeId = binder->registerNode(host, UE, masterId, false);
+                binder->updateUeInfoCellId(currMacNodeId, cellId);
+                
+                EV_DETAIL << "[registerToBinder] Registered new MacNodeId " << currMacNodeId << std::endl;
+            }
+            
+            // Crea/aggiorna mapping IP → MacNodeId
+            if (currMacNodeId > 0) {
+                MacNodeId mappedId = binder->getMacNodeId(newAddr);
+                if (mappedId == 0) {
+                    binder->setMacNodeId(newAddr, currMacNodeId);
+                    EV_DETAIL << "[registerToBinder] SUCCESS: Mapped IP " << newAddr 
+                            << " to MacNodeId " << currMacNodeId << std::endl;
+                }
+                else if (mappedId != currMacNodeId) {
+                    EV_DETAIL << "[registerToBinder] WARNING: IP " << newAddr 
+                                << " already mapped to MacNodeId " << mappedId 
+                                << " (expected " << currMacNodeId << ")" << std::endl;
+                }
+            }
+
+            nodeIdToMacNodeIdMap[host->getId()] = currMacNodeId; // Cache mapping
+            
+        } catch (std::exception& e) {
+            throw cRuntimeError("Error during Binder registration for %s: %s", 
+                            host->getFullPath().c_str(), e.what());
+        }
+    }
+
+    void SatelliteNetworkConfiguratorScs::unRegisterFromBinder(int moduleId) {
+        auto itCell = nodeToCellularIpMap.find(moduleId);
+        if (itCell == nodeToCellularIpMap.end()) {
+            EV_DETAIL << "[unRegisterFromBinder] No cellular IP found for module " << moduleId << std::endl;
+            return;
+        }
+        
+        Ipv4Address currCellIp = Ipv4Address(itCell->second);
+        Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
+        MacNodeId currMacId = 0;
+        cModule* host = getSimulation()->getModule(moduleId);
+        
+        // Method 1: Try to find MacNodeId using cellularNic module
+        if (host) {
+            cModule* cellularNic = host->getSubmodule("cellularNic");
+            if (cellularNic != nullptr) {
+                cModule* macModule = cellularNic->getSubmodule("mac");
+                if (macModule != nullptr) {
+                    currMacId = binder->getMacNodeIdFromOmnetId(macModule->getId());
+                    if (currMacId > 0) {
+                        EV_DETAIL << "[unRegisterFromBinder] Method 1: Found MacNodeId " << currMacId << " using MAC module ID" << std::endl;
+                    }
+                }
+            }
+        }
+        
+        // Method 2: Try to find MacNodeId from module parameter
+        if (currMacId == 0 && host && host->hasPar("macNodeId")) {
+            currMacId = host->par("macNodeId").intValue();
+            if (currMacId > 0) {
+                EV_DETAIL << "[unRegisterFromBinder] Method 2: Found MacNodeId " << currMacId << " from parameter" << std::endl;
+            }
+        }
+        
+        // Method 3: Try to find MacNodeId using IP (might already be mapped)
+        if (currMacId == 0) {
+            currMacId = binder->getMacNodeId(currCellIp);
+            if (currMacId > 0) {
+                EV_DETAIL << "[unRegisterFromBinder] Method 3: Found MacNodeId " << currMacId << " from IP mapping" << std::endl;
+            }
+        }
+
+        // Method 4: Try to find MacNodeId from cached mapping
+        if(currMacId == 0){
+            auto itCache = nodeIdToMacNodeIdMap.find(moduleId);
+            if (itCache != nodeIdToMacNodeIdMap.end()) {
+                currMacId = itCache->second;
+                if (currMacId > 0) {
+                    EV_DETAIL << "[unRegisterFromBinder] Method 4: Found MacNodeId " << currMacId << " from cached mapping" << std::endl;
+                }
+            }
+        }
+        
+        // Unregister if found
+        if (currMacId > 0) {
+            binder->setMacNodeId(currCellIp, 0); // Clear mapping
+            binder->unregisterNode(currMacId); // Unregister node
+            nodeIdToMacNodeIdMap.erase(moduleId); // Remove from cache
+            EV_DETAIL << "[unRegisterFromBinder] SUCCESS: Unregistered MacNodeId " << currMacId << std::endl;
+        }
+        else {
+            EV_DETAIL << "[unRegisterFromBinder] FAILURE: No MacNodeId found for module " << moduleId << " (tried host, MAC, parameter, IP)" << std::endl;
+        }
+    }
+    
+    void SatelliteNetworkConfiguratorScs::checkAndConfigureVehicleInterfaces() {
+        
+        cleanupVeinsNode(); // Clean up exited vehicles first
+
+        // Configure interfaces for all Veins nodes
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            if (!isVeinsNode(node->getModule())) continue; // Skip non-Veins nodes
+            cModule* host = node->getModule();
+            Ipv4RoutingTable *rt = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+            if (!rt) { throw cRuntimeError("Node %s has no Ipv4RoutingTable", host->getFullPath().c_str()); }
+
+            for (auto& entry : node->interfaceInfos) {
+                InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
+                if (!info->networkInterface) { continue; } // Skip if no network interface
+                
+                Ipv4InterfaceData *ipv4Data = info->networkInterface->getProtocolDataForUpdate<Ipv4InterfaceData>();
+                if (!ipv4Data) { continue; } // Skip if no IPv4 data
+                
+                std::string ifName = info->networkInterface->getInterfaceName();
+                bool isCellular = (ifName == "cellular");
+                bool isWlan = (ifName == "wlan0");
+
+                if (!isCellular && !isWlan) { continue; } // Skip non-target interfaces
+
+                // 1. Assign IP if not already assigned
+                if (ipv4Data->getIPAddress().isUnspecified()) {
+                    IpPool *currPoolPtr = isWlan ? this->wlanPoolPtr : this->cellularPoolPtr;
+                    std::map<int, uint32_t> &nodeToInterfaceMapRef = isWlan ? this->nodeToWlanIpMap : this->nodeToCellularIpMap;
+                    
+                    Ipv4Address newAddr = allocateIpFromPool(currPoolPtr, host->getId(), nodeToInterfaceMapRef);
+                    ipv4Data->setIPAddress(newAddr);
+                    ipv4Data->setNetmask(Ipv4Address(255, 255, 255, 0));
+                    
+                    EV_DETAIL << "Assigned new IP " << newAddr << " to " << host->getFullName() << " (" << ifName << ")" << endl;
+                }
+                Ipv4Address currAddrIp = ipv4Data->getIPAddress();
+                Ipv4Address netmaskAddr = ipv4Data->getNetmask();
+                // 2. Register to Binder if Cellular interface
+                if (isCellular) {
+                    Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
+                    if(binder->getMacNodeId(currAddrIp) == 0){  // Call register only if not already registered
+                        registerToBinder(currAddrIp, host);
+                    }
+                }
+                // 3. Synchronize internal structures
+                info->address = currAddrIp.getInt();
+                info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
+                info->netmask = netmaskAddr.getInt();
+                info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
+
+                // 4. Update routing table
+                if(info->networkInterface->isUp() && info->networkInterface->hasCarrier()){
+                    // Add direct route if not exists
+                    Ipv4Address networkAddrIp = currAddrIp.doAnd(netmaskAddr);
+                    if (!rt->findBestMatchingRoute(networkAddrIp)) {
+                        Ipv4Route *directRoute = new Ipv4Route();
+                        directRoute->setDestination(networkAddrIp);
+                        directRoute->setNetmask(netmaskAddr);
+                        directRoute->setInterface(info->networkInterface);
+                        directRoute->setSourceType(Ipv4Route::MANUAL);
+                        rt->addRoute(directRoute);
+                        EV_DETAIL << "Added direct route for " << networkAddrIp << "/" 
+                                << netmaskAddr.getNetmaskLength() << " on " << host->getFullName() 
+                                << " (" << ifName << ")" << endl;
+                    }
+                    // 5. Ensure default route via this interface if not exists
+                    if(!rt->findBestMatchingRoute(Ipv4Address::UNSPECIFIED_ADDRESS)) {
+                        Ipv4Route *defaultRoute = new Ipv4Route();
+                        defaultRoute->setDestination(Ipv4Address::UNSPECIFIED_ADDRESS);
+                        defaultRoute->setNetmask(Ipv4Address::UNSPECIFIED_ADDRESS);
+                        defaultRoute->setGateway(Ipv4Address::UNSPECIFIED_ADDRESS); 
+                        defaultRoute->setInterface(info->networkInterface);
+                        defaultRoute->setSourceType(Ipv4Route::MANUAL);
+                        rt->addRoute(defaultRoute);
+                        EV_DETAIL << "Added default route for " << networkAddrIp << "/" 
+                                << netmaskAddr.getNetmaskLength() << " on " << host->getFullName() 
+                                << " (" << ifName << ")" << endl;
+                    }
+                }
+            }
+        }
+    }
+
+    void SatelliteNetworkConfiguratorScs::dumpIpPools() {
+        std::cerr << "\n=== IP Pool Status ===" << endl;
+        std::cerr << "WLAN Pool : " << this->wlanPoolPtr->baseAddress << endl;
+        std::cerr << "  Used: " << wlanPoolPtr->usedAddressesSet.size() << " addresses" << endl;
+        std::cerr << "  Free: " << wlanPoolPtr->freeAddressesQueue.size() << " addresses" << endl;
+        std::cerr << "  Next: " << Ipv4Address(wlanPoolPtr->baseAddress | wlanPoolPtr->nextAddress) << endl;
+        
+        std::cerr << "Cellular Pool : " << this->cellularPoolPtr->baseAddress << endl;
+        std::cerr << "  Used: " << cellularPoolPtr->usedAddressesSet.size() << " addresses" << endl;
+        std::cerr << "  Free: " << cellularPoolPtr->freeAddressesQueue.size() << " addresses" << endl;
+        std::cerr << "  Next: " << Ipv4Address(cellularPoolPtr->baseAddress | cellularPoolPtr->nextAddress) << endl;
+        std::cerr << "=====================\n" << endl;
     }
 
     void SatelliteNetworkConfiguratorScs::handleMessage(cMessage *msg) {    
@@ -87,74 +398,45 @@ namespace inet {
     }
 
     bool SatelliteNetworkConfiguratorScs::isProtectedRoute(Ipv4Route* route){
-        if (route == nullptr || route->getInterface() == nullptr) { return false; }   
+        // This method is not needed anymore as we are not preserving any routes during cleanup
+        if (route == nullptr || route->getInterface() == nullptr) { return false; }
+        if (route->getSourceType() != Ipv4Route::MANUAL) { return true; }
         std::string ifName = route->getInterface()->getInterfaceName();
-        // Preserve Default Routes for Cellular Interfaces
-        if (ifName == "cellular" || ifName.find("lte") != std::string::npos) { 
-            if (route->getDestination().isUnspecified() 
-                && route->getGateway().isUnspecified()
-                && route->getNetmask().isUnspecified()) {
+        // Preserve Default Routes via cellular and wlan0
+        if (ifName == "cellular" || ifName == "wlan0") { 
+            if (route->getDestination().isUnspecified() && route->getNetmask().isUnspecified()) {
                     return true;
-                }
-        }
-        return false;
-    }
-
-    void SatelliteNetworkConfiguratorScs::validateVeinsNodeIp(){
-        for (int i = 0; i < topology.getNumNodes(); i++) {
-            Node *node = (Node *)topology.getNode(i);
-            if (isVeinsNode(node->getModule())) {
-                for (auto& entry : node->interfaceInfos) {
-                    InterfaceInfo *info = static_cast<InterfaceInfo*>(entry);
-                    if (info->networkInterface) {
-                        auto *ipv4Data = info->networkInterface->getProtocolData<Ipv4InterfaceData>();
-                        // Retrieve real IP address from interface protocol data if available
-                        if (ipv4Data && !ipv4Data->getIPAddress().isUnspecified()) {
-                            info->address = ipv4Data->getIPAddress().getInt();
-                            info->netmask = ipv4Data->getNetmask().getInt();
-                        }
-                        else {
-                            // Set default unspecified IP address and netmask
-                            info->address = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
-                            info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
-                            info->netmask = Ipv4Address::UNSPECIFIED_ADDRESS.getInt();
-                            info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
-                        }
-                    }
-                    else{
-                        throw cRuntimeError("Veins node interface has no Ipv4InterfaceData");
-                    }
-                }
             }
         }
+        return false;
     }
 
     bool SatelliteNetworkConfiguratorScs::isToExcludeLink(Link *link) {
-        // Exclude links with interfaces that are down or have no carrier
-        // isUp() = administrative state, hasCarrier() = physical connectivity
-        // This ensures that disabled interfaces are excluded from routing
-        if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
-            auto *srcIf = link->sourceInterfaceInfo->networkInterface;
-            if (!srcIf->isUp() || !srcIf->hasCarrier()) {
-                EV_DETAIL << "Wireless link excluded: source interface " 
-                          << srcIf->getInterfaceName() 
-                          << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
-                          << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
-                return true;
+            // Exclude links with interfaces that are down or have no carrier
+            // isUp() = administrative state, hasCarrier() = physical connectivity
+            // This ensures that disabled interfaces are excluded from routing
+            if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
+                auto *srcIf = link->sourceInterfaceInfo->networkInterface;
+                if (!srcIf->isUp() || !srcIf->hasCarrier()) {
+                    EV_WARN << "Wireless link excluded: source interface " 
+                            << srcIf->getInterfaceName() 
+                            << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
+                            << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
+                    return true;
+                }
             }
-        }
-        if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
-            auto *dstIf = link->destinationInterfaceInfo->networkInterface;
-            if (!dstIf->isUp() || !dstIf->hasCarrier()) {
-                EV_DETAIL << "Wireless link excluded: destination interface " 
-                          << dstIf->getInterfaceName() 
-                          << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
-                          << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
-                return true;
+            if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
+                auto *dstIf = link->destinationInterfaceInfo->networkInterface;
+                if (!dstIf->isUp() || !dstIf->hasCarrier()) {
+                    EV_WARN << "Wireless link excluded: destination interface " 
+                            << dstIf->getInterfaceName() 
+                            << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
+                            << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
-    }
 
     void SatelliteNetworkConfiguratorScs::printRoutingTable(){
         // Print routing table for all Veins nodes for debugging
@@ -171,22 +453,179 @@ namespace inet {
             }
             for (int i = 0; i < routingTable->getNumRoutes(); i++){
                 Ipv4Route *route = routingTable->getRoute(i);
-                bool isProtected = isProtectedRoute(route);
                 std::cerr << "  Route[" << i << "]: " 
                         << " source=" << nodeName << " "
                         << " dest=" << route->getDestination() << "/netlen=" << route->getNetmask().getNetmaskLength()
                         << " netmask=" << route->getNetmask()
                         << " via " << route->getInterface()->getInterfaceName()
                         << " gw=" << route->getGateway()
-                        << " PROTECTED=" << (isProtected ? "YES" : "NO")
                         << endl;
             }
         }
     }
 
-    void SatelliteNetworkConfiguratorScs::reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) {
-        EV_DETAIL << "\nReinvoking SatelliteNetworkConfiguratorScs at " << simTime() << endl;
+    void SatelliteNetworkConfiguratorScs::cleanupDownInterfaceRoutes() {
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            if (!isVeinsNode(node->getModule())) continue; // Skip non-Veins nodes
+            Ipv4RoutingTable *rt = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
+            if (!rt) continue; // Skip if no routing table
+            for(int j = rt->getNumRoutes() - 1; j >= 0; j--) {
+                Ipv4Route *route = rt->getRoute(j);
+                NetworkInterface *iface = route->getInterface();
+                // Delete route if via DOWN/no-carrier interface
+                if (iface && (!iface->isUp() || !iface->hasCarrier())) {
+                    EV_DETAIL << "Removing route via DOWN/no-carrier interface " 
+                            << iface->getInterfaceName() << " on node " 
+                            << node->getModule()->getFullName() << std::endl;
+                    rt->deleteRoute(route);
+                }
+            }
+        }
+    }
 
+    void SatelliteNetworkConfiguratorScs::filterVeinsSatelliteLinks(Topology& topology) {
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i);
+            // Skip non-Veins nodes
+            if (!isVeinsNode(node->getModule())) continue; 
+            // Iterate over outgoing links of the Veins node
+            veins::VeinsInetMobility* veinsMob = check_and_cast<veins::VeinsInetMobility*>(node->getModule()->getSubmodule("mobility"));
+            inet::Coord vehPos = veinsMob->getCurrentPosition();
+            for (int j = 0; j < node->getNumOutLinks(); j++) {
+                Link *link = (Link *)node->getLinkOut(j);
+                // Check if the link is to a satellite node and retrieve satellite mobility
+                Node *remoteNode = (Node *)link->getLinkOutRemoteNode();
+                cModule *remoteModule = remoteNode->getModule();
+                SatelliteMobility *satMobility = dynamic_cast<SatelliteMobility*>(remoteModule->getSubmodule("mobility"));
+                
+                // Retrieve BeamInfo module
+                // Satellite::BeamInfo *beamInfo = dynamic_cast<Satellite::BeamInfo*>(remoteModule->getSubmodule("bm")); 
+                
+                if (satMobility && isValidVeinsPosition(vehPos)) {
+                    // Retrieve vehicle latitude and longitude
+                    double vehLat = posConverterPtr->convertPosYToLatitude(vehPos.y);
+                    double vehLon = posConverterPtr->convertPosXToLongitude(vehPos.x);
+                    double elevation = satMobility->getElevation(vehLat, vehLon, 0.0);
+
+                    // Disable link if vehicle is outside beam coverage or not reachable
+                    if(!satMobility->isReachable(vehLat, vehLon, 0.0)) {
+                        link->disable();
+                        // Inet manages links as directional, we need to find the corresponding reverse link
+                        // Disable the reverse link as well
+                        for (int k = 0; k < remoteNode->getNumOutLinks(); k++) {
+                            Link *backLink = (Link *)remoteNode->getLinkOut(k);
+                            if (backLink->getLinkOutRemoteNode() == node) {
+                                backLink->disable();
+                                break;
+                            }
+                        }
+                        EV_DETAIL << "FAILURE: Vehicle " << node->getModule()->getFullName()
+                                    << " is OUTSIDE beam coverage of Satellite "
+                                  << remoteNode->getModule()->getFullName() 
+                                  << " (elevation: " << elevation << " degrees)" << std::endl;
+                    }
+                    else {
+                        EV_DETAIL << "SUCCESS: Vehicle " << node->getModule()->getFullName() 
+                                    << " is WITHIN beam coverage of Satellite "
+                                  << remoteNode->getModule()->getFullName() 
+                                  << " (elevation: " << elevation << " degrees)" << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    void SatelliteNetworkConfiguratorScs::optimizeVehiclesRoutes(){
+        for (int i = 0; i < topology.getNumNodes(); i++) {
+            Node *node = (Node *)topology.getNode(i); 
+            // Skip non-Veins nodes
+            if (!isVeinsNode(node->getModule())) { continue; } 
+            // Identify the active interface (up and has carrier)
+            NetworkInterface* activeIface = nullptr;
+            for (auto infoPtr : node->interfaceInfos) {
+                InterfaceInfo* info = static_cast<InterfaceInfo*>(infoPtr);
+                if (info->networkInterface && info->networkInterface->isUp() && info->networkInterface->hasCarrier()) {
+                    activeIface = info->networkInterface;
+                    break; 
+                }
+            }
+            // Skip if no active interface found
+            if (!activeIface) { continue; } 
+            // Identify the best gateway from existing routes on the active interface
+            Ipv4Address bestGateway = Ipv4Address::UNSPECIFIED_ADDRESS;
+            for (auto route : node->staticRoutes) {
+                if (route->getInterface() == activeIface && !route->getGateway().isUnspecified()) {
+                    bestGateway = route->getGateway();
+                    break; // Take the first valid gateway found
+                }
+            }
+            // Iterate and decide what to keep and what to discard
+            for (auto it = node->staticRoutes.begin(); it != node->staticRoutes.end(); ) {
+                Ipv4Route* route = *it;
+                // 1. Delete routes via inactive interfaces
+                if (route->getInterface() != activeIface) {
+                    delete route;
+                    it = node->staticRoutes.erase(it);
+                    continue;
+                }
+
+                // 2. Keep all routes (specific, default, direct) via active interface
+                // if (!route->getGateway().isUnspecified() && bestGateway.isUnspecified()) {
+                //     bestGateway = route->getGateway();  // Salva un gateway per la default
+                // }
+                // ++it;  
+
+                // 2. Keep direct routes (to directly connected networks)
+                if (route->getGateway().isUnspecified()) {
+                    EV_DETAIL << " Keeping DIRECT route to " << route->getDestination() << std::endl;
+                    ++it;
+                    continue;
+                }
+                // 3. Keep default routes (0.0.0.0)
+                if (route->getDestination().isUnspecified()) {
+                    EV_DETAIL << " Keeping EXISTING DEFAULT route." << std::endl;
+                    // If gateway is unspecified, but we have a bestGateway, update it
+                    if (route->getGateway().isUnspecified() && !bestGateway.isUnspecified()) {
+                        route->setGateway(bestGateway);
+                        EV_DETAIL << "  Old Gateway" << route->getGateway() << " -> Updated Gateway to " << bestGateway << std::endl;
+                    }
+                    ++it;
+                    continue;
+                }
+                // 4. Delete specific routes via active interface because they are covered by default route
+                delete route;
+                it = node->staticRoutes.erase(it);
+            }
+
+            // --- DEFAULT ROUTE GUARANTEE ---
+            // If we have filtered specific routes, we must ensure that a Default Route exists
+            // otherwise the vehicle will not reach the internet.
+            bool hasDefaultRoute = false;
+            // Check if a default route already exists
+            for (auto route : node->staticRoutes) {
+                if (route->getDestination().isUnspecified()) {
+                    hasDefaultRoute = true;
+                    break;
+                }
+            }
+            // If no default route exists, add one via the best gateway
+            if (!hasDefaultRoute && !bestGateway.isUnspecified()) {
+                Ipv4Route *defaultRoute = new Ipv4Route();
+                defaultRoute->setDestination(Ipv4Address::UNSPECIFIED_ADDRESS);
+                defaultRoute->setNetmask(Ipv4Address::UNSPECIFIED_ADDRESS);
+                defaultRoute->setGateway(bestGateway);
+                defaultRoute->setInterface(activeIface);
+                defaultRoute->setSourceType(Ipv4Route::MANUAL);
+                defaultRoute->setMetric(1);
+                node->staticRoutes.push_back(defaultRoute);
+                EV_DETAIL << "Added MISSING Default Route via " << bestGateway << endl;
+            }
+        }
+    }
+
+    void SatelliteNetworkConfiguratorScs::reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) {
+        // std::cerr << "\nReinvoking SatelliteNetworkConfiguratorScs at " << simTime() << endl;
         // std::cerr << "BEFORE CLEARING ROUTING TABLE:" << std::endl;
         // printRoutingTable();
 
@@ -199,23 +638,19 @@ namespace inet {
             // 1.1 Clear routing table (but preserve the cellular default route for vehicles)
             for(int j = routingTable->getNumRoutes() - 1; j >= 0; j--) {
                 Ipv4Route *route = routingTable->getRoute(j);
-
-                if (isProtectedRoute(route) && isVeinsNode(node->getModule())) { continue; }
-                
                 routingTable->deleteRoute(route);
-            }
+            } 
             // 1.2 Clear multicast routing table
-            for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++){
+            for(int m = 0; m < node->routingTable->getNumMulticastRoutes(); m++) {
                 node->routingTable->deleteMulticastRoute(node->routingTable->getMulticastRoute(m));
             }
             // 1.3 Clear static routes
             std::for_each(node->staticRoutes.begin(), node->staticRoutes.end(), []( Ipv4Route* route) { delete route; });
             node->staticRoutes.clear();
-        }
+        } 
         // Clear links and interfaces from topology
         std::for_each(topology.linkInfos.begin(), topology.linkInfos.end(), []( LinkInfo* link) { delete link; });
         for(auto & p : topology.interfaceInfos) delete p.second;
-
         topology.linkInfos.clear();
         topology.interfaceInfos.clear();
         topology.clear();
@@ -223,31 +658,48 @@ namespace inet {
         // 2. Re-extract topology
         SatelliteNetworkConfigurator::extractTopology(topology);
 
-        // 3. Validate IP addresses for dynamic nodes (SUMO/Veins)
-        this->validateVeinsNodeIp();
+        // 3. Configure Veins vehicle interfaces (cellular, wlan0) 
+        // and check binder registrations and register if needed
+        checkAndConfigureVehicleInterfaces();
+
+        // Prune satellite links based on elevation angle
+        filterVeinsSatelliteLinks(topology); 
 
         // 4. Recalculate routing
         SatelliteNetworkConfigurator::addStaticRoutes(topology, autorouteElement);
+
+        // 5. Optimize vehicle routes (to keep only correct routes via active interfaces)
+        optimizeVehiclesRoutes();
+       
+        // 6. Configure all routing tables
         SatelliteNetworkConfigurator::configureAllRoutingTables();
 
-        // 5. Remove unreachable routes (links with INFINITY weight in computeWirelessLinkWeight)
-        // this->removeWirelessUnreachableRoutes(autorouteElement); // not needed
-        // This is to prevent satellites from adding default routes that may interfere with Veins nodes' routing
-        // Already removed with addDefaultRoutes = default(false);
+        // 7. Cleanup routes via down/no-carrier interfaces (if exists)
+        // Not needed beacause optimizeVehiclesRoutes() already handles this
+        // cleanupDownInterfaceRoutes(); 
 
         // std::cerr << "AFTER REINVOKING ROUTING TABLE:" << std::endl;
         // printRoutingTable();
 
-        // 6. Debug output
+        // 5. Debug output
         if (par("dumpTopology").boolValue())
             dumpTopology(topology);
 
         if (par("dumpConfig").stringValue()[0])
             dumpConfiguration();
+        
+        if (par("dumpIpPools").boolValue())
+            dumpIpPools();
     }
 
     double SatelliteNetworkConfiguratorScs::computeWirelessLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
         EV_DETAIL << "Called computeWirelessLinkWeight between " << link->sourceInterfaceInfo->node->module->getFullName() << " and " << link->destinationInterfaceInfo->node->module->getFullName() << std::endl;
+
+        //Exclude links with interfaces that are down or have no carrier
+        if (isToExcludeLink(link)) {
+            EV_WARN<< "Link excluded based on interface state" << endl;
+            return INFINITY;
+        }
 
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
@@ -266,11 +718,6 @@ namespace inet {
             }
             if (!link->sourceInterfaceInfo->node || !link->destinationInterfaceInfo->node) {
                 EV_WARN << "Link interface has null node, skipping" << endl;
-                return INFINITY;
-            }
-            // Exclude links with interfaces that are down or have no carrier
-            if (isToExcludeLink(link)) {
-                EV_WARN<< "Link excluded based on interface state" << endl;
                 return INFINITY;
             }
             
@@ -296,7 +743,7 @@ namespace inet {
             }
 
             // Ensure PositionConverter is available
-            if(!posConverter) {
+            if(!posConverterPtr) {
                 EV_WARN << "PositionConverter not available for Veins nodes" << endl;
                 return INFINITY;
             }
@@ -327,8 +774,8 @@ namespace inet {
                     }
 
                     // Convert X,Y -> Lat,Lon using PositionConverter
-                    double vehLon = posConverter->convertPosXToLongitude(pos.x);
-                    double vehLat = posConverter->convertPosYToLatitude(pos.y);
+                    double vehLon = posConverterPtr->convertPosXToLongitude(pos.x);
+                    double vehLat = posConverterPtr->convertPosYToLatitude(pos.y);
 
                     EV_DETAIL << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
                             << vehLon << "°), SAT: (" << sourceSat->getLatitude() << "°, " 
@@ -336,7 +783,8 @@ namespace inet {
                             << "km), Elev: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°" << endl;
 
                     if (!sourceSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Link not reachable" << endl;
+                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
+                            << " with elevation " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°: Link not reachable" << endl;
                         return INFINITY;
                     }
 
@@ -352,6 +800,7 @@ namespace inet {
                     delay = (distKm * 1000.0) / 299792458.0;
                     EV_DETAIL << "SAT->VEC:" 
                               << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
+                              << " elevation: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°"
                               << " | Dist: " << distKm  << "km, Delay: " << delay << "s" << endl;
                     
                     return delay; 
@@ -424,11 +873,12 @@ namespace inet {
                     }
 
                     // Convert X,Y -> Lat,Lon using PositionConverter
-                    double vehLon = posConverter->convertPosXToLongitude(pos.x);
-                    double vehLat = posConverter->convertPosYToLatitude(pos.y);
+                    double vehLon = posConverterPtr->convertPosXToLongitude(pos.x);
+                    double vehLat = posConverterPtr->convertPosYToLatitude(pos.y);
 
                     if (!destSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Link not reachable" << endl;
+                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
+                        << " with elevation " << destSat->getElevation(vehLat, vehLon, 0.0) << "°: Link not reachable" << endl;
                         return INFINITY;
                     }
 
@@ -447,9 +897,10 @@ namespace inet {
 
                     // Calculate propagation delay (distance / speed of light)
                     delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "VEC->SAT:" 
-                            << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
-                            << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
+                    // std::cerr << "VEC->SAT:" 
+                    //         << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
+                    //         << " elevation: " << destSat->getElevation(vehLat, vehLon, 0.0) << "°"
+                    //         << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
                     
                     return delay;
                 }
@@ -532,11 +983,18 @@ namespace inet {
     }
 
     double SatelliteNetworkConfiguratorScs::computeWiredLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
+        
+        //Exclude links with interfaces that are down or have no carrier
+        if (isToExcludeLink(link)) {
+            EV_WARN<< "Link excluded based on interface state" << endl;
+            return INFINITY;
+        }
+        
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
             return parseCostAttribute(costAttribute);
         
-        Topology::Link *linkOut = static_cast<Topology::Link *>(static_cast<Topology::Link *>(link));
+        Topology::Link *linkOut = static_cast<Topology::Link *>(link);
         if (!strcmp(metric, "hopCount"))
             return 1;
         else if (!strcmp(metric, "delay")) {
@@ -577,6 +1035,5 @@ namespace inet {
         else
             throw cRuntimeError("Unknown metric");
     }
-
 
 } // namespace inet

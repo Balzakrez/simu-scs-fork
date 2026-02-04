@@ -15,6 +15,9 @@
 **/todo
 **/results
 **/temp
+**/tempcode
+**/logs
+batch_run.sh
 
 Makefile
 # demodump.xml

@@ -2,11 +2,11 @@
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
     <input>
+        <!-- Minato Scenario -->
         <net-file value="mmArea1net.xml"/>
-        <!-- <route-files value="master.rou.xml"/> -->
-        <!-- <route-files value="temp_valid_trips.rou.xml"/> -->
-        <route-files value="trips.rou.xml"/>
-		<additional-files value="minatobig.poly.xml"/>
+        <route-files value="mmArea1net_ordered.rou.xml"/>
+        <additional-files value="minatobig.poly.xml"/>
+        
     </input>
 
     <time>

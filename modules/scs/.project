@@ -4,7 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>inet</project>
-		<project>inet_leosatellites</project>
 		<project>leosatellites</project>
 		<project>os3</project>
 		<project>os3_leosatellites</project>

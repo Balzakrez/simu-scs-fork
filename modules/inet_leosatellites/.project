@@ -5,6 +5,8 @@
 	<projects>
 		<project>inet</project>
 		<project>leosatellites</project>
+		<project>scs</project>
+		<project>simu5G</project>
 		<project>veins</project>
 	</projects>
 	<buildSpec>

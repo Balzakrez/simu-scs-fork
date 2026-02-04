@@ -14,6 +14,5 @@ simple SatelliteNetworkConfiguratorScs extends SatelliteNetworkConfigurator
 		addStaticRoutes = true;
 		optimizeRoutes = false;
 
-        // Disable default route addition for satellites to prevent interference with Veins nodes' routing
-        addDefaultRoutes = default(false); // This parameters is used only in addStaticRoutes() method
+        bool dumpIpPools = default(false); // Whether to dump IP pool status after configuration
 }

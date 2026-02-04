@@ -20,10 +20,58 @@
    <interface hosts="SC5G.pgw" names="pppIf" address="10.1.0.42" netmask="255.255.255.252" metric="1"/>
    <interface hosts="SC5G.pgw" names="ppp0" address="10.1.0.45" netmask="255.255.255.252" metric="1"/>
    <interface hosts="SC5G.eNB" names="pppIf" address="10.1.0.46" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="SC5G.eNB" names="cellular" address="10.1.0.49" netmask="255.255.255.248" metric="1"/>
-   <interface hosts="SC5G.ue[0]" names="cellular" address="10.1.0.50" netmask="255.255.255.248" metric="1"/>
-   <interface hosts="SC5G.ue[1]" names="cellular" address="10.1.0.51" netmask="255.255.255.248" metric="1"/>
-   <interface hosts="SC5G.eNB" names="pppMEHostIf" address="10.1.0.57" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="SC5G.eNB" names="cellular" address="10.1.0.65" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[0]" names="cellular" address="10.1.0.66" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[1]" names="cellular" address="10.1.0.67" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[2]" names="cellular" address="10.1.0.68" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[3]" names="cellular" address="10.1.0.69" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[4]" names="cellular" address="10.1.0.70" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[5]" names="cellular" address="10.1.0.71" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[6]" names="cellular" address="10.1.0.72" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[7]" names="cellular" address="10.1.0.73" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[8]" names="cellular" address="10.1.0.74" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[9]" names="cellular" address="10.1.0.75" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[10]" names="cellular" address="10.1.0.76" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[11]" names="cellular" address="10.1.0.77" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[12]" names="cellular" address="10.1.0.78" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[13]" names="cellular" address="10.1.0.79" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[14]" names="cellular" address="10.1.0.80" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[15]" names="cellular" address="10.1.0.81" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[16]" names="cellular" address="10.1.0.82" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[17]" names="cellular" address="10.1.0.83" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[18]" names="cellular" address="10.1.0.84" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[19]" names="cellular" address="10.1.0.85" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[20]" names="cellular" address="10.1.0.86" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[21]" names="cellular" address="10.1.0.87" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[22]" names="cellular" address="10.1.0.88" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[23]" names="cellular" address="10.1.0.89" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[24]" names="cellular" address="10.1.0.90" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[25]" names="cellular" address="10.1.0.91" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[26]" names="cellular" address="10.1.0.92" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[27]" names="cellular" address="10.1.0.93" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[28]" names="cellular" address="10.1.0.94" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[29]" names="cellular" address="10.1.0.95" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[30]" names="cellular" address="10.1.0.96" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[31]" names="cellular" address="10.1.0.97" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[32]" names="cellular" address="10.1.0.98" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[33]" names="cellular" address="10.1.0.99" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[34]" names="cellular" address="10.1.0.100" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[35]" names="cellular" address="10.1.0.101" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[36]" names="cellular" address="10.1.0.102" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[37]" names="cellular" address="10.1.0.103" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[38]" names="cellular" address="10.1.0.104" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[39]" names="cellular" address="10.1.0.105" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[40]" names="cellular" address="10.1.0.106" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[41]" names="cellular" address="10.1.0.107" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[42]" names="cellular" address="10.1.0.108" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[43]" names="cellular" address="10.1.0.109" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[44]" names="cellular" address="10.1.0.110" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[45]" names="cellular" address="10.1.0.111" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[46]" names="cellular" address="10.1.0.112" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[47]" names="cellular" address="10.1.0.113" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[48]" names="cellular" address="10.1.0.114" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.ue[49]" names="cellular" address="10.1.0.115" netmask="255.255.255.192" metric="1"/>
+   <interface hosts="SC5G.eNB" names="pppMEHostIf" address="10.1.0.49" netmask="255.255.255.252" metric="1"/>
    <multicast-group hosts="SC5G.satellite[0]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="SC5G.MCC[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="SC5G.satellite[0]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
@@ -48,10 +96,58 @@
    <multicast-group hosts="SC5G.eNB" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
    <multicast-group hosts="SC5G.ue[0]" interfaces="cellular" address="224.0.0.1"/>
    <multicast-group hosts="SC5G.ue[1]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[2]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[3]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[4]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[5]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[6]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[7]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[8]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[9]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[10]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[11]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[12]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[13]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[14]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[15]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[16]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[17]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[18]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[19]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[20]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[21]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[22]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[23]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[24]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[25]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[26]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[27]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[28]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[29]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[30]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[31]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[32]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[33]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[34]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[35]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[36]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[37]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[38]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[39]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[40]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[41]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[42]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[43]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[44]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[45]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[46]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[47]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[48]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="SC5G.ue[49]" interfaces="cellular" address="224.0.0.1"/>
    <multicast-group hosts="SC5G.eNB" interfaces="pppMEHostIf" address="224.0.0.1 224.0.0.2"/>
    <wireless interfaces="SC5G.satellite[0]%cnl0 SC5G.MCC[0]%wlan0"/>
    <wireless interfaces="SC5G.satellite[0]%cnl1 SC5G.GS[0]%wlan0"/>
-   <wireless interfaces="SC5G.eNB%cellular SC5G.ue[0]%cellular SC5G.ue[1]%cellular"/>
+   <wireless interfaces="SC5G.eNB%cellular SC5G.ue[0]%cellular SC5G.ue[1]%cellular SC5G.ue[2]%cellular SC5G.ue[3]%cellular SC5G.ue[4]%cellular SC5G.ue[5]%cellular SC5G.ue[6]%cellular SC5G.ue[7]%cellular SC5G.ue[8]%cellular SC5G.ue[9]%cellular SC5G.ue[10]%cellular SC5G.ue[11]%cellular SC5G.ue[12]%cellular SC5G.ue[13]%cellular SC5G.ue[14]%cellular SC5G.ue[15]%cellular SC5G.ue[16]%cellular SC5G.ue[17]%cellular SC5G.ue[18]%cellular SC5G.ue[19]%cellular SC5G.ue[20]%cellular SC5G.ue[21]%cellular SC5G.ue[22]%cellular SC5G.ue[23]%cellular SC5G.ue[24]%cellular SC5G.ue[25]%cellular SC5G.ue[26]%cellular SC5G.ue[27]%cellular SC5G.ue[28]%cellular SC5G.ue[29]%cellular SC5G.ue[30]%cellular SC5G.ue[31]%cellular SC5G.ue[32]%cellular SC5G.ue[33]%cellular SC5G.ue[34]%cellular SC5G.ue[35]%cellular SC5G.ue[36]%cellular SC5G.ue[37]%cellular SC5G.ue[38]%cellular SC5G.ue[39]%cellular SC5G.ue[40]%cellular SC5G.ue[41]%cellular SC5G.ue[42]%cellular SC5G.ue[43]%cellular SC5G.ue[44]%cellular SC5G.ue[45]%cellular SC5G.ue[46]%cellular SC5G.ue[47]%cellular SC5G.ue[48]%cellular SC5G.ue[49]%cellular"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.2" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.6" netmask="255.255.255.255" gateway="*" interface="cnl1" metric="0"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.9" netmask="255.255.255.255" gateway="10.1.0.2" interface="cnl0" metric="0"/>
@@ -71,9 +167,9 @@
    <route hosts="SC5G.satellite[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.6" interface="cnl1" metric="0"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.6" interface="cnl1" metric="0"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.6" interface="cnl1" metric="0"/>
-   <route hosts="SC5G.satellite[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.6" interface="cnl1" metric="0"/>
+   <route hosts="SC5G.satellite[0]" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.6" interface="cnl1" metric="0"/>
    <route hosts="SC5G.satellite[0]" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.2" interface="cnl0" metric="0"/>
-   <route hosts="SC5G.satellite[0]" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.6" interface="cnl1" metric="0"/>
+   <route hosts="SC5G.satellite[0]" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.6" interface="cnl1" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.1" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.6" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
@@ -92,9 +188,9 @@
    <route hosts="SC5G.MCC[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
-   <route hosts="SC5G.MCC[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
+   <route hosts="SC5G.MCC[0]" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.1" interface="wlan0" metric="0"/>
    <route hosts="SC5G.MCC[0]" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.10" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.MCC[0]" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.1" interface="wlan0" metric="0"/>
+   <route hosts="SC5G.MCC[0]" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.1" interface="wlan0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.5" interface="wlan0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.5" interface="wlan0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.5" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
@@ -113,9 +209,9 @@
    <route hosts="SC5G.GS[0]" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.GS[0]" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.GS[0]" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.18" interface="ppp0" metric="0"/>
    <route hosts="SC5G.GS[0]" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.5" interface="wlan0" metric="0"/>
-   <route hosts="SC5G.GS[0]" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.18" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.GS[0]" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.18" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
@@ -135,9 +231,9 @@
    <route hosts="SC5G.routerFL" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.routerFL" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.routerFL" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.routerFL" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.26" interface="ppp1" metric="0"/>
-   <route hosts="SC5G.routerFL" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.9" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.routerFL" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.9" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
@@ -156,9 +252,9 @@
    <route hosts="SC5G.upf" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.upf" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.upf" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.upf" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.30" interface="ppp1" metric="0"/>
-   <route hosts="SC5G.upf" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.25" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.upf" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.25" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
@@ -178,9 +274,9 @@
    <route hosts="SC5G.router2" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.router2" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.router2" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router2" destination="10.1.0.36" netmask="255.255.255.252" gateway="*" interface="ppp1" metric="0"/>
-   <route hosts="SC5G.router2" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.29" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.router2" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.29" interface="ppp0" metric="0"/>
    <route hosts="SC5G.server" destination="10.1.0.36" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
    <route hosts="SC5G.server" destination="*" netmask="*" gateway="10.1.0.37" interface="ppp0" metric="0"/>
    <route hosts="SC5G.router" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.17" interface="ppp0" metric="0"/>
@@ -202,9 +298,9 @@
    <route hosts="SC5G.router" destination="10.1.0.45" netmask="255.255.255.255" gateway="10.1.0.42" interface="ppp1" metric="0"/>
    <route hosts="SC5G.router" destination="10.1.0.46" netmask="255.255.255.255" gateway="10.1.0.42" interface="ppp1" metric="0"/>
    <route hosts="SC5G.router" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.42" interface="ppp1" metric="0"/>
-   <route hosts="SC5G.router" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.42" interface="ppp1" metric="0"/>
+   <route hosts="SC5G.router" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.42" interface="ppp1" metric="0"/>
    <route hosts="SC5G.router" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.17" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.router" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.42" interface="ppp1" metric="0"/>
+   <route hosts="SC5G.router" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.42" interface="ppp1" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.41" interface="pppIf" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.41" interface="pppIf" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.41" interface="pppIf" metric="0"/>
@@ -224,9 +320,9 @@
    <route hosts="SC5G.pgw" destination="10.1.0.41" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.46" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.49" netmask="255.255.255.255" gateway="10.1.0.46" interface="ppp0" metric="0"/>
-   <route hosts="SC5G.pgw" destination="10.1.0.57" netmask="255.255.255.255" gateway="10.1.0.46" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.pgw" destination="10.1.0.65" netmask="255.255.255.255" gateway="10.1.0.46" interface="ppp0" metric="0"/>
    <route hosts="SC5G.pgw" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.41" interface="pppIf" metric="0"/>
-   <route hosts="SC5G.pgw" destination="10.1.0.48" netmask="255.255.255.248" gateway="10.1.0.46" interface="ppp0" metric="0"/>
+   <route hosts="SC5G.pgw" destination="10.1.0.64" netmask="255.255.255.192" gateway="10.1.0.46" interface="ppp0" metric="0"/>
    <route hosts="SC5G.eNB" destination="10.1.0.1" netmask="255.255.255.255" gateway="10.1.0.45" interface="pppIf" metric="0"/>
    <route hosts="SC5G.eNB" destination="10.1.0.2" netmask="255.255.255.255" gateway="10.1.0.45" interface="pppIf" metric="0"/>
    <route hosts="SC5G.eNB" destination="10.1.0.5" netmask="255.255.255.255" gateway="10.1.0.45" interface="pppIf" metric="0"/>
@@ -247,10 +343,106 @@
    <route hosts="SC5G.eNB" destination="10.1.0.42" netmask="255.255.255.255" gateway="10.1.0.45" interface="pppIf" metric="0"/>
    <route hosts="SC5G.eNB" destination="10.1.0.45" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
    <route hosts="SC5G.eNB" destination="10.1.0.36" netmask="255.255.255.252" gateway="10.1.0.45" interface="pppIf" metric="0"/>
-   <route hosts="SC5G.eNB" destination="10.1.0.48" netmask="255.255.255.248" gateway="*" interface="cellular" metric="0"/>
-   <route hosts="SC5G.ue[0]" destination="10.1.0.48" netmask="255.255.255.248" gateway="*" interface="cellular" metric="0"/>
-   <route hosts="SC5G.ue[0]" destination="*" netmask="*" gateway="10.1.0.49" interface="cellular" metric="0"/>
-   <route hosts="SC5G.ue[1]" destination="10.1.0.48" netmask="255.255.255.248" gateway="*" interface="cellular" metric="0"/>
-   <route hosts="SC5G.ue[1]" destination="*" netmask="*" gateway="10.1.0.49" interface="cellular" metric="0"/>
+   <route hosts="SC5G.eNB" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[0]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[0]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[1]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[1]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[2]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[2]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[3]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[3]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[4]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[4]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[5]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[5]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[6]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[6]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[7]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[7]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[8]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[8]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[9]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[9]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[10]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[10]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[11]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[11]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[12]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[12]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[13]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[13]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[14]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[14]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[15]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[15]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[16]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[16]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[17]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[17]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[18]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[18]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[19]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[19]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[20]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[20]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[21]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[21]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[22]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[22]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[23]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[23]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[24]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[24]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[25]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[25]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[26]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[26]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[27]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[27]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[28]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[28]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[29]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[29]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[30]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[30]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[31]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[31]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[32]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[32]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[33]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[33]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[34]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[34]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[35]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[35]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[36]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[36]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[37]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[37]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[38]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[38]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[39]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[39]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[40]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[40]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[41]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[41]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[42]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[42]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[43]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[43]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[44]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[44]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[45]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[45]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[46]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[46]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[47]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[47]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[48]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[48]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[49]" destination="10.1.0.64" netmask="255.255.255.192" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="SC5G.ue[49]" destination="*" netmask="*" gateway="10.1.0.65" interface="cellular" metric="0"/>
    <route hosts="SC5G.satellite[0].router1" destination="127.0.0.0" netmask="255.0.0.0" gateway="*" interface="lo0" metric="1"/>
 </config>
