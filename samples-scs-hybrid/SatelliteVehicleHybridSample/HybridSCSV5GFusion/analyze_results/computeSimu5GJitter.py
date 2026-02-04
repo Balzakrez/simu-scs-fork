@@ -68,16 +68,18 @@ def analyze_simu5g_jitter(filepath, config_name):
     # Calculate Stats
     df_vectors['Mean_Jitter'] = df_vectors['Jitter_ms'].apply(np.mean)
     
+    # Global Mean Jitter
     global_mean = df_vectors['Mean_Jitter'].mean()
     print(f"Global Mean Calculated Jitter: {global_mean:.2f} ms")
 
-    # PLOT 1: Mean Jitter 
+    # Plot Mean Jitter 
     print("Generating Mean Jitter Bar Chart...")
     fig1, ax1 = plt.subplots(figsize=(14, 6))
     
     node_ids = df_vectors['NodeID']
     means = df_vectors['Mean_Jitter']
     
+    # if mean Jitter < 10ms: Green, <30ms: Orange, else Red
     colors = ['#4CAF50' if m < 10 else '#FF9800' if m < 30 else '#F44336' for m in means]
 
     ax1.bar(node_ids, means, color=colors, edgecolor='black', width=0.8, alpha=0.8)
@@ -93,21 +95,17 @@ def analyze_simu5g_jitter(filepath, config_name):
     plt.savefig(f'plot_simu5g_jitter_mean_{config_name}.png', dpi=150)
     print(f"[OK] Saved plot_simu5g_jitter_mean_{config_name}.png")
 
-    # PLOT 2: Jitter Distribution 
+    # Plot Jitter Distribution 
     # print("Generating Jitter Distribution Box Plot...")
     # fig2, ax2 = plt.subplots(figsize=(14, 7))
-
     # bplot = ax2.boxplot(df_vectors['Jitter_ms'].tolist(), label=df_vectors['NodeID'].astype(str).tolist(), patch_artist=True, showfliers=False)
-
     # for patch in bplot['boxes']:
     #     patch.set_facecolor('#9C27B0') # Purple
     #     patch.set_alpha(0.6)
-
     # ax2.set_xlabel('Node Index')
     # ax2.set_ylabel('Jitter (ms)')
     # ax2.set_title(f'Simu5G RLC Jitter Distribution - {config_name}', fontsize=14)
     # ax2.grid(axis='y', linestyle='--', alpha=0.5)
-
     # plt.tight_layout()
     # plt.savefig(f'plot_simu5g_jitter_boxplot_{config_name}.png', dpi=150)
     # print(f"[OK] Saved plot_simu5g_jitter_boxplot_{config_name}.png")
@@ -119,5 +117,7 @@ if __name__ == '__main__':
         print("Usage: python plot_simu5g_jitter.py <path-file.vec>")
         sys.exit(1)
     filepath = sys.argv[1]
-    config_name = filepath.split(os.sep)[0]
+    config_name = filepath.split(os.sep)[-2] # Assuming config name is the parent directory name
+    if config_name == "." or config_name == "..":
+        config_name = "Simulation"
     analyze_simu5g_jitter(filepath, config_name)

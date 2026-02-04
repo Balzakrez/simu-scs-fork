@@ -1,3 +1,4 @@
+import os
 import sys, re
 import matplotlib.pyplot as plt
 from omnetpp.scave import results
@@ -69,17 +70,17 @@ def foo(filepath: str, config_name: str) -> None:
         # Global Statistics
         global_avg_cell = usage_summary["Cellular_Time_s"].mean()
         global_avg_sat = usage_summary["Satellite_Time_s"].mean()
-        print(f"Global Avg Cellular Time: {global_avg_cell}")
+        print(f"\nGlobal Avg Cellular Time: {global_avg_cell}")
         print(f"Global Avg Satellite Time: {global_avg_sat}")
 
         # How many nodes have prefferred one interface over the other
-        sat_lovers = usage_summary["Satellite_Time_s"] > usage_summary["Cellular_Time_s"]
-        cell_lovers = usage_summary["Satellite_Time_s"] <= usage_summary["Cellular_Time_s"]
-        num_sat_lovers = len(sat_lovers)
-        num_cell_lovers = len(cell_lovers)
-        print(f"Satellite Lovers: {num_sat_lovers} nodes")
-        print(f"Cellular Lovers: {num_cell_lovers} nodes")
-        print(f"Total Nodes: {num_sat_lovers + num_cell_lovers} nodes")
+        sat_lovers = usage_summary["Sat_%"] > usage_summary["Cell_%"]
+        print(f"\nSattellite Lovers: {sat_lovers.sum()} nodes") # 1 True, 0 False
+        cell_lovers = usage_summary["Sat_%"] < usage_summary["Cell_%"]
+        print(f"Cellular Lovers: {cell_lovers.sum()} nodes") # 1 True, 0 False
+        equal_lovers = usage_summary["Sat_%"] == usage_summary["Cell_%"]
+        print(f"Equal Lovers: {equal_lovers.sum()} nodes") # 1 True, 0 False
+        print(f"Total Nodes: {sat_lovers.sum() + cell_lovers.sum() + equal_lovers.sum()} nodes\n")
         
         # Plotting
         bar_plot_usage(usage_summary, config_name)
@@ -195,7 +196,10 @@ if __name__ == '__main__':
         sys.exit(1)
         
     filepath = sys.argv[1]
-    config_name = filepath.split("/")[0]
+    
+    config_name = filepath.split(os.sep)[-2]  # Assuming config name is the parent directory name
+    if config_name == "." or config_name == "..":
+        config_name = "Simulation"
 
     print(f"\n  Analyzing file: {filepath}")
     print(f"  Config name: {config_name}\n")

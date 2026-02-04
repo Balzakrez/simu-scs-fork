@@ -22,8 +22,7 @@ def analyze_jitter(filepath, config_name):
     print(f"Loading file: {filepath}...")
     results.set_inputs(filepath)
 
-    # Filter for the Jitter vector
-    # Usually named "currentJitter:vector" based on your NED file
+    # Filter for the Jitter vectors
     JITTER_FILTER = "*currentJitter:vector*"
 
     print("Extracting Jitter vectors...")
@@ -35,19 +34,18 @@ def analyze_jitter(filepath, config_name):
 
     print(f"Found {len(df)} vectors. Processing...")
 
-    # 1. Extract Node ID
+    # Extract Node ID
     df['NodeID'] = df['module'].apply(extract_node_id)
     df = df[df['NodeID'] != -1] # Remove invalid nodes
     df = df.sort_values('NodeID')
 
-    # 2. Convert Jitter from Seconds to Milliseconds
-    # Jitter values are usually small, so 'ms' is much easier to read than 's'
+    # Convert Jitter from Seconds to Milliseconds
     df['Jitter_ms'] = df['vecvalue'].apply(lambda x: np.array(x) * 1000.0)
 
-    # 3. Calculate Aggregate Stats per Node
+    # Calculate Aggregate Stats per Node
     df['Mean_Jitter'] = df['Jitter_ms'].apply(np.mean)
     
-    #  Calculate Global Mean across all nodes 
+    # Calculate Global Mean across all nodes 
     global_mean_jitter = df['Mean_Jitter'].mean()
     print(f"Global Mean Jitter: {global_mean_jitter:.2f} ms")
 
@@ -59,7 +57,6 @@ def analyze_jitter(filepath, config_name):
     node_ids = df['NodeID']
     means = df['Mean_Jitter']
     
-    # Conditional Colors (Based on typical VoIP/Gaming standards)
     # Green < 10ms (Excellent), Orange < 30ms (Acceptable), Red > 30ms (Poor)
     colors = []
     for m in means:
@@ -124,7 +121,7 @@ if __name__ == '__main__':
         
     filepath = sys.argv[1]
     
-    config_name = filepath.split(os.sep)[0]
+    config_name = filepath.split(os.sep)[-2] # Assuming config name is the parent directory name
     if config_name == "." or config_name == "..":
         config_name = "Simulation"
 

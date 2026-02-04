@@ -22,24 +22,20 @@ def plot_pdr_per_node(filepath, config_name):
     PDR = Rx / Tx * 100.
     """
     
-    # 1. Load Data
-    # Filter directly the vectors of interest
+    # Load data 
     print(f"Loading vectors from {filepath}...")
     results.set_inputs(filepath)
     
-    # Scave Filter: search for vectors named exactly pingTxSeq or pingRxSeq
+    # Filter and retrieve relevant vectors
     filter_expression = "*pingTxSeq:vector* OR *pingRxSeq:vector*"
     df = results.get_vectors(filter_expression)
 
-    print(df.head())
-    print(df.columns)
-    print(df[["name"]])
+    # print(df.columns)
 
     if df.empty:
         print(" [WARN] No pingTxSeq/pingRxSeq data found.")
         return
 
-    # 2. Data Processing
     # Extract Node ID from the module name
     df['NodeID'] = df['module'].apply(extract_node_id)
     
@@ -60,8 +56,6 @@ def plot_pdr_per_node(filepath, config_name):
         fill_value=0 # If a node has no Tx or Rx, set to 0
     )
 
-    print(pdr_table.head())
-    print(pdr_table.columns)
 
     # Verify that both columns exist
     if 'pingTxSeq:vector' not in pdr_table.columns:
@@ -72,7 +66,6 @@ def plot_pdr_per_node(filepath, config_name):
         pdr_table['pingRxSeq:vector'] = 0
 
     # Compute PDR
-    # Handle division by zero if Tx is 0
     pdr_table['PDR'] = pdr_table.apply(
         lambda row: (row['pingRxSeq:vector'] / row['pingTxSeq:vector'] * 100) if row['pingTxSeq:vector'] > 0 else 0.0, 
         axis=1
@@ -89,10 +82,10 @@ def plot_pdr_per_node(filepath, config_name):
         print(" [WARN] No valid nodes found after processing.")
         return
 
-    # 3. Plotting
+    # Plotting
     fig, ax = plt.subplots(figsize=(14, 6))
 
-    # Conditional coloring based on PDR value
+    #  if PDR >= 95% -> green, elif >=80% -> orange, else red
     colors = []
     for p in pdr_values:
         if p >= 95:
@@ -140,7 +133,7 @@ if __name__ == '__main__':
     filepath = sys.argv[1]
     
     # Attempt to extract config name from folder path, otherwise use generic name
-    config_name = filepath.split(os.sep)[0]
+    config_name = filepath.split(os.sep)[-2] # Assuming config name is the parent directory name
     if config_name == "." or config_name == "..":
         config_name = "Simulation"
 
@@ -155,102 +148,3 @@ if __name__ == '__main__':
         traceback.print_exc()
 
     print("\n Done!")
-
-
-
-# #!/usr/bin/env python3
-# import sys
-# import numpy as np
-# import utils as ut
-# import matplotlib.pyplot as plt
-
-
-# def plot_pdr_per_node(vectors, config_name):
-#     """
-#     Compute and plot PDR per node.
-#     PDR = Packet Delivery Ratio = packets received / packets sent
-#     How we compute it from the .vec:
-#     - pingTxSeq counts packets sent (count of the vector)
-#     - pingRxSeq counts packets received (count of the vector)
-#     - PDR = len(pingRxSeq) / len(pingTxSeq)
-#     """
-
-#     tx_vectors = ut.find_vectors_by_name(vectors, r'^pingTxSeq$')
-#     rx_vectors = ut.find_vectors_by_name(vectors, r'^pingRxSeq$')
-#     if not tx_vectors or not rx_vectors:
-#         print("  [WARN] Nessun dato pingTxSeq/pingRxSeq trovato")
-#         return
-#     # tx_counts = { node_idx, <tx count> } for mapping node -> TX count
-#     tx_counts = {}
-#     for vec in tx_vectors:
-#         node_idx = ut.extract_node_index(vec['module'])
-#         if node_idx is not None:
-#             tx_counts[node_idx] = len(vec['times'])  # Numero di pacchetti inviati
-#     # rx_counts = { node_idx, <rx count> } for mapping node -> RX count
-#     rx_counts = {}
-#     for vec in rx_vectors:
-#         node_idx = ut.extract_node_index(vec['module'])
-#         if node_idx is not None:
-#             rx_counts[node_idx] = len(vec['times'])  # Numero di pacchetti ricevuti
-#     # Compute PDR per each node
-#     node_indices = []
-#     pdr_values = []
-#     for node_idx in sorted(tx_counts.keys()):
-#         tx = tx_counts[node_idx]
-#         rx = rx_counts.get(node_idx, 0)
-#         pdr = (rx / tx * 100) if tx > 0 else 0
-#         node_indices.append(node_idx)
-#         pdr_values.append(pdr)
-    
-#     # Plot
-#     fig, ax = plt.subplots(figsize=(14, 5))
-    
-#     # Bar chart with color based on PDR (green if high, red if low)
-#     colors = ['#4CAF50' if p >= 95 else '#FF9800' if p >= 80 else '#F44336' for p in pdr_values]
-#     bars = ax.bar(node_indices, pdr_values, color=colors, edgecolor='black', linewidth=0.5)
-    
-#     # Reference line at 95%
-#     ax.axhline(y=95, color='red', linestyle='--', alpha=0.7, label='Threshold 95%')
-    
-#     # Mean line
-#     mean_pdr = float(np.mean(pdr_values))
-#     ax.axhline(y=mean_pdr, color='blue', linestyle='-', alpha=0.7, linewidth=2, label=f'Mean: {mean_pdr:.1f}%')
-#     ax.set_xlabel('Node')
-#     ax.set_ylabel('PDR (%)')
-#     ax.set_title(f'PDR per node — {config_name}  (mean={mean_pdr:.1f}%)')
-#     ax.set_ylim(0, 105)
-#     ax.legend()
-#     ax.grid(axis='y', alpha=0.3)
-#     plt.tight_layout()
-    
-#     # Save the plot
-#     output_file = f'plot_pdr_{config_name}.png'
-#     plt.savefig(output_file, dpi=150)
-#     plt.close()
-#     print(f"  [OK] Plot saved: {output_file}")
-
-# # ==============================================================================
-# # MAIN
-# # ==============================================================================
-# if __name__ == '__main__':
-#     if len(sys.argv) < 2:
-#         print("Usage: python pdrVec.py <path-file.vec>")
-#         print("Example: python pdrVec.py results/CellularOnlyBaseline/0.vec")
-#         sys.exit(1)
-#     filepath = sys.argv[1]
-#     config_name = filepath.split("/")[0]
-   
-#     print(f"  Parsing file: {filepath}")
-#     print(f"  Configuration name: {config_name}")
-#     vectors = ut.parse_vec(filepath)
-
-    
-#     print(f"  Vectors found: {len(vectors)}")
-
-    
-    
-#     # 4. Generate the plots
-#     print("\n  Generating plots...")
-#     plot_pdr_per_node(vectors, config_name)
-
-#     print("\n  Done!")

@@ -20,7 +20,6 @@ def analyze_simu5g_throughput(filepath, config_name):
     results.set_inputs(filepath)
 
     # Simu5G RLC Throughput Vector
-    # Usually in Bytes/s
     TPUT_FILTER = "*rlcThroughputUl:vector*"
 
     print("Extracting Throughput vectors...")
@@ -36,7 +35,7 @@ def analyze_simu5g_throughput(filepath, config_name):
     df = df[df['NodeID'] != -1]
     df = df.sort_values('NodeID')
 
-    # KEY STEP: Convert Bytes/s to kbps 
+    # Convert Bytes/s to kbps 
     # 1 Byte = 8 bits
     # 1000 bits = 1 kbit
     df['Tput_kbps'] = df['vecvalue'].apply(lambda x: np.array(x) * 8.0 / 1000.0)
@@ -47,7 +46,7 @@ def analyze_simu5g_throughput(filepath, config_name):
     global_mean = df['Mean_Tput'].mean()
     print(f"Global Mean Throughput: {global_mean:.2f} kbps")
 
-    # PLOT 1: Mean Throughput 
+    # Plot Mean Throughput 
     print("Generating Mean Throughput Bar Chart...")
     fig1, ax1 = plt.subplots(figsize=(14, 6))
     
@@ -72,18 +71,14 @@ def analyze_simu5g_throughput(filepath, config_name):
 
     # print("Generating Throughput Box Plot...")
     # fig2, ax2 = plt.subplots(figsize=(14, 7))
-
     # bplot = ax2.boxplot(df['Tput_kbps'].tolist(), label=df['NodeID'].astype(str).tolist(), patch_artist=True, showfliers=False)
-
     # for patch in bplot['boxes']:
     #     patch.set_facecolor('#00BCD4') # Cyan
     #     patch.set_alpha(0.6)
-
     # ax2.set_xlabel('Node Index')
     # ax2.set_ylabel('Throughput (kbps)')
     # ax2.set_title(f'Simu5G RLC Throughput Distribution - {config_name}', fontsize=14)
     # ax2.grid(axis='y', linestyle='--', alpha=0.5)
-
     # plt.tight_layout()
     # plt.savefig(f'plot_simu5g_throughput_boxplot_{config_name}.png', dpi=150)
     # print(f"[OK] Saved plot_simu5g_throughput_boxplot_{config_name}.png")
@@ -95,5 +90,5 @@ if __name__ == '__main__':
         print("Usage: python plot_simu5g_throughput.py <path-file.vec>")
         sys.exit(1)
     filepath = sys.argv[1]
-    config_name = filepath.split(os.sep)[0]
+    config_name = filepath.split(os.sep)[-2] # Assuming config name is the parent directory name
     analyze_simu5g_throughput(filepath, config_name)
