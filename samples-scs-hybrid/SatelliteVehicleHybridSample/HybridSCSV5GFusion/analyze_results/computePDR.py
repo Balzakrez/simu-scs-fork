@@ -4,6 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from omnetpp.scave import results
 
+
+# *********************************************************************************** #
+
 def extract_node_id(module_str):
     """
     Extracts the node ID from the module string (e.g., 'Network.node[5].app[0]').
@@ -23,7 +26,7 @@ def plot_pdr_per_node(filepath, config_name):
     """
     
     # Load data 
-    print(f"Loading vectors from {filepath}...")
+    print(f"Loading vectors from {filepath}")
     results.set_inputs(filepath)
     
     # Filter and retrieve relevant vectors
@@ -102,6 +105,7 @@ def plot_pdr_per_node(filepath, config_name):
 
     # Mean line
     mean_pdr = np.mean(pdr_values)
+    print(f"    Global Mean PDR: {mean_pdr:.1f}%")
     ax.axhline(y=mean_pdr, color='blue', linestyle='-', alpha=0.7, linewidth=2, label=f'Mean: {mean_pdr:.1f}%')
 
     # Chart decorations
@@ -117,7 +121,9 @@ def plot_pdr_per_node(filepath, config_name):
     plt.tight_layout()
 
     # Save plot
-    output_filename = f'plot_pdr_{config_name}.png'
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/plot_pdr_{config_name}.png'
     plt.savefig(output_filename, dpi=150)
     plt.close()
     print(f" [OK] Plot saved: {output_filename}")

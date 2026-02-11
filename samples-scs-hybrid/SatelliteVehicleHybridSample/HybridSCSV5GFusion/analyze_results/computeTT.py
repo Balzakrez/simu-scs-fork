@@ -89,8 +89,13 @@ def analyze_throughput(filepath, config_name):
     ax1.grid(axis='y', linestyle='--', alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig(f'plot_throughput_mean_{config_name}.png', dpi=150)
-    print(f"[OK] Saved plot_throughput_mean_{config_name}.png")
+
+    # Save plot
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/plot_throughput_mean_{config_name}.png'
+    plt.savefig(output_filename, dpi=150)
+    print(f"[OK] Saved plot: {output_filename}")
 
     # print("Generating Throughput Box Plot (Distribution)...")
     # fig2, ax2 = plt.subplots(figsize=(14, 7))
@@ -108,8 +113,10 @@ def analyze_throughput(filepath, config_name):
     #     plt.xticks(rotation=90, fontsize=8)
     # ax2.grid(axis='y', linestyle='--', alpha=0.5)
     # plt.tight_layout()
-    # plt.savefig(f'plot_throughput_boxplot_{config_name}.png', dpi=150)
-    # print(f"[OK] Saved plot_throughput_boxplot_{config_name}.png")
+    # dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    # output_filename = f'{dir_name}/plot_throughput_boxplot_{config_name}.png'
+    # plt.savefig(output_filename, dpi=150)
+    # print(f"[OK] Saved plot: {output_filename}")
 
 # *********************************************************************************** #
 

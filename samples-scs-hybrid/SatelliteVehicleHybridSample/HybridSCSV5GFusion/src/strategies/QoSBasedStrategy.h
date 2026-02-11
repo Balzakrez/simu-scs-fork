@@ -7,12 +7,12 @@
 #ifndef __QOSBASEDSTRATEGY_H
 #define __QOSBASEDSTRATEGY_H
 
-#include <omnetpp.h>
-#include <map>
 #include "ISwitchingStrategy.h"
 #include "../HybridInterfaceManager.h"
+#include "os3/mobility/LUTMotionMobility.h"
+#include "scs/mobility/SatelliteMobilityScs.h"
+#include "scs_utils/converter/PositionConverter.h"
 
-using namespace omnetpp;
 
 class QoSBasedStrategy : public ISwitchingStrategy, public cListener {
 
@@ -23,7 +23,7 @@ protected:
       simtime_t txTime;      // Transmission time-stamp
       simtime_t rxTime;      // Reception time-stamp
       bool responded;        // True if pong received
-      std::string interface; // Interface used
+      std::string pingInterface; // Interface used
    };
 
    // InterfaceStats structure to hold computed statistics
@@ -35,12 +35,16 @@ protected:
       int sampleCount = 0;
       simtime_t lastUpdate = SIMTIME_ZERO;
    };
+   InterfaceStats currentStats;
 
    // TrafficStats structure to hold traffic statistics
    struct TrafficStats {
       double totalBytes = 0.0;
       simtime_t startTime = SIMTIME_ZERO;
    };
+   // Throughput tracking on RX
+   TrafficStats satelliteRX;
+   TrafficStats cellularRX;
 
    // Parameters
    double minAcceptablePDR; // min Packet Delivery Ratio (0.0 - 1.0)
@@ -49,10 +53,11 @@ protected:
    double maxAcceptableJitter; // max jitter in seconds
    double minQosScore; // minimum QoS score to avoid switching
    
-   double minHoldTime; // minimum time to hold an interface before switching again in seconds
    int minDegradationCount; // min number of degraded samples to trigger switch
    double qosCheckInterval; // interval to check QoS in seconds
-   double measurementWindowInterval; // time window for measurements in seconds
+   
+   simtime_t minHoldTime; // minimum time to hold an interface before switching again in seconds
+   simtime_t cutOffInterval; // time window for measurements in seconds
 
    // Weighted scoring
    double weightRTT; // weight for RTT in decision making
@@ -66,23 +71,18 @@ protected:
    cModule *pingAppModule = nullptr; // Pointer to the ping application module
    cModule *udpAppModule = nullptr; // Pointer to the UDP application module
    
-   // Satellite visibility
-   IMobility *vehicleMobility = nullptr;
-   SatelliteMobilityScs *satMobility = nullptr;
-   PositionConverter *posConverter = nullptr;
-   std::string satModulePath = "";
+   // Module references for mobility and position conversion
+   inet::IMobility *vehicleMobility = nullptr;
+   inet::SatelliteMobilityScs *satMobility = nullptr;
+   LUTMotionMobility *gsMobility = nullptr;    
+   Satellite::PositionConverter *posConverter = nullptr;
 
    // State
    simtime_t lastSwitchTime = SIMTIME_ZERO; // Time of the last interface switch
-   std::string currentInterface = "";
+   std::string currentInterfaceName = "";
    
    // HistoryMap <PingId, PingEvent> to track ping events
    std::map<long, PingEvent> pingHistory; 
-   InterfaceStats satelliteStats;
-   InterfaceStats cellularStats;
-
-   // Throughput tracking on RX
-   TrafficStats trafficStatsRX;
 
    // Counters 
    int consecutiveDegradations = 0;
@@ -95,7 +95,6 @@ protected:
    simsignal_t degradationCountSignal;
    simsignal_t qosScoreSignal;
   
-
    /* ************************************************** */
 
 public:
@@ -153,9 +152,14 @@ protected:
    double calculateAvgPDR(const std::string &interface);
 
    /**
-    * Calculates average throughput for the specified interface.
+    * Calculates average throughput for the current interface.
     */
    double calculateThroughputOnRx();
+
+   /**
+    * Calculates average throughput for the specified interface.
+    */
+   double calculateThroughputForInterface(const std::string &interface);
    
    /**
     * Updates the statistics for both satellite and cellular interfaces.

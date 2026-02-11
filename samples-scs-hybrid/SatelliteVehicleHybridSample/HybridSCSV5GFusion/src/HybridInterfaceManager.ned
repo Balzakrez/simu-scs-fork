@@ -15,9 +15,7 @@ simple HybridInterfaceManager
         string satInterfaceName = default("wlan0");
         string cellInterfaceName = default("cellular");
         bool startWithSatellite = default(false);
-        string satelliteModulePath = default("satellite[0]"); 
-        
-        // ===== Switching Strategy =====
+    
         string switchingMode @enum("time-based", "coverage-based", "energy-aware", "qos-based");
         
         // ===== Time-Based Strategy Parameters =====
@@ -31,11 +29,15 @@ simple HybridInterfaceManager
         double lowEnergyThreshold @unit(J) = default(90J);
         double highEnergyThreshold @unit(J) = default(240J);
         double energyCheckInterval @unit(s) = default(5s);
-        string optimizationMode @enum("minimize_energy", "maximize_qos", "balanced") = default("balanced");
+        double energyCutOffInterval @unit(s) = default(5s); // cutoff interval for delete old energy samples
         double satelliteEnergyCostPerByte @unit(J) = default(0.01J);
         double cellularEnergyCostPerByte @unit(J) = default(0.0002J);
-        double minAcceptableRTT @unit(s) = default(0.01s);
+        // Thresholds for energy-based strategy
         double maxAcceptableRTT @unit(s) = default(0.5s);
+        double minUtilityScore = default(0.5);
+        // Weighted scoring for energy-based strategy
+        double weightEnergy = default(0.5);
+        double weightQos = default(0.5);
 
         // ===== QoS-Based Strategy Parameters =====
         double minAcceptablePDR = default(0.75); // minimum Packet Delivery Ratio (0.0 - 1.0)
@@ -45,9 +47,9 @@ simple HybridInterfaceManager
         double minQosScore = default(0.75); // Threshold for QoS degradation
         int minDegradationCount = default(3); // number of consecutive degradations before switching
         double qosCheckInterval @unit(s) = default(5s); // interval to check QoS in seconds
-        double qosMeasurementWindow @unit(s) = default(5s); // time window for measurements in seconds
+        double qosCutOffInterval @unit(s) = default(5s); // cutoff interval for delete old QoS samples
         double minHoldTime @unit(s) = default(10s); // cool-down time between switches in seconds
-        // Weighted scoring
+        // Weighted scoring for QoS-based strategy
         double weightRTT = default(0.4); // weight for RTT in decision making
         double weightPDR = default(0.3); // weight for PDR in decision making
         double weightJitter = default(0.2); // weight for Jitter in decision making
@@ -101,24 +103,7 @@ simple HybridInterfaceManager
             title="Current Packet Delivery Ratio"; 
             record=vector,stats,last;
         );
-
-        // ====================================================
-        // Coverage-Based Strategy Signals 
-        @signal[satelliteElevationSignal](type=double);
-        @statistic[satelliteElevationDegree](
-            source=satelliteElevationSignal;
-            title="Satellite Elevation Angle"; 
-            unit=deg; 
-            record=vector,stats,last;
-        );
-        
-        @signal[coverageLossCountSignal](type=int);
-        @statistic[coverageLossCount](
-            source=coverageLossCountSignal;
-            title="Coverage Loss Count"; 
-            record=vector,stats,last;
-        );
-
+  
         // ====================================================
         // Energy-Based Strategy Signals 
         @signal[residualEnergySignal](type=double);
@@ -166,6 +151,96 @@ simple HybridInterfaceManager
             source=degradationCountSignal;
             title="Degradation Count"; 
             record=vector,stats,last;
+        );
+
+        // ====================================================
+        //  Cumulative Statistics Signals (QoS-Based)
+        @signal[satelliteCumulativeThroughput](type=double);
+        @statistic[satelliteCumulativeThroughput](
+            source=satelliteCumulativeThroughput;
+            title="Satellite Cumulative Throughput";
+            unit=bps;
+            record=last;  // Last value
+        );
+        
+        @signal[satelliteCumulativeRTT](type=double);
+        @statistic[satelliteCumulativeRTT](
+            source=satelliteCumulativeRTT;
+            title="Satellite Cumulative Average RTT";
+            unit=s;
+            record=last;
+        );
+        
+        @signal[satelliteCumulativePDR](type=double);
+        @statistic[satelliteCumulativePDR](
+            source=satelliteCumulativePDR;
+            title="Satellite Cumulative Packet Delivery Ratio";
+            record=last;
+        );
+        
+        @signal[satelliteCumulativeJitter](type=double);
+        @statistic[satelliteCumulativeJitter](
+            source=satelliteCumulativeJitter;
+            title="Satellite Cumulative Average Jitter";
+            unit=s;
+            record=last;
+        );
+        
+        @signal[satelliteTotalBytes](type=double);
+        @statistic[satelliteTotalBytes](
+            source=satelliteTotalBytes;
+            title="Satellite Total Bytes Transferred";
+            unit=B;
+            record=last;
+        );
+        
+        // Cellular cumulative signals
+        @signal[cellularCumulativeThroughput](type=double);
+        @statistic[cellularCumulativeThroughput](
+            source=cellularCumulativeThroughput;
+            title="Cellular Cumulative Throughput";
+            unit=bps;
+            record=last;
+        );
+        
+        @signal[cellularCumulativeRTT](type=double);
+        @statistic[cellularCumulativeRTT](
+            source=cellularCumulativeRTT;
+            title="Cellular Cumulative Average RTT";
+            unit=s;
+            record=last;
+        );
+        
+        @signal[cellularCumulativePDR](type=double);
+        @statistic[cellularCumulativePDR](
+            source=cellularCumulativePDR;
+            title="Cellular Cumulative Packet Delivery Ratio";
+            record=last;
+        );
+        
+        @signal[cellularCumulativeJitter](type=double);
+        @statistic[cellularCumulativeJitter](
+            source=cellularCumulativeJitter;
+            title="Cellular Cumulative Average Jitter";
+            unit=s;
+            record=last;
+        );
+        
+        @signal[cellularTotalBytes](type=double);
+        @statistic[cellularTotalBytes](
+            source=cellularTotalBytes;
+            title="Cellular Total Bytes Transferred";
+            unit=B;
+            record=last;
+        );
+        
+        // Total across both interfaces
+        @signal[totalBytesTransferred](type=double);
+        @statistic[totalBytesTransferred](
+            source=totalBytesTransferred;
+            title="Total Bytes Transferred (All Interfaces)";
+            unit=B;
+            record=last;
         );
         
 }

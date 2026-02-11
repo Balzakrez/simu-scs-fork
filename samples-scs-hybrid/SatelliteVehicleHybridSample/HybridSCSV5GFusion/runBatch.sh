@@ -30,10 +30,10 @@ declare -a SINGLE_ALL=(
 #"QoSBasedBaseline"
 declare -a QOS_ALL=(
     "QoSBasedBaseline"
-    "QoSBasedLatencySensitive"
-    "QoSBasedReliabilityFocused"
-    "QoSBasedThroughputOptimized"
-    "QoSBasedAggressive"
+    # "QoSBasedLatencySensitive"
+    # "QoSBasedReliabilityFocused"
+    # "QoSBasedThroughputOptimized"
+    # "QoSBasedAggressive"
 )
 
 #"EnergyAwareBaseline"
@@ -59,18 +59,25 @@ declare -a SET_ALL=(
 
     # "CoverageBasedBaseline"
     # "CoverageBasedWithTraffic"
+    # "CoverageBasedWithTraffic200"
 
     "QoSBasedBaseline"
-    "QoSBasedLatencySensitive"
-    "QoSBasedReliabilityFocused"
-    "QoSBasedThroughputOptimized"
-    "QoSBasedAggressive"
+    # "QoSBasedLatencySensitive"
+    # "QoSBasedReliabilityFocused"
+    # "QoSBasedThroughputOptimized"
+    # "QoSBasedAggressive"
     
-    # "EnergyAwareMinimizeEnergy"
-    # "EnergyAwareMaximizeQoS"
-    # "EnergyAwareBalanced"
-    # "EnergyAwareLowBattery"
-    # "EnergyAwareSwitchingWithTraffic"
+    # "EnergyAware_100E_00Q"
+    # "EnergyAware_90E_10Q"
+    # "EnergyAware_80E_20Q"
+    # "EnergyAware_70E_30Q"
+    # "EnergyAware_60E_40Q"
+    # "EnergyAware_50E_50Q"
+    # "EnergyAware_40E_60Q"
+    # "EnergyAware_30E_70Q"
+    # "EnergyAware_20E_80Q"
+    # "EnergyAware_10E_90Q"
+    # "EnergyAware_00E_100Q"
 )
 
 # ==============================================================================

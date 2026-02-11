@@ -17,7 +17,12 @@
 **/temp
 **/tempcode
 **/logs
-batch_run.sh
+
+utils.py
+utilsActiveNode.py
+utilsPacketDropped.py
+utilsTemporalStats.py
+utilsTimeWindow.py
 
 Makefile
 # demodump.xml

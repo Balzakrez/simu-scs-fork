@@ -10,33 +10,22 @@
 
 #include "ISwitchingStrategy.h"
 #include "../HybridInterfaceManager.h"
-#include "inet/mobility/contract/IMobility.h"
-
-// Custom specific headers
-#include "scs_utils/converter/PositionConverter.h"
+#include "os3/mobility/LUTMotionMobility.h"
 #include "scs/mobility/SatelliteMobilityScs.h"
+#include "scs_utils/converter/PositionConverter.h"
 
-using namespace inet;
-using namespace Satellite; // Namespace for PositionConverter
 
 class CoverageBasedStrategy : public ISwitchingStrategy
 {
   protected:
     // Parameters
     simtime_t checkInterval;         // Time between coverage checks
-    std::string satModulePath;       // Path to satellite module
     cMessage *checkTimer = nullptr;  // Timer for periodic coverage evaluation
     
     // Pointer to external modules
-    IMobility *vehicleMobility = nullptr;         // Vehicle mobility (x,y)
-    SatelliteMobilityScs *satMobility = nullptr;  // Satellite mobility (orbit calculation)
-    PositionConverter *posConverter = nullptr;    // Converter (x,y -> lat,lon)
-
-    // Specific signals and counters for statistics
-    simsignal_t elevationSignalId;          // Elevation angle signal 
-    simsignal_t coverageLossCountSignalId;  // Coverage loss count signal
-    int coverageLossCount = 0;              // Count of coverage loss events
-
+    inet::IMobility *vehicleMobility = nullptr; // Vehicle mobility
+    LUTMotionMobility *gsMobility = nullptr; // Ground station mobility 
+    Satellite::PositionConverter *posConverter = nullptr; // Converter (x,y -> lat,lon)
 
   public:
     CoverageBasedStrategy(HybridInterfaceManager *mgr);

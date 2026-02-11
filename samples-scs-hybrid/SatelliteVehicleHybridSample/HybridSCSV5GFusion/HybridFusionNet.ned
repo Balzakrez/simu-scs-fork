@@ -8,6 +8,7 @@ package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 // CUSTOM IMPORTS
 // ==============================================================================
 import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X;
+//import SatelliteVehicleHybridSample.HybridSCSV5GFusion.src.SatelliteTDMAController;
 
 // ==============================================================================
 // SCS IMPORTS
@@ -35,7 +36,7 @@ import inet_leosatellites.networklayer.configurator.ipv4.SatelliteNetworkConfigu
 // ==============================================================================
 // SIMU5G IMPORTS
 // ==============================================================================
-// import simu5g.nodes.Upf;
+import simu5g.nodes.Upf;
 // import simu5g.nodes.NR.gNodeB;
 import simu5g.nodes.eNodeB;
 import simu5g.nodes.PgwStandard;
@@ -148,6 +149,10 @@ network HybridFusionNet
         // ======================================================================
         node[0]: HybridCarV2X;
 
+        //tdmaManager: SatelliteTDMAController {
+            //@display("p=100,100;is=s"); // Posizione del controller sulla mappa (può essere nascosto)
+        //}
+
         // ======================================================================
         // SATELLITE NODES
         // ======================================================================
@@ -185,11 +190,11 @@ network HybridFusionNet
         }
 
         // ======================================================================
-        // CELLULAR INFRASTRUCTURE (5G NR) - Optional/Commented
+        // CELLULAR INFRASTRUCTURE (5G NR) 
         // ======================================================================
-        // upf: Upf { // 5G User Plane Function
-        //     @display("p=800,800");
-        // }
+        upf: Upf { // 5G User Plane Function
+            @display("p=800,1000");
+        }
         
         // gNB: gNodeB { // 5G Base Station
         //     @display("p=2000,1000;is=s");
@@ -202,23 +207,32 @@ network HybridFusionNet
             @display("p=1000,1000;i=device/smallrouter");
         }
 
+
     // ==========================================================================
     // NETWORK CONNECTIONS
     // ==========================================================================
     connections allowunconnected:  
 
-        // Internet Backbone: Server <-> Internet Router
+        // 1. INTERNET BACKBONE
+        // Flow: Server -> Internet -> InternetRouter
         server.pppg++ <--> Eth10G <--> internetRouter.pppg++;
 
-        // Terrestrial Network (4G LTE): eNodeB <-> PGW <-> Internet Router
+        // ----------------------------------------------------------------------
+        // 2. Terrestrial Network (TN) - 4G LTE
+        // Flow: InternetRouter -> PGW -> eNodeB -> HybridCarV2X
+        // ----------------------------------------------------------------------
+        // The PGW connects the Internet to the LTE network
         internetRouter.pppg++ <--> Eth10G <--> pgw.filterGate;
+        // The eNodeB connects to the PGW
         pgw.pppg++ <--> Eth10G <--> eNB.ppp;
-
-        // Terrestrial Network (5G NR) - Optional/Commented
-        // internetRouter.pppg++ <--> Eth10G <--> upf.filterGate;
-        // upf.pppg++ <--> Eth10G <--> gNB.ppp; 
-
-        // Satellite Network (NTN): MCC <-> Feeder Link Router <-> Internet Router
-        internetRouter.pppg++ <--> Eth10G <--> routerFL.pppg++;
+        // ----------------------------------------------------------------------
+        // 3. Satellite Network (NTN) - 5G Core
+        // Flow: InternetRouter -> UPF -> RouterFL -> MCC -> Satellite -> HybridCarV2X
+        // ----------------------------------------------------------------------
+        // The UPF acts as a gateway between the Internet and the satellite network
+        internetRouter.pppg++ <--> Eth10G <--> upf.pppg++;
+        // The output of the UPF goes to the router that manages the satellite links
+        upf.pppg++ <--> Eth10G <--> routerFL.pppg++;
+        // The satellite router connects to the Ground Station (MCC)
         routerFL.pppg++ <--> Eth10G <--> MCC[0].pppg++; 
 }

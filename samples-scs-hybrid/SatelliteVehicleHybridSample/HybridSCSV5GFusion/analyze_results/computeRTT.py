@@ -51,10 +51,9 @@ def analyze_rtt(filepath, config_name):
     
     # Calculate Global Mean across all nodes 
     global_mean_rtt = df['Mean_RTT'].mean()
-    print(f"Global Mean RTT: {global_mean_rtt:.2f} ms")
+    print(f"    Global Mean RTT: {global_mean_rtt:.2f} ms")
 
     print("Generating Mean RTT Bar Chart...")
-    
     fig1, ax1 = plt.subplots(figsize=(14, 6))
     
     node_ids = df['NodeID']
@@ -90,26 +89,13 @@ def analyze_rtt(filepath, config_name):
     ax1.grid(axis='y', linestyle='--', alpha=0.5)
 
     plt.tight_layout()
-    plt.savefig(f'plot_rtt_mean_{config_name}.png', dpi=150)
-    print(f"[OK] Saved plot_rtt_mean_{config_name}.png")
 
-    # print("Generating RTT Box Plot (Distribution)...")
-    # fig2, ax2 = plt.subplots(figsize=(14, 7))
-    # data_to_plot = df['RTT_ms'].tolist()
-    # labels = df['NodeID'].astype(str).tolist()
-    # bplot = ax2.boxplot(data_to_plot, label=labels, patch_artist=True, showfliers=False) 
-    # for patch in bplot['boxes']:
-    #     patch.set_facecolor('#2196F3')
-    #     patch.set_alpha(0.6)
-    # ax2.set_xlabel('Node Index', fontsize=12)
-    # ax2.set_ylabel('RTT (ms)', fontsize=12)
-    # ax2.set_title(f'RTT Distribution (Jitter Analysis) - {config_name}', fontsize=14)
-    # if len(labels) > 20:
-    #     plt.xticks(rotation=90, fontsize=8)
-    # ax2.grid(axis='y', linestyle='--', alpha=0.5)
-    # plt.tight_layout()
-    # plt.savefig(f'plot_rtt_boxplot_{config_name}.png', dpi=150)
-    # print(f"[OK] Saved plot_rtt_boxplot_{config_name}.png")
+    # Save plot
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/plot_rtt_mean_{config_name}.png'
+    plt.savefig(output_filename, dpi=150)
+    print(f"[OK] Saved {output_filename}")
 
 # *********************************************************************************** #
 

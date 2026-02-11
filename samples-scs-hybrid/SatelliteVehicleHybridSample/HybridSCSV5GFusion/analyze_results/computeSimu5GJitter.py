@@ -92,23 +92,13 @@ def analyze_simu5g_jitter(filepath, config_name):
     ax1.grid(axis='y', linestyle='--', alpha=0.5)
     
     plt.tight_layout()
-    plt.savefig(f'plot_simu5g_jitter_mean_{config_name}.png', dpi=150)
-    print(f"[OK] Saved plot_simu5g_jitter_mean_{config_name}.png")
 
-    # Plot Jitter Distribution 
-    # print("Generating Jitter Distribution Box Plot...")
-    # fig2, ax2 = plt.subplots(figsize=(14, 7))
-    # bplot = ax2.boxplot(df_vectors['Jitter_ms'].tolist(), label=df_vectors['NodeID'].astype(str).tolist(), patch_artist=True, showfliers=False)
-    # for patch in bplot['boxes']:
-    #     patch.set_facecolor('#9C27B0') # Purple
-    #     patch.set_alpha(0.6)
-    # ax2.set_xlabel('Node Index')
-    # ax2.set_ylabel('Jitter (ms)')
-    # ax2.set_title(f'Simu5G RLC Jitter Distribution - {config_name}', fontsize=14)
-    # ax2.grid(axis='y', linestyle='--', alpha=0.5)
-    # plt.tight_layout()
-    # plt.savefig(f'plot_simu5g_jitter_boxplot_{config_name}.png', dpi=150)
-    # print(f"[OK] Saved plot_simu5g_jitter_boxplot_{config_name}.png")
+    # Save plot
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/plot_simu5g_jitter_mean_{config_name}.png'
+    plt.savefig(output_filename, dpi=150)
+    print(f"[OK] Saved {output_filename}")
 
 # *********************************************************************************** #
 

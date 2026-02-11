@@ -5,6 +5,7 @@
 	<projects>
 		<project>inet</project>
 		<project>inet_leosatellites</project>
+		<project>os3</project>
 		<project>scs</project>
 		<project>scs_optional</project>
 		<project>scs_utils</project>

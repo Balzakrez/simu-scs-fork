@@ -13,7 +13,7 @@ def extract_node_id(module_str):
 
 # *********************************************************************************** #
 
-def foo(filepath: str, config_name: str) -> None:
+def plot(filepath: str, config_name: str) -> None:
    
     # FILTER_CELL = "*cellUsageTime:vector*"
     # FILTER_SAT = "*satUsageTime:vector*"
@@ -121,7 +121,9 @@ def bar_plot_usage(usage_summary, config_name):
     plt.tight_layout()
     
     # Save plot
-    output_filename = f'plot_interface_usage_{config_name}.png'
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/plot_interface_usage_{config_name}.png'
     plt.savefig(output_filename, dpi=150)
     print(f"[OK] Saved plot: {output_filename}")
 
@@ -155,7 +157,7 @@ def pie_plot_usage(usage_summary, config_name):
     sizes = [total_cell_time, total_sat_time]
     labels = ['Cellular', 'Satellite']
     colors = ['#4CAF50', '#2196F3'] # Green (Cell), Blue (Sat)
-    explode = (0, 0)  # Slightly "explode" the Cellular slice for visual effect
+    explode = (0.1, 0)  # Slightly "explode" the Cellular slice for visual effect
 
     # Creation of the Pie Chart
     pie_result = ax.pie(
@@ -164,7 +166,7 @@ def pie_plot_usage(usage_summary, config_name):
         labels=labels, 
         colors=colors,
         autopct='%1.1f%%',  # Show percentage with 1 decimal place
-        shadow=False, 
+        shadow=True, 
         startangle=90,
         textprops={'fontsize': 14}
     )
@@ -183,7 +185,9 @@ def pie_plot_usage(usage_summary, config_name):
     plt.tight_layout()
     
     # Save to file
-    output_filename = f'pie_interface_usage_{config_name}.png'
+    dir_name = filepath.rsplit(os.sep, 1)[0] # Assuming config name is the parent directory name
+    print(f" Saving plot for {config_name} in directory: {dir_name}")
+    output_filename = f'{dir_name}/pie_interface_usage_{config_name}.png'
     plt.savefig(output_filename, dpi=150)
     plt.close() # Close figure to free memory
     print(f"[OK] Saved pie chart: {output_filename}")
@@ -204,6 +208,6 @@ if __name__ == '__main__':
     print(f"\n  Analyzing file: {filepath}")
     print(f"  Config name: {config_name}\n")
    
-    foo(filepath, config_name)
+    plot(filepath, config_name)
 
     print("\n  Done!")

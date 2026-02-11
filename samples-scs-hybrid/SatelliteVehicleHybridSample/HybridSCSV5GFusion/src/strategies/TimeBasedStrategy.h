@@ -12,10 +12,6 @@
 #include "ISwitchingStrategy.h"
 #include "../HybridInterfaceManager.h"
 #include "inet/common/InitStages.h"
-#include <omnetpp.h>
-
-using namespace omnetpp;
-using namespace inet;
 
 /**
  * Time-based switching strategy.
