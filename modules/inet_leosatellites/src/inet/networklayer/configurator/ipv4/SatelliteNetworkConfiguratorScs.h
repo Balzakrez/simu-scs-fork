@@ -12,6 +12,8 @@
 
 #include "leosatellites/networklayer/configurator/ipv4/SatelliteNetworkConfigurator.h"
 #include "inet/common/geometry/common/Coord.h"
+#include "common/binder/Binder.h" // from Simu5G
+#include "veins_inet_scs/VeinsInetMobility.h" // from scs_optional
 
 #include <queue>
 
@@ -89,13 +91,6 @@ private:
     virtual bool isVeinsNode(cModule* mod);
 
     /**
-     * @brief Determines if a route is protected (should not be deleted).
-     * @param route Route to check
-     * @return true if route is protected, false otherwise
-     */
-    virtual bool isProtectedRoute(Ipv4Route* route);
-
-    /**
      * @brief Configures vehicle interfaces with IP addresses from pools.
      * The address is assigned from the appropriate pool (wlan or cellular).
      * Add direct routes for the assigned interfaces if not existing.
@@ -110,11 +105,6 @@ private:
      * @return true if link should be excluded, false otherwise
      */
     virtual bool isToExcludeLink(Link *link);
-
-    /**
-     * @brief Cleans up routes associated with down interfaces.
-     */
-    virtual void cleanupDownInterfaceRoutes();
 
     /**
      * @brief Optimizes routes for Veins vehicles.
@@ -139,17 +129,17 @@ private:
     /* ************************************************************ */
 
     /** @brief Allocation and release of IP addresses from pools 
-    * @param pool Pointer to the IP pool
-    * @param moduleId Module ID of the node requesting the IP
-    * @param nodeToIpMap Map of module IDs to allocated IP addresses 
-    */
+     *  @param pool Pointer to the IP pool
+     *  @param moduleId Module ID of the node requesting the IP
+     *  @param nodeToIpMap Map of module IDs to allocated IP addresses 
+     */
     virtual Ipv4Address allocateIpFromPool(IpPool* pool, int moduleId, std::map<int, uint32_t>& nodeToIpMap);
 
     /** @brief Release of IP addresses from pools 
-    * @param pool Pointer to the IP pool
-    * @param moduleId Module ID of the node releasing the IP
-    * @param nodeToIpMap Map of module IDs to allocated IP addresses
-    */
+     *  @param pool Pointer to the IP pool
+     *  @param moduleId Module ID of the node releasing the IP
+     *  @param nodeToIpMap Map of module IDs to allocated IP addresses
+     */
     virtual void releaseIpToPool(IpPool* pool, int moduleId, std::map<int, uint32_t>& nodeToIpMap);
     
     /** @brief Dump IP Pools */
@@ -158,15 +148,23 @@ private:
     /* ************************************************************ */
 
     /** @brief Binder Registration 
-     * @param newAddr New IP address to register
-     * @param host Module to register the IP address to
-    */
+     *  @param newAddr New IP address to register
+     *  @param host Module to register the IP address to
+     */
     virtual void registerToBinder(const Ipv4Address newAddr, cModule* host);
 
     /** @brief Binder Registration and Unregistration 
-     * @param moduleId Module ID of the node to unregister
-    */
+     *  @param moduleId Module ID of the node to unregister
+     */
     virtual void unRegisterFromBinder(int moduleId);
+
+    /**
+     *  @brief Find MacNodeId for a node using multiple fallback methods
+     *  @param host Module host
+     *  @param cellularIp Cellular IP address (optional, for IP-based lookup)
+     *  @return MacNodeId if found, 0 otherwise
+     */
+    virtual MacNodeId findMacNodeId(cModule* host, const Ipv4Address& cellularIp = Ipv4Address::UNSPECIFIED_ADDRESS);
 
     /* ************************************************************ */
     
@@ -200,6 +198,22 @@ protected:
      */
     virtual void reinvokeConfigurator(Topology& topology, cXMLElement *autorouteElement) override;
 
+
+    /**
+     * @brief Calculate propagation delay from distance
+     * @param distanceKm Distance in kilometers
+     * @return Delay in seconds, or INFINITY if invalid
+    */
+    virtual double calculatePropagationDelay(double distanceKm);
+
+    /**
+     * @brief Get vehicle geographic coordinates from Veins position
+     * @param veinsMob Veins mobility module
+     * @param outLat Output latitude
+     * @param outLon Output longitude
+     * @return true if successful, false if position invalid
+     */
+    virtual bool checkAndGetVehicleGeoCoordinates(veins::VeinsInetMobility* veinsMob, double& outLat, double& outLon);
 
     /**
      * @brief Computes wireless link weight (cost) for routing algorithms.

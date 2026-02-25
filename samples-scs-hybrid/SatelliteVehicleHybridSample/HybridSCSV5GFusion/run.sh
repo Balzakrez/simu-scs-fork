@@ -173,7 +173,7 @@ SUMO_PID=$!
 
 echo "SUMO started (PID: $SUMO_PID)"
 echo "Waiting for SUMO to initialize..."
-sleep 2
+sleep 5
 
 # Check if SUMO is still running
 if ! ps -p $SUMO_PID > /dev/null; then
@@ -199,6 +199,6 @@ $EXEC -u Cmdenv $EXTRA_OPTS -c $CONFIG \
     --image-path="$IMAGE_PATH" \
     --*.manager.port=$SUMO_PORT \
     $LIBS \
-    omnetpp.ini
+    omnetpp5G.ini
 echo ""
 echo "Simulation completed!"

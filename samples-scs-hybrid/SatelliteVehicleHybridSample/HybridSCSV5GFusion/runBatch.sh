@@ -30,26 +30,26 @@ declare -a SINGLE_ALL=(
 #"QoSBasedBaseline"
 declare -a QOS_ALL=(
     "QoSBasedBaseline"
-    # "QoSBasedLatencySensitive"
-    # "QoSBasedReliabilityFocused"
-    # "QoSBasedThroughputOptimized"
-    # "QoSBasedAggressive"
+    "QoSBasedLatencySensitive"
+    "QoSBasedReliabilityFocused"
+    "QoSBasedThroughputOptimized"
+    "QoSBasedAggressive"
 )
 
 #"EnergyAwareBaseline"
 declare -a ENERGY_ALL=(
-    # "EnergyAwareMinimizeEnergy"
-    # "EnergyAwareMaximizeQoS"
-    # "EnergyAwareBalanced"
-    # "EnergyAwareLowBattery"
-    # "EnergyAwareSwitchingWithTraffic"
+    "EnergyAwareMinimizeEnergy"
+    "EnergyAwareMaximizeQoS"
+    "EnergyAwareBalanced"
+    "EnergyAwareLowBattery"
+    "EnergyAwareSwitchingWithTraffic"
 )
 
 # --- All 17 configurations ---
 declare -a SET_ALL=(
-    # "CellularOnlyBaseline"
-    # "CellularOnlyWithTraffic"
-    # "SatelliteOnlyBaseline"
+    
+    "CellularOnlyWithTraffic"
+    
     # "SatelliteOnlyWithTraffic"
 
     # "TimeBasedBaseline"
@@ -59,13 +59,12 @@ declare -a SET_ALL=(
 
     # "CoverageBasedBaseline"
     # "CoverageBasedWithTraffic"
-    # "CoverageBasedWithTraffic200"
 
-    "QoSBasedBaseline"
+    # "QoSBasedBaseline"
+    # "QoSBasedAggressive"
     # "QoSBasedLatencySensitive"
     # "QoSBasedReliabilityFocused"
     # "QoSBasedThroughputOptimized"
-    # "QoSBasedAggressive"
     
     # "EnergyAware_100E_00Q"
     # "EnergyAware_90E_10Q"
@@ -175,7 +174,6 @@ run_simulation() {
     fi
 }
 
-
 # ==============================================================================
 # ARGUMENT PARSING
 # ==============================================================================
@@ -210,7 +208,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-
 # ==============================================================================
 # VALIDATION
 # ==============================================================================
@@ -231,7 +228,6 @@ fi
 
 # Create log directory
 mkdir -p "$LOG_DIR"
-
 
 # ==============================================================================
 # SUMMARY

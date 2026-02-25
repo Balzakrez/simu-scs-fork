@@ -26,9 +26,9 @@ module SatelliteHostBase extends SatApplicationLayerNodeBase
         bool initFromDisplayString=default(false);
 
         cnl[*].typename = default("AckingWirelessInterface");
+		cnl[*].radio.typename = default("ApskScalarRadio"); 
         cnl[*].radio.transmitter.typename = default("SatelliteApskScalarTransmitter");
         cnl[*].radio.receiver.typename = default("SatelliteApskScalarReceiver");
-		cnl[*].radio.typename = default("ApskScalarRadio");
         cnl[*].mgmt.typename = default("Ieee80211MgmtStaSimplified");
         cnl[*].radio.receiver.errorModel.typename = default("SatelliteErrorModel");   
         cnl[*].radio.displayCommunicationRange = false;

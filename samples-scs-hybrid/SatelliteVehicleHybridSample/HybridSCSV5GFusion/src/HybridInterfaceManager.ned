@@ -24,25 +24,9 @@ simple HybridInterfaceManager
         // ===== Coverage-Based Strategy Parameters =====
         double coverageCheckInterval @unit(s) = default(1s);
 
-        // ===== Energy-Aware Strategy Parameters =====
-        double criticalEnergyThreshold @unit(J) = default(30J);
-        double lowEnergyThreshold @unit(J) = default(90J);
-        double highEnergyThreshold @unit(J) = default(240J);
-        double energyCheckInterval @unit(s) = default(5s);
-        double energyCutOffInterval @unit(s) = default(5s); // cutoff interval for delete old energy samples
-        double satelliteEnergyCostPerByte @unit(J) = default(0.01J);
-        double cellularEnergyCostPerByte @unit(J) = default(0.0002J);
-        // Thresholds for energy-based strategy
-        double maxAcceptableRTT @unit(s) = default(0.5s);
-        double minUtilityScore = default(0.5);
-        // Weighted scoring for energy-based strategy
-        double weightEnergy = default(0.5);
-        double weightQos = default(0.5);
-
         // ===== QoS-Based Strategy Parameters =====
         double minAcceptablePDR = default(0.75); // minimum Packet Delivery Ratio (0.0 - 1.0)
         double minAcceptableThroughput @unit(bps) = default(0bps); // minimum throughput in bps
-        double maxAcceptableDelay @unit(s) = default(0.5s); // max RTT in seconds
         double maxAcceptableJitter @unit(s) = default(0.05s); // max jitter in seconds
         double minQosScore = default(0.75); // Threshold for QoS degradation
         int minDegradationCount = default(3); // number of consecutive degradations before switching
@@ -54,6 +38,19 @@ simple HybridInterfaceManager
         double weightPDR = default(0.3); // weight for PDR in decision making
         double weightJitter = default(0.2); // weight for Jitter in decision making
         double weightThroughput = default(0.1); // weight for Throughput in decision making
+
+        // ===== Energy-Aware Strategy Parameters =====
+        double criticalEnergyThreshold @unit(J) = default(30J);
+        double energyCheckInterval @unit(s) = default(5s);
+        double energyCutOffInterval @unit(s) = default(5s); // cutoff interval for delete old energy samples
+        double satelliteEnergyCostPerByte @unit(J) = default(0.01J);
+        double cellularEnergyCostPerByte @unit(J) = default(0.0002J);
+        // Thresholds for energy-based strategy
+        double maxAcceptableRTT @unit(s) = default(0.5s);
+        double minUtilityScore = default(0.5);
+        // Weighted scoring for energy-based strategy
+        double weightEnergy = default(0.5);
+        double weightQos = default(0.5);
 
         // ====================================================
         // General Signals (HybridInterfaceManager) 
@@ -119,6 +116,37 @@ simple HybridInterfaceManager
             source=utilityScoreSignal;
             title="Utility Score"; 
             record=vector,stats,last;
+        );
+
+        @signal[energyEfficiencySignal](type=double);
+        @statistic[energyEfficiency](
+            source=energyEfficiencySignal;
+            title="Energy Efficiency Score"; 
+            record=vector,stats,last;
+        );
+
+        @signal[satelliteEnergyConsumed](type=double);
+        @statistic[satelliteEnergyConsumed](
+            source=satelliteEnergyConsumed;
+            title="Satellite Estimated Energy Consumed";
+            unit=J;
+            record=last;
+        );
+
+        @signal[cellularEnergyConsumed](type=double);
+        @statistic[cellularEnergyConsumed](
+            source=cellularEnergyConsumed;
+            title="Cellular Estimated Energy Consumed";
+            unit=J;
+            record=last;
+        );
+
+        @signal[totalEnergyConsumed](type=double);
+        @statistic[totalEnergyConsumed](
+            source=totalEnergyConsumed;
+            title="Total Estimated Energy Consumed";
+            unit=J;
+            record=last;
         );
 
         // ====================================================
@@ -242,5 +270,6 @@ simple HybridInterfaceManager
             unit=B;
             record=last;
         );
+        // ====================================================
         
 }

@@ -1,142 +1,298 @@
 <config>
-   <interface hosts="HybridFusionNet.satellite[0]" names="cnl0" address="10.0.0.1" netmask="255.255.255.252" metric="4"/>
-   <interface hosts="HybridFusionNet.MCC[0]" names="wlan0" address="10.0.0.2" netmask="255.255.255.252" metric="4"/>
-   <interface hosts="HybridFusionNet.satellite[0]" names="cnl1" address="10.0.0.5" netmask="255.255.255.252" metric="14"/>
-   <interface hosts="HybridFusionNet.satellite[0]" names="cnl2" address="10.0.0.9" netmask="255.255.255.252" metric="14"/>
-   <interface hosts="HybridFusionNet.MCC[0]" names="ppp0" address="10.0.0.13" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.routerFL" names="ppp1" address="10.0.0.14" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.MCC[0]" names="eth0" address="10.0.0.17" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.server" names="ppp0" address="10.0.0.21" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.internetRouter" names="ppp0" address="10.0.0.22" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.internetRouter" names="ppp1" address="10.0.0.25" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.pgw" names="pppIf" address="10.0.0.26" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.internetRouter" names="ppp2" address="10.0.0.29" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.routerFL" names="ppp0" address="10.0.0.30" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.pgw" names="ppp0" address="10.0.0.33" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.eNB" names="pppIf" address="10.0.0.34" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.eNB" names="cellular" address="10.0.0.37" netmask="255.255.255.252" metric="1"/>
-   <interface hosts="HybridFusionNet.eNB" names="pppMEHostIf" address="10.0.0.41" netmask="255.255.255.252" metric="1"/>
-   <multicast-group hosts="HybridFusionNet.satellite[0]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.satellite[0]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.satellite[0]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.routerFL" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.MCC[0]" interfaces="eth0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.server" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.internetRouter" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.internetRouter" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.pgw" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.internetRouter" interfaces="ppp2" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.routerFL" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.pgw" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.eNB" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.eNB" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
-   <multicast-group hosts="HybridFusionNet.eNB" interfaces="pppMEHostIf" address="224.0.0.1 224.0.0.2"/>
-   <wireless interfaces="HybridFusionNet.satellite[0]%cnl0 HybridFusionNet.MCC[0]%wlan0"/>
-   <wireless interfaces="HybridFusionNet.satellite[0]%cnl1"/>
-   <wireless interfaces="HybridFusionNet.satellite[0]%cnl2"/>
-   <wireless interfaces="HybridFusionNet.eNB%cellular"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.2" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.14" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.satellite[0]" destination="10.0.0.20" netmask="255.255.255.252" gateway="10.0.0.2" interface="cnl0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.1" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.1" interface="wlan0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.14" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.MCC[0]" destination="10.0.0.20" netmask="255.255.255.252" gateway="10.0.0.14" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.1" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.14" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.22" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.server" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.22" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.1" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.14" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.30" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.26" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.30" netmask="255.255.255.255" gateway="*" interface="ppp2" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.26" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.internetRouter" destination="10.0.0.20" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.1" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.14" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.25" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.34" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.34" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.34" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.pgw" destination="10.0.0.20" netmask="255.255.255.252" gateway="10.0.0.25" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.1" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.13" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.14" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.29" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.30" netmask="255.255.255.255" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.33" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.eNB" destination="10.0.0.20" netmask="255.255.255.252" gateway="10.0.0.33" interface="pppIf" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.1" netmask="255.255.255.255" gateway="10.0.0.13" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.13" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.5" netmask="255.255.255.255" gateway="10.0.0.13" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.9" netmask="255.255.255.255" gateway="10.0.0.13" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.13" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.17" netmask="255.255.255.255" gateway="10.0.0.13" interface="ppp1" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.22" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.25" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.26" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.29" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.33" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.37" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.41" netmask="255.255.255.255" gateway="10.0.0.29" interface="ppp0" metric="0"/>
-   <route hosts="HybridFusionNet.routerFL" destination="10.0.0.20" netmask="255.255.255.252" gateway="10.0.0.29" interface="ppp0" metric="0"/>
+   <interface hosts="HybridFusionNet5G.satellite[0]" names="cnl0" address="10.0.0.1" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[1]" names="cnl0" address="10.0.0.2" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[2]" names="cnl0" address="10.0.0.3" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[3]" names="cnl0" address="10.0.0.4" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[4]" names="cnl0" address="10.0.0.5" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[5]" names="cnl0" address="10.0.0.6" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[6]" names="cnl0" address="10.0.0.7" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[7]" names="cnl0" address="10.0.0.8" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[8]" names="cnl0" address="10.0.0.9" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[9]" names="cnl0" address="10.0.0.10" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.MCC[0]" names="wlan0" address="10.0.0.11" netmask="255.255.255.240" metric="4"/>
+   <interface hosts="HybridFusionNet5G.satellite[0]" names="cnl1" address="10.0.0.17" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[1]" names="cnl1" address="10.0.0.18" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[2]" names="cnl1" address="10.0.0.19" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[3]" names="cnl1" address="10.0.0.20" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[4]" names="cnl1" address="10.0.0.21" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[5]" names="cnl1" address="10.0.0.22" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[6]" names="cnl1" address="10.0.0.23" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[7]" names="cnl1" address="10.0.0.24" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[8]" names="cnl1" address="10.0.0.25" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[9]" names="cnl1" address="10.0.0.26" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[0]" names="cnl2" address="10.0.0.33" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[1]" names="cnl2" address="10.0.0.34" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[2]" names="cnl2" address="10.0.0.35" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[3]" names="cnl2" address="10.0.0.36" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[4]" names="cnl2" address="10.0.0.37" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[5]" names="cnl2" address="10.0.0.38" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[6]" names="cnl2" address="10.0.0.39" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[7]" names="cnl2" address="10.0.0.40" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[8]" names="cnl2" address="10.0.0.41" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.satellite[9]" names="cnl2" address="10.0.0.42" netmask="255.255.255.240" metric="14"/>
+   <interface hosts="HybridFusionNet5G.MCC[0]" names="ppp0" address="10.0.0.49" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.routerFL" names="ppp1" address="10.0.0.50" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.MCC[0]" names="eth0" address="10.0.0.53" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.server" names="ppp0" address="10.0.0.57" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.internetRouter" names="ppp0" address="10.0.0.58" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.internetRouter" names="ppp1" address="10.0.0.61" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.upf" names="pppIf" address="10.0.0.62" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.internetRouter" names="ppp2" address="10.0.0.65" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.upfNTN" names="ppp0" address="10.0.0.66" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.upf" names="ppp0" address="10.0.0.69" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.gNB" names="pppIf" address="10.0.0.70" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.upfNTN" names="ppp1" address="10.0.0.73" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.routerFL" names="ppp0" address="10.0.0.74" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.upfNTN" names="pppIf" address="10.0.0.77" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.gNB" names="cellular" address="10.0.0.81" netmask="255.255.255.252" metric="1"/>
+   <interface hosts="HybridFusionNet5G.node[35]" names="cellular" address="10.4.0.135" netmask="255.255.255.0" metric="1"/>
+   <interface hosts="HybridFusionNet5G.gNB" names="pppMEHostIf" address="10.0.0.85" netmask="255.255.255.252" metric="1"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[0]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[1]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[2]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[3]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[4]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[5]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[6]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[7]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[8]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[9]" interfaces="cnl0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.MCC[0]" interfaces="wlan0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[0]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[1]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[2]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[3]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[4]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[5]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[6]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[7]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[8]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[9]" interfaces="cnl1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[0]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[1]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[2]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[3]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[4]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[5]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[6]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[7]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[8]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.satellite[9]" interfaces="cnl2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.MCC[0]" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.routerFL" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.MCC[0]" interfaces="eth0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.server" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.internetRouter" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.internetRouter" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.upf" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.internetRouter" interfaces="ppp2" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.upfNTN" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.upf" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.gNB" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.upfNTN" interfaces="ppp1" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.routerFL" interfaces="ppp0" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.upfNTN" interfaces="pppIf" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.gNB" interfaces="cellular" address="224.0.0.1 224.0.0.2"/>
+   <multicast-group hosts="HybridFusionNet5G.node[35]" interfaces="cellular" address="224.0.0.1"/>
+   <multicast-group hosts="HybridFusionNet5G.gNB" interfaces="pppMEHostIf" address="224.0.0.1 224.0.0.2"/>
+   <wireless interfaces="HybridFusionNet5G.satellite[0]%cnl0 HybridFusionNet5G.satellite[1]%cnl0 HybridFusionNet5G.satellite[2]%cnl0 HybridFusionNet5G.satellite[3]%cnl0 HybridFusionNet5G.satellite[4]%cnl0 HybridFusionNet5G.satellite[5]%cnl0 HybridFusionNet5G.satellite[6]%cnl0 HybridFusionNet5G.satellite[7]%cnl0 HybridFusionNet5G.satellite[8]%cnl0 HybridFusionNet5G.satellite[9]%cnl0 HybridFusionNet5G.MCC[0]%wlan0"/>
+   <wireless interfaces="HybridFusionNet5G.satellite[0]%cnl1 HybridFusionNet5G.satellite[1]%cnl1 HybridFusionNet5G.satellite[2]%cnl1 HybridFusionNet5G.satellite[3]%cnl1 HybridFusionNet5G.satellite[4]%cnl1 HybridFusionNet5G.satellite[5]%cnl1 HybridFusionNet5G.satellite[6]%cnl1 HybridFusionNet5G.satellite[7]%cnl1 HybridFusionNet5G.satellite[8]%cnl1 HybridFusionNet5G.satellite[9]%cnl1"/>
+   <wireless interfaces="HybridFusionNet5G.satellite[0]%cnl2 HybridFusionNet5G.satellite[1]%cnl2 HybridFusionNet5G.satellite[2]%cnl2 HybridFusionNet5G.satellite[3]%cnl2 HybridFusionNet5G.satellite[4]%cnl2 HybridFusionNet5G.satellite[5]%cnl2 HybridFusionNet5G.satellite[6]%cnl2 HybridFusionNet5G.satellite[7]%cnl2 HybridFusionNet5G.satellite[8]%cnl2 HybridFusionNet5G.satellite[9]%cnl2"/>
+   <wireless interfaces="HybridFusionNet5G.gNB%cellular HybridFusionNet5G.node[35]%cellular"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.11" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[1]" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.11" netmask="255.255.255.255" gateway="*" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.satellite[2]" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.11" interface="cnl0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.2" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.3" netmask="255.255.255.255" gateway="*" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.2" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.3" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.2" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.3" interface="wlan0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.50" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.MCC[0]" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.50" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.58" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.server" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.58" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.62" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.66" netmask="255.255.255.255" gateway="*" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.62" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.62" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.66" interface="ppp2" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.62" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.62" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.0.0.56" netmask="255.255.255.252" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.internetRouter" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.62" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.61" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.70" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.70" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.70" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.61" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.upf" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.70" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.74" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.65" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.74" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.upfNTN" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.65" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.49" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.50" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.69" netmask="255.255.255.255" gateway="*" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.73" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.74" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.69" interface="pppIf" metric="0"/>
+   <route hosts="HybridFusionNet5G.gNB" destination="10.4.0.0" netmask="255.255.255.0" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.2" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.3" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.11" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.18" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.19" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.34" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.35" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.49" netmask="255.255.255.255" gateway="*" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.53" netmask="255.255.255.255" gateway="10.0.0.49" interface="ppp1" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.58" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.61" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.62" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.65" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.66" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.69" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.70" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.73" netmask="255.255.255.255" gateway="*" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.77" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.81" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.85" netmask="255.255.255.255" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.0.0.56" netmask="255.255.255.252" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.routerFL" destination="10.4.0.0" netmask="255.255.255.0" gateway="10.0.0.73" interface="ppp0" metric="0"/>
+   <route hosts="HybridFusionNet5G.node[35]" destination="10.0.0.81" netmask="255.255.255.255" gateway="*" interface="cellular" metric="0"/>
+   <route hosts="HybridFusionNet5G.node[35]" destination="10.4.0.0" netmask="255.255.255.0" gateway="*" interface="cellular" metric="1"/>
+   <route hosts="HybridFusionNet5G.node[35]" destination="*" netmask="*" gateway="10.0.0.81" interface="cellular" metric="1"/>
 </config>

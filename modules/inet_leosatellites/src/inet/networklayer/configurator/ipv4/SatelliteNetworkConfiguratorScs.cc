@@ -19,6 +19,7 @@
 #include "common/binder/Binder.h" // from Simu5G
 #include "stack/mac/layer/LteMacBase.h" // from Simu5G
 
+#define VERBOSE_LOGGING 0
 
 Define_Module(inet::SatelliteNetworkConfiguratorScs);
 
@@ -73,8 +74,8 @@ namespace inet {
             if (poolPtr->nextAddress > poolPtr->maxHosts){
                 throw cRuntimeError("IP pool exhausted! No more addresses available in subnet");
             }
-            uint32_t hostPort = poolPtr->nextAddress++; // Increment for next allocation
-            newIp = poolPtr->baseAddress | hostPort; // Combine network and host parts
+            uint32_t hostPart = poolPtr->nextAddress++; // Increment for next allocation
+            newIp = poolPtr->baseAddress | hostPart; // Combine network and host parts
         }
         // 3. Mark the new IP as used and map to node
         poolPtr->usedAddressesSet.insert(newIp);
@@ -95,7 +96,6 @@ namespace inet {
         poolPtr->freeAddressesQueue.push(ipToFree);
         // 3. Remove from mapping
         nodeToIpMap.erase(it);
-        EV_DETAIL << "Released IP: " << Ipv4Address(ipToFree) << " from module " << moduleId << std::endl;
     }
 
     void SatelliteNetworkConfiguratorScs::cleanupVeinsNode() {       
@@ -126,70 +126,86 @@ namespace inet {
         }
     }
 
+    MacNodeId SatelliteNetworkConfiguratorScs::findMacNodeId(cModule* host, const Ipv4Address& cellularIp) {
+        if (!host) return 0;
+        
+        Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
+        MacNodeId macNodeId = 0;
+        
+        // Method 1: Try to find MacNodeId using cellularNic module
+        cModule* cellularNic = host->getSubmodule("cellularNic");
+        if (cellularNic) {
+            cModule* macModule = cellularNic->getSubmodule("mac");
+            if (macModule) {
+                macNodeId = binder->getMacNodeIdFromOmnetId(macModule->getId());
+                if (macNodeId > 0) {
+                    return macNodeId;
+                }
+            }
+        }
+        // Method 2: Try to find MacNodeId from module parameter
+        if (host->hasPar("macNodeId")) {
+            macNodeId = host->par("macNodeId").intValue();
+            if (macNodeId > 0) {
+                return macNodeId;
+            }
+        }
+        // Method 3: Try to find MacNodeId using IP (might already be mapped)
+        if (!cellularIp.isUnspecified()) {
+            macNodeId = binder->getMacNodeId(cellularIp);
+            if (macNodeId > 0) {
+                return macNodeId;
+            }
+        }
+        // Method 4: Try cached mapping
+        auto it = nodeIdToMacNodeIdMap.find(host->getId());
+        if (it != nodeIdToMacNodeIdMap.end()) {
+            macNodeId = it->second;
+            if (macNodeId > 0) {
+                return macNodeId;
+            }
+        }
+        return 0;
+    }
+
     void SatelliteNetworkConfiguratorScs::registerToBinder(const Ipv4Address newAddr, cModule* host) {
         try {
             Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
-            MacNodeId currMacNodeId = 0;
-            // Method 1: Try to find MacNodeId using cellularNic module
-            cModule* cellularNic = host->getSubmodule("cellularNic");
-            if (cellularNic != nullptr) {
-                cModule* macModule = cellularNic->getSubmodule("mac");
-                if (macModule != nullptr) {
-                    currMacNodeId = binder->getMacNodeIdFromOmnetId(macModule->getId());
-                    if (currMacNodeId > 0) {
-                        EV_DETAIL << "[registerToBinder] Method 1: Found MacNodeId " << currMacNodeId 
-                                << " using MAC module ID" << std::endl;
-                    }
-                }
-            }
-            // Method 2: Try to find MacNodeId from module parameter
-            if (currMacNodeId == 0 && host->hasPar("macNodeId")) {
-                currMacNodeId = host->par("macNodeId").intValue();
-                if (currMacNodeId > 0) {
-                    EV_DETAIL << "[registerToBinder] Method 2: Found MacNodeId " << currMacNodeId 
-                            << " from parameter" << std::endl;
-                }
-            }
-            
-            // Method 3: Try to find MacNodeId using IP (might already be mapped)
-            if (currMacNodeId == 0) {
-                currMacNodeId = binder->getMacNodeId(newAddr);
-                if (currMacNodeId > 0) {
-                    EV_DETAIL << "[registerToBinder] Method 3: Found MacNodeId " << currMacNodeId 
-                            << " from IP mapping" << std::endl;
-                }
-            }
-            
+            // Check if already registered 
+            MacNodeId currMacNodeId = findMacNodeId(host, newAddr); 
             // Method 4: Manual registration (last fallback)
             if (currMacNodeId == 0) {
                 int masterId = host->hasPar("masterId") ? host->par("masterId").intValue() : 1;
                 int cellId = host->hasPar("macCellId") ? host->par("macCellId").intValue() : 1;
-                
-                EV_DETAIL << "[registerToBinder] Method 4: No MacNodeId found, registering manually" << std::endl;
-                
                 currMacNodeId = binder->registerNode(host, UE, masterId, false);
                 binder->updateUeInfoCellId(currMacNodeId, cellId);
-                
-                EV_DETAIL << "[registerToBinder] Registered new MacNodeId " << currMacNodeId << std::endl;
             }
-            
-            // Crea/aggiorna mapping IP → MacNodeId
+            // Create/Update IP -> MacNodeId mapping
             if (currMacNodeId > 0) {
+                EV_INFO << "Binder mapping: Host=" << host->getFullPath() 
+                        << " with IP=" << newAddr 
+                        << " is already mapped to MacNodeId=" << currMacNodeId 
+                        << std::endl;
                 MacNodeId mappedId = binder->getMacNodeId(newAddr);
                 if (mappedId == 0) {
                     binder->setMacNodeId(newAddr, currMacNodeId);
-                    EV_DETAIL << "[registerToBinder] SUCCESS: Mapped IP " << newAddr 
-                            << " to MacNodeId " << currMacNodeId << std::endl;
+                    EV_INFO << "Binder mapping: IP=" << newAddr 
+                            << " mapped to MacNodeId=" << currMacNodeId 
+                            << std::endl;
                 }
                 else if (mappedId != currMacNodeId) {
-                    EV_DETAIL << "[registerToBinder] WARNING: IP " << newAddr 
-                                << " already mapped to MacNodeId " << mappedId 
-                                << " (expected " << currMacNodeId << ")" << std::endl;
+                    EV_INFO << "Binder mapping conflict: IP=" << newAddr 
+                            << " already mapped to MacNodeId=" << mappedId 
+                            << ", cannot map to MacNodeId=" << currMacNodeId 
+                            << std::endl;
                 }
             }
-
             nodeIdToMacNodeIdMap[host->getId()] = currMacNodeId; // Cache mapping
-            
+            EV_INFO << "Binder registration successful for host " << host->getFullPath() 
+                    << " with IP " << newAddr 
+                    << " and MacNodeId " << currMacNodeId 
+                    << std::endl;
+
         } catch (std::exception& e) {
             throw cRuntimeError("Error during Binder registration for %s: %s", 
                             host->getFullPath().c_str(), e.what());
@@ -198,77 +214,32 @@ namespace inet {
 
     void SatelliteNetworkConfiguratorScs::unRegisterFromBinder(int moduleId) {
         auto itCell = nodeToCellularIpMap.find(moduleId);
-        if (itCell == nodeToCellularIpMap.end()) {
-            EV_DETAIL << "[unRegisterFromBinder] No cellular IP found for module " << moduleId << std::endl;
-            return;
-        }
+        if (itCell == nodeToCellularIpMap.end()) { return; }
         
         Ipv4Address currCellIp = Ipv4Address(itCell->second);
-        Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
-        MacNodeId currMacId = 0;
         cModule* host = getSimulation()->getModule(moduleId);
-        
-        // Method 1: Try to find MacNodeId using cellularNic module
-        if (host) {
-            cModule* cellularNic = host->getSubmodule("cellularNic");
-            if (cellularNic != nullptr) {
-                cModule* macModule = cellularNic->getSubmodule("mac");
-                if (macModule != nullptr) {
-                    currMacId = binder->getMacNodeIdFromOmnetId(macModule->getId());
-                    if (currMacId > 0) {
-                        EV_DETAIL << "[unRegisterFromBinder] Method 1: Found MacNodeId " << currMacId << " using MAC module ID" << std::endl;
-                    }
-                }
-            }
-        }
-        
-        // Method 2: Try to find MacNodeId from module parameter
-        if (currMacId == 0 && host && host->hasPar("macNodeId")) {
-            currMacId = host->par("macNodeId").intValue();
-            if (currMacId > 0) {
-                EV_DETAIL << "[unRegisterFromBinder] Method 2: Found MacNodeId " << currMacId << " from parameter" << std::endl;
-            }
-        }
-        
-        // Method 3: Try to find MacNodeId using IP (might already be mapped)
-        if (currMacId == 0) {
-            currMacId = binder->getMacNodeId(currCellIp);
-            if (currMacId > 0) {
-                EV_DETAIL << "[unRegisterFromBinder] Method 3: Found MacNodeId " << currMacId << " from IP mapping" << std::endl;
-            }
-        }
-
-        // Method 4: Try to find MacNodeId from cached mapping
-        if(currMacId == 0){
-            auto itCache = nodeIdToMacNodeIdMap.find(moduleId);
-            if (itCache != nodeIdToMacNodeIdMap.end()) {
-                currMacId = itCache->second;
-                if (currMacId > 0) {
-                    EV_DETAIL << "[unRegisterFromBinder] Method 4: Found MacNodeId " << currMacId << " from cached mapping" << std::endl;
-                }
-            }
-        }
-        
+        Binder* binder = check_and_cast<Binder*>(getSimulation()->getModuleByPath("binder"));
+        MacNodeId currMacId = findMacNodeId(host, currCellIp); // Try to find MacNodeId using multiple methods
         // Unregister if found
         if (currMacId > 0) {
             binder->setMacNodeId(currCellIp, 0); // Clear mapping
             binder->unregisterNode(currMacId); // Unregister node
             nodeIdToMacNodeIdMap.erase(moduleId); // Remove from cache
-            EV_DETAIL << "[unRegisterFromBinder] SUCCESS: Unregistered MacNodeId " << currMacId << std::endl;
-        }
-        else {
-            EV_DETAIL << "[unRegisterFromBinder] FAILURE: No MacNodeId found for module " << moduleId << " (tried host, MAC, parameter, IP)" << std::endl;
+            EV_INFO << "Binder unregistration: Host=" << host->getFullPath() 
+                    << " with IP=" << currCellIp 
+                    << " and MacNodeId=" << currMacId 
+                    << " has been unregistered" 
+                    << std::endl;
         }
     }
     
     void SatelliteNetworkConfiguratorScs::checkAndConfigureVehicleInterfaces() {
-        
-        cleanupVeinsNode(); // Clean up exited vehicles first
-
+        // Clean up exited vehicles first
+        cleanupVeinsNode(); 
         // Configure interfaces for all Veins nodes
         for (int i = 0; i < topology.getNumNodes(); i++) {
             Node *node = (Node *)topology.getNode(i);
-            if (!isVeinsNode(node->getModule())) continue; // Skip non-Veins nodes
+            if (!isVeinsNode(node->getModule())) { continue; } // Skip non-Veins nodes
             cModule* host = node->getModule();
             Ipv4RoutingTable *rt = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
             if (!rt) { throw cRuntimeError("Node %s has no Ipv4RoutingTable", host->getFullPath().c_str()); }
@@ -290,12 +261,9 @@ namespace inet {
                 if (ipv4Data->getIPAddress().isUnspecified()) {
                     IpPool *currPoolPtr = isWlan ? this->wlanPoolPtr : this->cellularPoolPtr;
                     std::map<int, uint32_t> &nodeToInterfaceMapRef = isWlan ? this->nodeToWlanIpMap : this->nodeToCellularIpMap;
-                    
                     Ipv4Address newAddr = allocateIpFromPool(currPoolPtr, host->getId(), nodeToInterfaceMapRef);
                     ipv4Data->setIPAddress(newAddr);
                     ipv4Data->setNetmask(Ipv4Address(255, 255, 255, 0));
-                    
-                    EV_DETAIL << "Assigned new IP " << newAddr << " to " << host->getFullName() << " (" << ifName << ")" << endl;
                 }
                 Ipv4Address currAddrIp = ipv4Data->getIPAddress();
                 Ipv4Address netmaskAddr = ipv4Data->getNetmask();
@@ -311,8 +279,9 @@ namespace inet {
                 info->addressSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
                 info->netmask = netmaskAddr.getInt();
                 info->netmaskSpecifiedBits = Ipv4Address::ALLONES_ADDRESS.getInt();
-
-                // 4. Update routing table
+                // Update routing table
+                // Note: With carrier-only switching, interfaces are always UP
+                // Routes are added/enabled based on carrier state
                 if(info->networkInterface->isUp() && info->networkInterface->hasCarrier()){
                     // Add direct route if not exists
                     Ipv4Address networkAddrIp = currAddrIp.doAnd(netmaskAddr);
@@ -322,10 +291,8 @@ namespace inet {
                         directRoute->setNetmask(netmaskAddr);
                         directRoute->setInterface(info->networkInterface);
                         directRoute->setSourceType(Ipv4Route::MANUAL);
+                        directRoute->setMetric(1); // Direct routes have lowest metric
                         rt->addRoute(directRoute);
-                        EV_DETAIL << "Added direct route for " << networkAddrIp << "/" 
-                                << netmaskAddr.getNetmaskLength() << " on " << host->getFullName() 
-                                << " (" << ifName << ")" << endl;
                     }
                     // 5. Ensure default route via this interface if not exists
                     if(!rt->findBestMatchingRoute(Ipv4Address::UNSPECIFIED_ADDRESS)) {
@@ -335,10 +302,8 @@ namespace inet {
                         defaultRoute->setGateway(Ipv4Address::UNSPECIFIED_ADDRESS); 
                         defaultRoute->setInterface(info->networkInterface);
                         defaultRoute->setSourceType(Ipv4Route::MANUAL);
+                        defaultRoute->setMetric(1);
                         rt->addRoute(defaultRoute);
-                        EV_DETAIL << "Added default route for " << networkAddrIp << "/" 
-                                << netmaskAddr.getNetmaskLength() << " on " << host->getFullName() 
-                                << " (" << ifName << ")" << endl;
                     }
                 }
             }
@@ -397,43 +362,17 @@ namespace inet {
         return true;
     }
 
-    bool SatelliteNetworkConfiguratorScs::isProtectedRoute(Ipv4Route* route){
-        // This method is not needed anymore as we are not preserving any routes during cleanup
-        if (route == nullptr || route->getInterface() == nullptr) { return false; }
-        if (route->getSourceType() != Ipv4Route::MANUAL) { return true; }
-        std::string ifName = route->getInterface()->getInterfaceName();
-        // Preserve Default Routes via cellular and wlan0
-        if (ifName == "cellular" || ifName == "wlan0") { 
-            if (route->getDestination().isUnspecified() && route->getNetmask().isUnspecified()) {
-                    return true;
-            }
-        }
-        return false;
-    }
-
     bool SatelliteNetworkConfiguratorScs::isToExcludeLink(Link *link) {
-            // Exclude links with interfaces that are down or have no carrier
-            // isUp() = administrative state, hasCarrier() = physical connectivity
-            // This ensures that disabled interfaces are excluded from routing
+            // Exclude links with interfaces that don't have carrier (physical connectivity)
+            // Note: isUp() check is kept for robustness, but with carrier-only switching
+            // all vehicle interfaces are always UP
             if (link->sourceInterfaceInfo && link->sourceInterfaceInfo->networkInterface) {
                 auto *srcIf = link->sourceInterfaceInfo->networkInterface;
-                if (!srcIf->isUp() || !srcIf->hasCarrier()) {
-                    EV_WARN << "Wireless link excluded: source interface " 
-                            << srcIf->getInterfaceName() 
-                            << " is DOWN/no carrier (isUp=" << srcIf->isUp() 
-                            << ", hasCarrier=" << srcIf->hasCarrier() << ")" << endl;
-                    return true;
-                }
+                if (!srcIf->isUp() || !srcIf->hasCarrier()) { return true; }
             }
             if (link->destinationInterfaceInfo && link->destinationInterfaceInfo->networkInterface) {
                 auto *dstIf = link->destinationInterfaceInfo->networkInterface;
-                if (!dstIf->isUp() || !dstIf->hasCarrier()) {
-                    EV_WARN << "Wireless link excluded: destination interface " 
-                            << dstIf->getInterfaceName() 
-                            << " is DOWN/no carrier (isUp=" << dstIf->isUp() 
-                            << ", hasCarrier=" << dstIf->hasCarrier() << ")" << endl;
-                    return true;
-                }
+                if (!dstIf->isUp() || !dstIf->hasCarrier()) { return true; }
             }
             return false;
         }
@@ -464,72 +403,43 @@ namespace inet {
         }
     }
 
-    void SatelliteNetworkConfiguratorScs::cleanupDownInterfaceRoutes() {
-        for (int i = 0; i < topology.getNumNodes(); i++) {
-            Node *node = (Node *)topology.getNode(i);
-            if (!isVeinsNode(node->getModule())) continue; // Skip non-Veins nodes
-            Ipv4RoutingTable *rt = dynamic_cast<Ipv4RoutingTable*>(node->routingTable);
-            if (!rt) continue; // Skip if no routing table
-            for(int j = rt->getNumRoutes() - 1; j >= 0; j--) {
-                Ipv4Route *route = rt->getRoute(j);
-                NetworkInterface *iface = route->getInterface();
-                // Delete route if via DOWN/no-carrier interface
-                if (iface && (!iface->isUp() || !iface->hasCarrier())) {
-                    EV_DETAIL << "Removing route via DOWN/no-carrier interface " 
-                            << iface->getInterfaceName() << " on node " 
-                            << node->getModule()->getFullName() << std::endl;
-                    rt->deleteRoute(route);
-                }
-            }
-        }
-    }
-
     void SatelliteNetworkConfiguratorScs::filterVeinsSatelliteLinks(Topology& topology) {
         for (int i = 0; i < topology.getNumNodes(); i++) {
             Node *node = (Node *)topology.getNode(i);
-            // Skip non-Veins nodes
-            if (!isVeinsNode(node->getModule())) continue; 
+            if (!isVeinsNode(node->getModule())) continue; // Skip non-Veins nodes
+
             // Iterate over outgoing links of the Veins node
             veins::VeinsInetMobility* veinsMob = check_and_cast<veins::VeinsInetMobility*>(node->getModule()->getSubmodule("mobility"));
             inet::Coord vehPos = veinsMob->getCurrentPosition();
+            
+            // Early check for valid position to avoid unnecessary satellite link checks
+            if(!isValidVeinsPosition(vehPos)) { continue; }
+            
+            // Cache vehicle latitude and longitude for this node to avoid repeated conversions in the loop
+            double vehLat = posConverterPtr->convertPosYToLatitude(vehPos.y);
+            double vehLon = posConverterPtr->convertPosXToLongitude(vehPos.x);
+            
             for (int j = 0; j < node->getNumOutLinks(); j++) {
                 Link *link = (Link *)node->getLinkOut(j);
                 // Check if the link is to a satellite node and retrieve satellite mobility
                 Node *remoteNode = (Node *)link->getLinkOutRemoteNode();
                 cModule *remoteModule = remoteNode->getModule();
                 SatelliteMobility *satMobility = dynamic_cast<SatelliteMobility*>(remoteModule->getSubmodule("mobility"));
-                
                 // Retrieve BeamInfo module
                 // Satellite::BeamInfo *beamInfo = dynamic_cast<Satellite::BeamInfo*>(remoteModule->getSubmodule("bm")); 
-                
-                if (satMobility && isValidVeinsPosition(vehPos)) {
-                    // Retrieve vehicle latitude and longitude
-                    double vehLat = posConverterPtr->convertPosYToLatitude(vehPos.y);
-                    double vehLon = posConverterPtr->convertPosXToLongitude(vehPos.x);
+                if (satMobility) {
                     double elevation = satMobility->getElevation(vehLat, vehLon, 0.0);
-
                     // Disable link if vehicle is outside beam coverage or not reachable
                     if(!satMobility->isReachable(vehLat, vehLon, 0.0)) {
                         link->disable();
                         // Inet manages links as directional, we need to find the corresponding reverse link
-                        // Disable the reverse link as well
                         for (int k = 0; k < remoteNode->getNumOutLinks(); k++) {
                             Link *backLink = (Link *)remoteNode->getLinkOut(k);
                             if (backLink->getLinkOutRemoteNode() == node) {
-                                backLink->disable();
+                                backLink->disable(); // Disable the reverse link as well
                                 break;
                             }
                         }
-                        EV_DETAIL << "FAILURE: Vehicle " << node->getModule()->getFullName()
-                                    << " is OUTSIDE beam coverage of Satellite "
-                                  << remoteNode->getModule()->getFullName() 
-                                  << " (elevation: " << elevation << " degrees)" << std::endl;
-                    }
-                    else {
-                        EV_DETAIL << "SUCCESS: Vehicle " << node->getModule()->getFullName() 
-                                    << " is WITHIN beam coverage of Satellite "
-                                  << remoteNode->getModule()->getFullName() 
-                                  << " (elevation: " << elevation << " degrees)" << std::endl;
                     }
                 }
             }
@@ -541,15 +451,17 @@ namespace inet {
             Node *node = (Node *)topology.getNode(i); 
             // Skip non-Veins nodes
             if (!isVeinsNode(node->getModule())) { continue; } 
+            
             // Identify the active interface (up and has carrier)
             NetworkInterface* activeIface = nullptr;
             for (auto infoPtr : node->interfaceInfos) {
                 InterfaceInfo* info = static_cast<InterfaceInfo*>(infoPtr);
-                if (info->networkInterface && info->networkInterface->isUp() && info->networkInterface->hasCarrier()) {
+                if (info->networkInterface && info->networkInterface->hasCarrier()) {
                     activeIface = info->networkInterface;
                     break; 
                 }
             }
+            
             // Skip if no active interface found
             if (!activeIface) { continue; } 
             // Identify the best gateway from existing routes on the active interface
@@ -560,8 +472,9 @@ namespace inet {
                     break; // Take the first valid gateway found
                 }
             }
+            
             // Iterate and decide what to keep and what to discard
-            for (auto it = node->staticRoutes.begin(); it != node->staticRoutes.end(); ) {
+            for (auto it = node->staticRoutes.begin(); it != node->staticRoutes.end();) {
                 Ipv4Route* route = *it;
                 // 1. Delete routes via inactive interfaces
                 if (route->getInterface() != activeIface) {
@@ -569,38 +482,32 @@ namespace inet {
                     it = node->staticRoutes.erase(it);
                     continue;
                 }
-
                 // 2. Keep all routes (specific, default, direct) via active interface
                 // if (!route->getGateway().isUnspecified() && bestGateway.isUnspecified()) {
-                //     bestGateway = route->getGateway();  // Salva un gateway per la default
+                //     bestGateway = route->getGateway();  // Save best gateway
                 // }
                 // ++it;  
-
-                // 2. Keep direct routes (to directly connected networks)
+                // 3. Keep direct routes (to directly connected networks)
                 if (route->getGateway().isUnspecified()) {
-                    EV_DETAIL << " Keeping DIRECT route to " << route->getDestination() << std::endl;
                     ++it;
                     continue;
                 }
-                // 3. Keep default routes (0.0.0.0)
+                // 4. Keep default routes (0.0.0.0)
                 if (route->getDestination().isUnspecified()) {
-                    EV_DETAIL << " Keeping EXISTING DEFAULT route." << std::endl;
                     // If gateway is unspecified, but we have a bestGateway, update it
                     if (route->getGateway().isUnspecified() && !bestGateway.isUnspecified()) {
                         route->setGateway(bestGateway);
-                        EV_DETAIL << "  Old Gateway" << route->getGateway() << " -> Updated Gateway to " << bestGateway << std::endl;
                     }
                     ++it;
                     continue;
                 }
-                // 4. Delete specific routes via active interface because they are covered by default route
+                
+                // 5. Delete specific routes via active interface because they are covered by default route
                 delete route;
                 it = node->staticRoutes.erase(it);
             }
-
-            // --- DEFAULT ROUTE GUARANTEE ---
+            // DEFAULT ROUTE GUARANTEE 
             // If we have filtered specific routes, we must ensure that a Default Route exists
-            // otherwise the vehicle will not reach the internet.
             bool hasDefaultRoute = false;
             // Check if a default route already exists
             for (auto route : node->staticRoutes) {
@@ -617,9 +524,8 @@ namespace inet {
                 defaultRoute->setGateway(bestGateway);
                 defaultRoute->setInterface(activeIface);
                 defaultRoute->setSourceType(Ipv4Route::MANUAL);
-                defaultRoute->setMetric(1);
+                defaultRoute->setMetric(1); // Default routes have lowest metric
                 node->staticRoutes.push_back(defaultRoute);
-                EV_DETAIL << "Added MISSING Default Route via " << bestGateway << endl;
             }
         }
     }
@@ -658,30 +564,27 @@ namespace inet {
         // 2. Re-extract topology
         SatelliteNetworkConfigurator::extractTopology(topology);
 
-        // 3. Configure Veins vehicle interfaces (cellular, wlan0) 
-        // and check binder registrations and register if needed
+        // 3. Configure Veins vehicle interfaces (cellular, wlan0)
+        // Both interfaces are always UP, IP assignment and Binder registration
         checkAndConfigureVehicleInterfaces();
 
-        // Prune satellite links based on elevation angle
+        // 4. Filter satellite links based coverage/elevation
         filterVeinsSatelliteLinks(topology); 
 
-        // 4. Recalculate routing
+        // 5. Recalculate routing
         SatelliteNetworkConfigurator::addStaticRoutes(topology, autorouteElement);
 
-        // 5. Optimize vehicle routes (to keep only correct routes via active interfaces)
+        // 6. Optimize vehicle routes (keep only routes via active interface)
+        // Active = hasCarrier() since interfaces are always UP
         optimizeVehiclesRoutes();
        
-        // 6. Configure all routing tables
+        // 7. Configure all routing tables
         SatelliteNetworkConfigurator::configureAllRoutingTables();
-
-        // 7. Cleanup routes via down/no-carrier interfaces (if exists)
-        // Not needed beacause optimizeVehiclesRoutes() already handles this
-        // cleanupDownInterfaceRoutes(); 
 
         // std::cerr << "AFTER REINVOKING ROUTING TABLE:" << std::endl;
         // printRoutingTable();
 
-        // 5. Debug output
+        // Debug output
         if (par("dumpTopology").boolValue())
             dumpTopology(topology);
 
@@ -692,14 +595,30 @@ namespace inet {
             dumpIpPools();
     }
 
+    double SatelliteNetworkConfiguratorScs::calculatePropagationDelay(double distanceKm) {
+        if (std::isnan(distanceKm) || distanceKm < 0) { return INFINITY; }
+        // Speed of light: 299,792,458 m/s
+        return (distanceKm * 1000.0) / 299792458.0;
+    }
+
+    bool SatelliteNetworkConfiguratorScs::checkAndGetVehicleGeoCoordinates(veins::VeinsInetMobility* veinsMob, double& outLat, double& outLon) {
+        if (!veinsMob || !veinsMob->getParentModule() || veinsMob->isTerminated()) {
+            return false;
+        }
+        inet::Coord pos = veinsMob->getCurrentPosition();
+        if (!isValidVeinsPosition(pos)) {
+            return false;
+        }
+        outLon = posConverterPtr->convertPosXToLongitude(pos.x);
+        outLat = posConverterPtr->convertPosYToLatitude(pos.y);
+        return true;
+    }
+
     double SatelliteNetworkConfiguratorScs::computeWirelessLinkWeight(Link *link, const char *metric, cXMLElement *parameters) {
-        EV_DETAIL << "Called computeWirelessLinkWeight between " << link->sourceInterfaceInfo->node->module->getFullName() << " and " << link->destinationInterfaceInfo->node->module->getFullName() << std::endl;
+        
 
         //Exclude links with interfaces that are down or have no carrier
-        if (isToExcludeLink(link)) {
-            EV_WARN<< "Link excluded based on interface state" << endl;
-            return INFINITY;
-        }
+        if (isToExcludeLink(link)) { return INFINITY; }
 
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
@@ -711,45 +630,26 @@ namespace inet {
             
         // Calculate propagation delay (used to determine if link exists)
         if (!strcmp(metric, "propagationDelay")) {
-
-            if (!link->sourceInterfaceInfo || !link->destinationInterfaceInfo) {
-                EV_WARN << "Link has null interface info, skipping" << endl;
-                return INFINITY;
-            }
-            if (!link->sourceInterfaceInfo->node || !link->destinationInterfaceInfo->node) {
-                EV_WARN << "Link interface has null node, skipping" << endl;
-                return INFINITY;
-            }
             
+            if (!link->sourceInterfaceInfo || !link->destinationInterfaceInfo) { return INFINITY; }
+            if (!link->sourceInterfaceInfo->node || !link->destinationInterfaceInfo->node) { return INFINITY; }
+
             // Get transmitter and receiver modules
             cModule *transmitterModule = link->sourceInterfaceInfo->node->module;
             cModule *receiverModule = link->destinationInterfaceInfo->node->module;
             
             // Verify modules are valid and not deleted
-            if (!transmitterModule || !receiverModule) {
-                EV_WARN << "TX or RX module is null or deleted, skipping link" << endl;
-                return INFINITY;
-            }
+            if (!transmitterModule || !receiverModule) { return INFINITY; }
 
-            EV_DETAIL << "Evaluating link: " << transmitterModule->getFullName() << " -> " << receiverModule->getFullName() << endl;
-            
             // Get mobility modules
             cModule* txMob = transmitterModule->getSubmodule("mobility");
             cModule* rxMob = receiverModule->getSubmodule("mobility");
 
-            if(!txMob || !rxMob) {
-                EV_WARN << "Mobility module missing in TX or RX" << endl;
-                return INFINITY;
-            }
-
+            if(!txMob || !rxMob) { return INFINITY; }
             // Ensure PositionConverter is available
-            if(!posConverterPtr) {
-                EV_WARN << "PositionConverter not available for Veins nodes" << endl;
-                return INFINITY;
-            }
+            if(!posConverterPtr) { return INFINITY; }
 
             double delay = 0.0;
-
             // ========================================
             // CASE 1: Satellite -> X \in {Vehicle, GroundStation, Satellite}
             // ========================================
@@ -760,92 +660,49 @@ namespace inet {
                 if(veins::VeinsInetMobility *destVeins = dynamic_cast<veins::VeinsInetMobility*>(rxMob)) { 
                     // Check that the Veins vehicle module is still valid
                     if(!destVeins->getParentModule() || destVeins->isTerminated()) {
-                        EV_WARN << "SAT->VEC: Dest vehicle module deleted/invalid" << endl;
                         return INFINITY;
                     }
-
-                    // Get vehicle Cartesian position
-                    inet::Coord pos = destVeins->getCurrentPosition();
-
-                    // Validate position
-                    if(!isValidVeinsPosition(pos)) {
-                        EV_WARN << "SAT->VEC: " << sourceSat->getFullPath() <<  " -> " << destVeins->getFullPath() << ": Invalid position" << endl;
-                        return INFINITY;
-                    }
-
+                    double vehLon, vehLat;
                     // Convert X,Y -> Lat,Lon using PositionConverter
-                    double vehLon = posConverterPtr->convertPosXToLongitude(pos.x);
-                    double vehLat = posConverterPtr->convertPosYToLatitude(pos.y);
-
-                    EV_DETAIL << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
-                            << vehLon << "°), SAT: (" << sourceSat->getLatitude() << "°, " 
-                            << sourceSat->getLongitude() << "°, " << sourceSat->getAltitude() 
-                            << "km), Elev: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°" << endl;
-
-                    if (!sourceSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
-                            << " with elevation " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°: Link not reachable" << endl;
+                    if (!checkAndGetVehicleGeoCoordinates(destVeins, vehLat, vehLon)) {
                         return INFINITY;
                     }
-
+                    if (!sourceSat->isReachable(vehLat, vehLon, 0.0)) {   
+                        return INFINITY;
+                    }
                     // Calculate distance Satellite <-> Vehicle (in km)
                     double distKm = sourceSat->getDistance(vehLat, vehLon, 0.0);
-
                     if(std::isnan(distKm) || distKm < 0) { 
-                        EV_WARN << "SAT->VEC:" << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
-                    
                     // Calculate propagation delay (distance / speed of light)
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->VEC:" 
-                              << sourceSat->getFullPath() << " -> " << destVeins->getFullPath() 
-                              << " elevation: " << sourceSat->getElevation(vehLat, vehLon, 0.0) << "°"
-                              << " | Dist: " << distKm  << "km, Delay: " << delay << "s" << endl;
-                    
+                    delay = calculatePropagationDelay(distKm);
                     return delay; 
                 }
                 // ========================================
                 // CASE 1.B: Satellite -> GroundStation
                 // ========================================
                 else if(GroundStationMobility *destGS = dynamic_cast<GroundStationMobility*>(rxMob)) {
-
                     // Calculate distance Satellite <-> GroundStation (in km)
                     double distKm = sourceSat->getDistance(destGS->getLUTPositionY(), destGS->getLUTPositionX(), 0.0);
-
                     if(std::isnan(distKm) || distKm < 0) {
-                        EV_WARN << "SAT->GS:" << sourceSat->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
-
                     // Calculate propagation delay (distance / speed of light)
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->GS:" 
-                            << sourceSat->getFullPath() << " -> " << destGS->getFullPath() 
-                            << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
-
+                    delay = calculatePropagationDelay(distKm);
                     return delay;
                 }
                 // ========================================
                 // CASE 1.C: Satellite -> Satellite 
                 // ========================================
                 else if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)) {
-
                     // Calculate distance Satellite <-> Satellite (in km)
                     double distKm = sourceSat->getDistance(destSat->getLatitude(), destSat->getLongitude(), destSat->getAltitude());
-
-   
                     if(std::isnan(distKm) || distKm < 0) {  
-                        EV_WARN << "SAT->SAT:" << sourceSat->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
-
                     // Calculate propagation delay (distance / speed of light)
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "SAT->SAT:" 
-                              << sourceSat->getFullPath() << " -> " << destSat->getFullPath() 
-                              << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
-                    
+                    delay = calculatePropagationDelay(distKm); 
                     return delay;
                 }
             }
@@ -856,52 +713,29 @@ namespace inet {
             {
                 // Check that the Veins vehicle module is still valid
                 if(!sourceVeins->getParentModule() || sourceVeins->isTerminated()) {
-                    EV_WARN << "Source vehicle module deleted/invalid" << endl;
                     return INFINITY;
                 }
                 // ========================================
                 // Case 2.A: Vehicle -> Satellite
                 // ========================================
                 if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)) {
-                    // Get vehicle Cartesian position
-                    inet::Coord pos = sourceVeins->getCurrentPosition();
-           
-                    // Validate position
-                    if(!isValidVeinsPosition(pos)) {
-                        EV_DETAIL << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid position" << endl;
-                        return INFINITY;
-                    }
-
+                    // Check and get vehicle latitude and longitude
                     // Convert X,Y -> Lat,Lon using PositionConverter
-                    double vehLon = posConverterPtr->convertPosXToLongitude(pos.x);
-                    double vehLat = posConverterPtr->convertPosYToLatitude(pos.y);
-
-                    if (!destSat->isReachable(vehLat, vehLon, 0.0)) {   
-                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
-                        << " with elevation " << destSat->getElevation(vehLat, vehLon, 0.0) << "°: Link not reachable" << endl;
+                    double vehLon, vehLat;
+                    if (!checkAndGetVehicleGeoCoordinates(sourceVeins, vehLat, vehLon)) {  
                         return INFINITY;
                     }
-
-                    EV_DETAIL << "VEC pos: (" << pos.x << "m, " << pos.y << "m) -> (" << vehLat << "°, " 
-                             << vehLon << "°), SAT: (" << destSat->getLatitude() << "°, " 
-                             << destSat->getLongitude() << "°, " << destSat->getAltitude() 
-                             << "km), Elev: " << destSat->getElevation(vehLat, vehLon, 0.0) << "°" << endl;
+                    if (!destSat->isReachable(vehLat, vehLon, 0.0)) {   
+                        return INFINITY;
+                    }
 
                     // Calculate distance Satellite <-> Vehicle (in km)
                     double distKm = destSat->getDistance(vehLat, vehLon, 0.0);
-
                     if(std::isnan(distKm) || distKm < 0) { 
-                        EV_WARN << "VEC->SAT:" << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
-
                     // Calculate propagation delay (distance / speed of light)
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    // std::cerr << "VEC->SAT:" 
-                    //         << sourceVeins->getFullPath() << " -> " << destSat->getFullPath() 
-                    //         << " elevation: " << destSat->getElevation(vehLat, vehLon, 0.0) << "°"
-                    //         << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
-                    
+                    delay = calculatePropagationDelay(distKm);
                     return delay;
                 }
                 // ========================================
@@ -910,7 +744,6 @@ namespace inet {
                 // This method is used for wireless links only between satellite and ground nodes (GS or Veins vehicles)
                 // ========================================
                 else if (GroundStationMobility *destGS = dynamic_cast<GroundStationMobility*>(rxMob)) {
-                    EV_DETAIL << "VEC -> GS: " << sourceVeins->getFullPath() << " -> " << destGS->getFullPath() << endl;
                     return INFINITY; // Disable Vehicle->GroundStation links in SatelliteNetworkConfigurator
                 }
                 // ========================================
@@ -919,7 +752,6 @@ namespace inet {
                 // This method is used for wireless links only between satellite and ground nodes (GS or Veins vehicles)
                 // ========================================
                 else if (veins::VeinsInetMobility *destVeins = dynamic_cast<veins::VeinsInetMobility*>(rxMob)) {
-                    EV_DETAIL << "VEC -> VEC: " << sourceVeins->getFullPath() << " -> " << destVeins->getFullPath() << endl;
                     return INFINITY; // Disable V2V links in SatelliteNetworkConfigurator
                 }
             }
@@ -932,21 +764,14 @@ namespace inet {
                 // Case 3.A: GroundStation -> Satellite
                 // ========================================
                 if(SatelliteMobility *destSat = dynamic_cast<SatelliteMobility*>(rxMob)) {
-
                     // Calculate distance GroundStation <-> Satellite (in km) using SatelliteMobility->getDistance
                     // Don't use GroundStation->getDistance calculates the 3D Euclidean distance between two points in ECEF coordinates, 
                     // but is not designed for orbital calculations.
                     double distKm = destSat->getDistance(sourceGS->getLUTPositionY(), sourceGS->getLUTPositionX(), 0.0); 
-
                     if(std::isnan(distKm) || distKm < 0) {
-                        EV_WARN << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() << ": Invalid distance "<< distKm << " km" << endl;
                         return INFINITY;
                     }
-
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "GS->SAT:" << sourceGS->getFullPath() << " -> " << destSat->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
-
+                    delay = calculatePropagationDelay(distKm);
                     return delay;
                 }
                 // ========================================
@@ -956,28 +781,18 @@ namespace inet {
 
                     // Calculate distance GroundStation <-> GroundStation (in km)
                     double distKm = sourceGS->getDistance(destGS->getLUTPositionY(), destGS->getLUTPositionX(), 0.0);
-
                     if(std::isnan(distKm) || distKm < 0) {
-                        EV_WARN << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() << ": Invalid distance " << distKm << " km" << endl;
                         return INFINITY;
                     }
-
-                    delay = (distKm * 1000.0) / 299792458.0;
-                    EV_DETAIL << "GS->GS:" << sourceGS->getFullPath() << " -> " << destGS->getFullPath() 
-                        << " | Dist: " << distKm << "km, Delay: " << delay << "s" << endl;
-
+                    delay = calculatePropagationDelay(distKm);
                     return delay;
                 }
             }
             // Default for non-satellite or unidentified links (value is set to INFINITY)
-            EV_WARN << "Unhandled mobility case: "
-                << "TX=" << transmitterModule->getFullPath() << " (" << (txMob ? txMob->getClassName() : "NULL") << "), " 
-                << "RX=" << receiverModule->getFullPath() << " (" << (rxMob ? rxMob->getClassName() : "NULL") << ")" << endl;
             return INFINITY;
         }
         else {
             // For metrics other than propagationDelay (e.g., dataRate, errorRate)
-            EV_WARN << "Metric '" << metric << "' not implemented for wireless links, using minLinkWeight" << endl;
             return minLinkWeight; // or use return SatelliteNetworkConfigurator::computeWirelessLinkWeight(link, metric, parameters);
         }
     }
@@ -986,14 +801,11 @@ namespace inet {
         
         //Exclude links with interfaces that are down or have no carrier
         if (isToExcludeLink(link)) {
-            EV_WARN<< "Link excluded based on interface state" << endl;
             return INFINITY;
         }
-        
         const char *costAttribute = parameters->getAttribute("cost");
         if (costAttribute != nullptr)
             return parseCostAttribute(costAttribute);
-        
         Topology::Link *linkOut = static_cast<Topology::Link *>(link);
         if (!strcmp(metric, "hopCount"))
             return 1;
@@ -1025,11 +837,6 @@ namespace inet {
                 return minLinkWeight;
         }
         else if (!strcmp(metric, "propagationDelay")) {
-                EV_DETAIL << "Computing wired link weight (propagationDelay) for link from" 
-                  << (link->sourceInterfaceInfo && link->sourceInterfaceInfo->node && link->sourceInterfaceInfo->node->module ? link->sourceInterfaceInfo->node->module->getFullName() : "NULL") 
-                  << " to " 
-                  << (link->destinationInterfaceInfo && link->destinationInterfaceInfo->node && link->destinationInterfaceInfo->node->module ? link->destinationInterfaceInfo->node->module->getFullName() : "NULL") 
-                  << endl;
                 return minLinkWeight;
         }
         else

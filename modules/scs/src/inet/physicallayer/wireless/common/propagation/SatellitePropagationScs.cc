@@ -22,6 +22,9 @@
 #include <math.h>
 
 // using namespace Satellite;
+#include "veins_inet_scs/VeinsInetMobility.h"
+#include "scs_utils/converter/PositionConverter.h"
+#include "inet/mobility/single/AttachedMobility.h"
 
 #ifdef USEVEINSINET
 namespace veins {
@@ -35,12 +38,28 @@ namespace physicallayer {
 
 Define_Module(SatellitePropagationScs);
 
-SatellitePropagationScs::SatellitePropagationScs() : SatellitePropagation()
-{
-}
+SatellitePropagationScs::SatellitePropagationScs() : SatellitePropagation() { }
 
 const IArrival *SatellitePropagationScs::computeArrival(const ITransmission *transmission, IMobility *mobility) const
 {
+
+    if (AttachedMobility* attachedMob = dynamic_cast<AttachedMobility*>(mobility)) {
+        // antenna -> radio -> wlan[0] -> node[X]
+        cModule* current = attachedMob->getParentModule();
+        for (int i = 0; i < 3 && current; i++) {
+            current = current->getParentModule();
+        }
+        if (current) {
+            cModule* mobModule = current->getSubmodule("mobility");
+            if (mobModule) {
+                IMobility* refMob = dynamic_cast<IMobility*>(mobModule);
+                if (refMob) {
+                    mobility = refMob;
+                }
+            }
+        }
+    }
+
     arrivalComputationCount++;
     const simtime_t startTime = transmission->getStartTime();
     const simtime_t endTime = transmission->getEndTime();
@@ -54,57 +73,85 @@ const IArrival *SatellitePropagationScs::computeArrival(const ITransmission *tra
     int   TransmitterID = transmission->getTransmitterId();
 
     double distance = 0; //m
-        if (const SatelliteApskScalarTransmission *satApskTransmission = dynamic_cast<const SatelliteApskScalarTransmission*>(transmission)) {
+    if (const SatelliteApskScalarTransmission *satApskTransmission = dynamic_cast<const SatelliteApskScalarTransmission*>(transmission)) {
 
-            const auto GParent = (satApskTransmission->getName());
+        const auto GParent = (satApskTransmission->getName());
 
-            if (const inet::SatelliteMobilityScs *receiverSatMobility = dynamic_cast<const inet::SatelliteMobilityScs*>(mobility)) {
+        if (const inet::SatelliteMobilityScs *receiverSatMobility = dynamic_cast<const inet::SatelliteMobilityScs*>(mobility)) {
 
-                std::string satelliteName = receiverSatMobility->getParentModule()->par("satelliteName").stringValue();
+            std::string satelliteName = receiverSatMobility->getParentModule()->par("satelliteName").stringValue();
 
-                const auto Parent = (receiverSatMobility->getParentModule());
+            const auto Parent = (receiverSatMobility->getParentModule());
 
-                if (Parent) {
-                    const int satNum2 = Parent->getIndex();
-                    distance = receiverSatMobility->getDistance(satApskTransmission->getStartLongLatPosition().m_Lat, satApskTransmission->getStartLongLatPosition().m_Lon, satApskTransmission->getStartLongLatPosition().m_Alt);
+            if (Parent) {
+                const int satNum2 = Parent->getIndex();
+                distance = receiverSatMobility->getDistance(satApskTransmission->getStartLongLatPosition().m_Lat, satApskTransmission->getStartLongLatPosition().m_Lon, satApskTransmission->getStartLongLatPosition().m_Alt);
 
-                    if(distance<=2000)
-                    {
-                        EV << "\nDISTANCE: " << distance << "km" << "(satellite Propagation) " << satelliteName << "(" << satNum2 << ")" << "ground" << GParent << "Transmitter id " << TransmitterID << "..\n";                    //EV << "\nDISTANCE: lat" << satApskTransmission->getStartLongLatPosition().m_Lat << " do " << satApskTransmission->getStartLongLatPosition().m_Lon << "do" <<  receiverSatMobility->getLatitude() << " do " <<  receiverSatMobility->getLongitude() << " do" << distance/1000 << "Ground Station \n";
-                    }
-                    distance *=1000;
+                if(distance<=2000)
+                {
+                    EV << "\nDISTANCE: " << distance << "km" << "(satellite Propagation) " << satelliteName << "(" << satNum2 << ")" << "ground" << GParent << "Transmitter id " << TransmitterID << "..\n";                    //EV << "\nDISTANCE: lat" << satApskTransmission->getStartLongLatPosition().m_Lat << " do " << satApskTransmission->getStartLongLatPosition().m_Lon << "do" <<  receiverSatMobility->getLatitude() << " do " <<  receiverSatMobility->getLongitude() << " do" << distance/1000 << "Ground Station \n";
                 }
+                distance *=1000;
+            }
 
-            } else if (const GroundStationMobility *receiverLutMobility = dynamic_cast<const GroundStationMobility*>(mobility))
-            {
-                // satelliteposition
+        } else if (const GroundStationMobility *receiverLutMobility = dynamic_cast<const GroundStationMobility*>(mobility))
+        {
+            // satelliteposition
 
-                const SatelliteApskScalarTransmission* SatTransmission = dynamic_cast<const SatelliteApskScalarTransmission*>(transmission);
+            const SatelliteApskScalarTransmission* SatTransmission = dynamic_cast<const SatelliteApskScalarTransmission*>(transmission);
 
-                if (SatTransmission) {
+            if (SatTransmission) {
 
-                    cSite siteEquator(receiverLutMobility->getLUTPositionY(),receiverLutMobility->getLUTPositionX(),receiverLutMobility->getLUTAltitude());
-                    cCoordTopo topoLook = siteEquator.getLookAngle(SatTransmission->getSatellitePosition());
-                    distance = topoLook.m_Range;
-                    EV << "\nDISTANCE: " << distance << "km" << "(ground station propagation)" << "to satellite name " << GParent << "Transmitter id " << TransmitterID << "\n";
-                    distance *= 1000;
-
-                }
-                else {
-                    EV << "\n================cast transmission failed ====================================";
-                }
-
+                cSite siteEquator(receiverLutMobility->getLUTPositionY(),receiverLutMobility->getLUTPositionX(),receiverLutMobility->getLUTAltitude());
+                cCoordTopo topoLook = siteEquator.getLookAngle(SatTransmission->getSatellitePosition());
+                distance = topoLook.m_Range;
+                EV << "\nDISTANCE: " << distance << "km" << "(ground station propagation)" << "to satellite name " << GParent << "Transmitter id " << TransmitterID << "\n";
+                distance *= 1000;
 
             }
-                else {
-                  distance = 700000;
-                  EV << "\nOTHER receiver DETECTED";
-              }
+            else {
+                EV << "\n================cast transmission failed ====================================";
+            }
+
 
         }
-        else {
-            EV << "\nOTHER TRANSMITTER DETECTED";
+        else if (veins::VeinsInetMobility* veinsMobility = dynamic_cast<veins::VeinsInetMobility*>(mobility)) {
+            cModule* posModule = getSimulation()->getSystemModule()->getSubmodule("Pos");
+            Satellite::PositionConverter* posConverter = dynamic_cast<Satellite::PositionConverter*>(posModule);
+
+            if (!veinsMobility->getParentModule() || veinsMobility->isTerminated() || !posConverter) {
+                distance = 700000; // Fallback distance (700 km)
+                EV << "\nVeins vehicle module invalid or terminated or PositionConverter not available\n";
+            }
+            else {  
+                inet::Coord vehPos = veinsMobility->getCurrentPosition();
+                double vehLat = posConverter->convertPosYToLatitude(vehPos.y);
+                double vehLon = posConverter->convertPosXToLongitude(vehPos.x);
+                
+                const SatelliteApskScalarTransmission* SatTransmission = 
+                    dynamic_cast<const SatelliteApskScalarTransmission*>(transmission);
+                
+                if (SatTransmission) {
+                    cSite siteVehicle(vehLat, vehLon, 0.0);
+                    cCoordTopo topoLook = siteVehicle.getLookAngle(SatTransmission->getSatellitePosition());
+                    distance = topoLook.m_Range;
+                    distance *= 1000;
+                }
+                else{
+                    distance = 700000;
+                    EV << "\nSatTransmission cast failed - using fallback\n";
+                } 
+            } 
         }
+        else {
+            distance = 700000;
+            EV << "\nOTHER receiver DETECTED";
+        }
+
+    }
+    else {
+        EV << "\nOTHER TRANSMITTER DETECTED";
+    }
 
     const Coord startArrivalPosition = ignoreMovementDuringPropagation ? mobility->getCurrentPosition() : computeArrivalPosition(startTime, startPosition, mobility);
 

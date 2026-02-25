@@ -18,11 +18,7 @@
 **/tempcode
 **/logs
 
-utils.py
-utilsActiveNode.py
-utilsPacketDropped.py
-utilsTemporalStats.py
-utilsTimeWindow.py
+**/analyze
 
 Makefile
 # demodump.xml

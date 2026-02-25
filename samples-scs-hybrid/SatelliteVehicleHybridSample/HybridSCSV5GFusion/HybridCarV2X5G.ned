@@ -1,46 +1,40 @@
 // ==============================================================================
-// File: HybridCarV2X.ned
-// Hybrid Vehicle Module with Dual Connectivity (Satellite + 5G Cellular)
+// File: HybridCarV2X5G.ned
+// Hybrid Vehicle Module with Dual Connectivity (Satellite + 5G NR)
+// Extends NRUe to provide native 5G NR support with satellite interface
 // ==============================================================================
 package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 
-import simu5g.stack.LteNicUe;
-import inet.node.inet.StandardHost;
+import simu5g.stack.NRNicUe;
+import simu5g.nodes.NR.NRUe;
+import inet.linklayer.contract.IWirelessInterface;
 import SatelliteVehicleHybridSample.HybridSCSV5GFusion.src.HybridInterfaceManager;
 
+import inet.common.lifecycle.NodeStatus;
+import inet.power.contract.IEpEnergyStorage;
+import inet.power.contract.IEpEnergyManagement;
+
 // ==============================================================================
-// HYBRID VEHICLE MODULE
-// Extends StandardHost with dual connectivity capabilities
+// HYBRID VEHICLE MODULE WITH 5G NR
+// Extends NRUe with satellite connectivity capabilities
 // ==============================================================================
-module HybridCarV2X extends StandardHost
+module HybridCarV2X5G extends NRUe
 {
     parameters:
         // ======================================================================
         // NETWORK NODE CONFIGURATION
         // ======================================================================
-        @networkNode; // Required by SatelliteNetworkConfiguratorScs
-        forwarding = default(false); // Vehicles are endpoints, not routers
+        @display("i=device/car");
 
         // ======================================================================
         // CONNECTIVITY CONFIGURATION
         // ======================================================================
-        bool hasCellular = default(true); // Enable/disable cellular connectivity
-        numWlanInterfaces = default(1);   // One interface for satellite communication
+        int numWlanInterfaces = default(1); // One interface for satellite communication
 
         // ======================================================================
         // HYBRID INTERFACE SWITCHING CONFIGURATION
         // ======================================================================
         bool enableSwitching = default(true); // Enable/disable HybridInterfaceManager
-
-        // ======================================================================
-        // CELLULAR (5G/LTE) CONFIGURATION
-        // ======================================================================
-        // Simu5G Parameters (only used if hasCellular=true)
-        string nodeType = default("UE");
-        int macNodeId @mutable = default(0);
-        int masterId @mutable = default(0);
-        int macCellId @mutable = default(0);
-        string extHostAddress = default("");
 
         // ======================================================================
         // SATELLITE INTERFACE CONFIGURATION
@@ -63,43 +57,42 @@ module HybridCarV2X extends StandardHost
         wlan[0].queue.typename = default("DropTailQueue");
 
         // ======================================================================
-        // MOBILITY CONFIGURATION
-        // ======================================================================
-        mobility.typename = default("VeinsInetMobility");
-
-        // ======================================================================
         // ROUTING & INTERFACE TABLE MODULES
         // ======================================================================
-        *.routingTableModule = default(absPath(".ipv4.routingTable"));
         *.interfaceTableModule = default(absPath(".interfaceTable"));
-
-    // ==========================================================================
-    // GATES DEFINITION
-    // ==========================================================================
-    gates:
-        input lteRadioIn @directIn;  // LTE/5G radio input gate
+        *.routingTableModule = default(absPath(".ipv4.routingTable"));
+        *.energySourceModule = default(absPath(".energyStorage"));
 
     // ==========================================================================
     // SUBMODULES
     // ==========================================================================
     submodules:
-        // Hybrid Interface Manager (Optional)
+        // Satellite Network Interface
+        wlan[numWlanInterfaces]: <default("WirelessInterface")> like IWirelessInterface {
+            @display("p=200,589;q=queue");
+        }
+        // Hybrid Interface Manager
         interfaceManager: HybridInterfaceManager if enableSwitching {
             @display("p=100,400");
         }
-        
-        // Cellular Network Interface Card (Optional)
-        cellularNic: LteNicUe if hasCellular {
-            nodeType = parent.nodeType;
-            d2dCapable = false;  // Disable D2D (Device-to-Device)
+        status: NodeStatus {
+            @display("p=100,200;is=s");
         }
-
+        energyStorage: <default("SimpleEpEnergyStorage")> like inet.power.contract.IEpEnergyStorage {
+            @display("p=100,500;i=block/plug");
+        }
+        energyManagement: <default("SimpleEpEnergyManagement")> like IEpEnergyManagement {
+            @display("p=100,600;i=block/plug");
+        }
     // ==========================================================================
     // CONNECTIONS
     // ==========================================================================
     connections allowunconnected:
-        // Cellular NIC connections (only if hasCellular=true)
-        cellularNic.upperLayerOut --> nl.in++ if hasCellular;
-        cellularNic.upperLayerIn <-- nl.out++ if hasCellular;
-        lteRadioIn --> cellularNic.radioIn if hasCellular;
+        // NRUe already connects nrRadioIn <-> cellularNic <-> nl internally
+        
+        // Connect satellite interface to network layer
+        for i=0..numWlanInterfaces-1 {
+            wlan[i].upperLayerOut --> nl.in++;
+            wlan[i].upperLayerIn <-- nl.out++;
+        }
 }

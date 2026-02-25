@@ -13,10 +13,6 @@ HybridInterfaceManager::~HybridInterfaceManager() {
         delete this->strategy;
         this->strategy = nullptr;
     }
-    if (switchGuardTimerMsg) {
-        cancelAndDelete(switchGuardTimerMsg);
-        switchGuardTimerMsg = nullptr;
-    }
 }
 
 void HybridInterfaceManager::initialize(int stage) {
@@ -51,7 +47,7 @@ void HybridInterfaceManager::initialize(int stage) {
     }
     // INITSTAGE_NETWORK_CONFIGURATION: Interfaces are already registered and configured
     if (stage == INITSTAGE_NETWORK_CONFIGURATION) {
-        // Get InterfaceTable and RoutingTable
+        // Get InterfaceTable and RoutingTable↑
         cModule *host = getParentModule();
         // std::string currNodeName = getParentModule()->getFullName();
         interfaceTable = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
@@ -111,10 +107,6 @@ ISwitchingStrategy* HybridInterfaceManager::createStrategy() {
 }
 
 void HybridInterfaceManager::handleMessage(cMessage *msg) {
-    if (msg == switchGuardTimerMsg) {
-        completeSwitch();
-        return;
-    }
     if (strategy) {
         strategy->handleMessage(msg);
     } 
@@ -125,18 +117,11 @@ void HybridInterfaceManager::handleMessage(cMessage *msg) {
 }
 
 void HybridInterfaceManager::performSwitch(bool toSatellite) {
-    if (this->isSatState == toSatellite) return;  // No switch needed if already in desired state
+    if (this->isSatState == toSatellite) { return; }  // No switch needed if already in desired state
+    
     // Update Satellite State with requested state
     this->isSatState = toSatellite;
-    // Note: Not used for now
-    // if(!switchGuardTimerMsg){
-    //     switchGuardTimerMsg = new cMessage("switchGuardTimer");
-    // }
     
-    // To ensure transimission stability, we set a fixed guard time of 20ms
-    // And to ensure that old packets are sent with the old interface before switching
-    // scheduleAt(simTime() + 0.02, switchGuardTimerMsg); // 20ms fixed for guard time
-
     completeSwitch();
 }
 
@@ -164,10 +149,9 @@ void HybridInterfaceManager::completeSwitch(){
 void HybridInterfaceManager::updateInterfaceStates() {
     // Satellite Interface State Management
     if (satInterface != nullptr) {
-        NetworkInterface::State targetState = isSatState ? NetworkInterface::UP : NetworkInterface::DOWN;
         // 1. ADMINISTRATIVE STATE (UP/DOWN): Check if interface is utilizable for routing or not
-        if (satInterface->getState() != targetState) {
-            satInterface->setState(targetState);
+        if (satInterface->getState() != NetworkInterface::UP) {
+            satInterface->setState(NetworkInterface::UP);
             EV_DETAIL << "SatInterface State updated to (State=" << (isSatState ? "UP" : "DOWN") 
                       << ", Carrier=" << satInterface->hasCarrier() << ")" << endl;
         }
@@ -182,9 +166,8 @@ void HybridInterfaceManager::updateInterfaceStates() {
     if (cellInterface != nullptr) {
         bool cellularState = !isSatState;
         // 1. ADMINISTRATIVE STATE (UP/DOWN): Check if interface is utilizable for routing or not
-        NetworkInterface::State targetState = cellularState ? NetworkInterface::UP : NetworkInterface::DOWN;
-        if (cellInterface->getState() != targetState) {
-            cellInterface->setState(targetState);
+        if (cellInterface->getState() != NetworkInterface::UP) {
+            cellInterface->setState(NetworkInterface::UP);
             EV_DETAIL << "CellInterface State updated to (State=" << (cellularState ? "UP" : "DOWN") 
                       << ", Carrier=" << cellInterface->hasCarrier() << ")" << endl;
         }

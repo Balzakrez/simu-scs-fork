@@ -72,8 +72,6 @@ private:
     simsignal_t satUsageTimeSignalId;           
     simsignal_t cellUsageTimeSignalId;    
 
-    cMessage *switchGuardTimerMsg;   
-
     // Counters
     int totalSwitchesCount = 0; // Total number of switches performed
     simtime_t lastSwitchTime;   // Timestamp of the last switch

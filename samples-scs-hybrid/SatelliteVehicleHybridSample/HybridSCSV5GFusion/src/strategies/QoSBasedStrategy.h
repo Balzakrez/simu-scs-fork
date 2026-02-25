@@ -18,38 +18,36 @@ class QoSBasedStrategy : public ISwitchingStrategy, public cListener {
 
 protected:
 
-   // Event structure to hold ping information
-   struct PingEvent {
-      simtime_t txTime;      // Transmission time-stamp
-      simtime_t rxTime;      // Reception time-stamp
-      bool responded;        // True if pong received
-      std::string pingInterface; // Interface used
+   // Event structure to hold probe information
+   struct ProbeEvent {
+      simtime_t txTime;
+      simtime_t rxTime;
+      bool received;
+      std::string usedInterface;
    };
+   // HistoryMap <SeqNum, ProbeEvent> to track probe events
+   std::map<int, ProbeEvent> probeHistory; 
+   cModule *udpAppModule = nullptr; // Pointer to the UDP application module
 
    // InterfaceStats structure to hold computed statistics
    struct InterfaceStats {
       double avgRTT = 0.0;
       double avgJitter = 0.0;
       double avgPDR = 1.0;
-      double avgThroughput = 0.0;
       int sampleCount = 0;
       simtime_t lastUpdate = SIMTIME_ZERO;
    };
-   InterfaceStats currentStats;
+   InterfaceStats currentInterfaceStatistics;
 
-   // TrafficStats structure to hold traffic statistics
-   struct TrafficStats {
-      double totalBytes = 0.0;
-      simtime_t startTime = SIMTIME_ZERO;
-   };
-   // Throughput tracking on RX
-   TrafficStats satelliteRX;
-   TrafficStats cellularRX;
+   // Accumulators for total bytes received
+   double satelliteTotalRxBytesAccum = 0.0;
+   double satelliteTotalTxBytesAccum = 0.0;
+   double cellularTotalRxBytesAccum = 0.0;
+   double cellularTotalTxBytesAccum = 0.0;
 
    // Parameters
    double minAcceptablePDR; // min Packet Delivery Ratio (0.0 - 1.0)
-   double minAcceptableThroughput; // min throughput in bps
-   double maxAcceptableDelay; // max RTT in seconds
+   double maxAcceptableRTT; // max RTT in seconds
    double maxAcceptableJitter; // max jitter in seconds
    double minQosScore; // minimum QoS score to avoid switching
    
@@ -63,35 +61,28 @@ protected:
    double weightRTT; // weight for RTT in decision making
    double weightPDR; // weight for PDR in decision making
    double weightJitter; // weight for Jitter in decision making
-   double weightThroughput; // weight for Throughput in decision making
 
    /* ************************************************** */
    // Timer and modules
    cMessage *qosCheckTimerMsg = nullptr; // Timer message for periodic QoS checks
-   cModule *pingAppModule = nullptr; // Pointer to the ping application module
-   cModule *udpAppModule = nullptr; // Pointer to the UDP application module
    
    // Module references for mobility and position conversion
    inet::IMobility *vehicleMobility = nullptr;
-   inet::SatelliteMobilityScs *satMobility = nullptr;
    LUTMotionMobility *gsMobility = nullptr;    
    Satellite::PositionConverter *posConverter = nullptr;
+   //inet::SatelliteMobilityScs *satMobility = nullptr;
 
    // State
    simtime_t lastSwitchTime = SIMTIME_ZERO; // Time of the last interface switch
    std::string currentInterfaceName = "";
-   
-   // HistoryMap <PingId, PingEvent> to track ping events
-   std::map<long, PingEvent> pingHistory; 
 
    // Counters 
    int consecutiveDegradations = 0;
-
+   
    // Signal Ids for statistics
    simsignal_t currentRTTSignal;
    simsignal_t currentJitterSignal;
    simsignal_t currentPDRSignal;
-   simsignal_t currentThroughputSignal;
    simsignal_t degradationCountSignal;
    simsignal_t qosScoreSignal;
   
@@ -108,10 +99,10 @@ public:
    virtual const char* getStrategyName() const override { return "QoSBased"; }
 
    // cListener overrides for signal reception
-   virtual void receiveSignal(cComponent *source, simsignal_t signalID, long l, cObject *details) override;
-   virtual void receiveSignal(cComponent *source, simsignal_t signalID, double d, cObject *details) override; 
    virtual void receiveSignal(cComponent *source, simsignal_t signalID, cObject *obj, cObject *details) override;
    
+   virtual void receiveSignal(cComponent *source, simsignal_t signalID, long l, cObject *details) override {};
+   virtual void receiveSignal(cComponent *source, simsignal_t signalID, double d, cObject *details) override {}; 
    virtual void receiveSignal(cComponent *source, simsignal_t signalID, const char *s, cObject *details) override {};
    virtual void receiveSignal(cComponent *source, simsignal_t signalID, unsigned long l, cObject *details) override {};
    virtual void receiveSignal(cComponent *source, simsignal_t signalID, const SimTime &t, cObject *details) override {};
@@ -137,29 +128,19 @@ protected:
    void performDecision();
    
    /**
-    * Calculates average RTT for the specified interface.
+    * Calculates average RTT for the current interface.
     */
-   double calculateAvgRTT(const std::string &interface);
+   double calculateAvgRTT();
    
    /**
-    * Calculates average jitter for the specified interface.
+    * Calculates average jitter for the current interface.
     */
-   double calculateAvgJitter(const std::string &interface);
+   double calculateAvgJitter();
 
    /**
-    * Calculates average Packet Delivery Ratio (PDR) for the specified interface.
+    * Calculates average Packet Delivery Ratio (PDR) for the current interface.
     */
-   double calculateAvgPDR(const std::string &interface);
-
-   /**
-    * Calculates average throughput for the current interface.
-    */
-   double calculateThroughputOnRx();
-
-   /**
-    * Calculates average throughput for the specified interface.
-    */
-   double calculateThroughputForInterface(const std::string &interface);
+   double calculateAvgPDR();
    
    /**
     * Updates the statistics for both satellite and cellular interfaces.
@@ -181,7 +162,7 @@ protected:
    bool isSatelliteVisible();
    
    /**
-    * Cleans up old ping events from the history map to prevent memory bloat.
+    * Cleans up old events from the history map to prevent memory bloat.
     */
    void cleanOldEvents();
 
@@ -189,6 +170,13 @@ protected:
     * Emit current QoS metrics as statistics for analysis.
     */
    void emitStatistics();
+
+   /**
+     * Extracts sequence number from packet name (e.g. "RTT_Probe-42" -> 42).
+     * @param pktName The name of the packet from which to extract the sequence number.
+     * @return The extracted sequence number, or -1 if extraction fails.
+     */
+   int extractSeqNumber(const std::string &pktName);
 
    };
 

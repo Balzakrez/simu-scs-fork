@@ -20,6 +20,11 @@
 #include "leosatellites/mobility/GroundStationMobility.h"
 #include "inet/common/InitStages.h"
 
+
+#include "inet/mobility/single/AttachedMobility.h"
+#include "veins_inet_scs/VeinsInetMobility.h"
+#include "scs_utils/converter/PositionConverter.h"  
+
 using namespace Satellite;
 
 namespace inet {
@@ -61,6 +66,22 @@ const ITransmission *SatelliteApskScalarTransmitter::createTransmission(const IR
 
 
     IMobility *mobility = transmitter->getAntenna()->getMobility();
+    if (AttachedMobility* attachedMob = dynamic_cast<AttachedMobility*>(mobility)) {
+        // antenna -> radio -> wlan[0] -> node[X]
+        cModule* current = attachedMob->getParentModule();
+        for (int i = 0; i < 3 && current; i++) {
+            current = current->getParentModule();
+        }
+        if (current) {
+            cModule* mobModule = current->getSubmodule("mobility");
+            if (mobModule) {
+                IMobility* refMob = dynamic_cast<IMobility*>(mobModule);
+                if (refMob) {
+                    mobility = refMob;
+                }
+            }
+        }
+    }
 
     const Coord startPosition=Coord(mobility->getCurrentPosition());
     const Coord endPosition=Coord(mobility->getCurrentPosition());
@@ -74,8 +95,8 @@ const ITransmission *SatelliteApskScalarTransmitter::createTransmission(const IR
     if (inet::SatelliteMobilityScs *sgp4Mobility = dynamic_cast<inet::SatelliteMobilityScs *>(mobility))
     { //The node is a satellite (550km altitude)
 
-        longLatStartPosition = cCoordGeo(sgp4Mobility->getLatitude(), sgp4Mobility->getLongitude(), SatelliteAltitude);
-        longLatEndPosition = cCoordGeo(sgp4Mobility->getLatitude(), sgp4Mobility->getLongitude(), SatelliteAltitude);
+        longLatStartPosition = cCoordGeo(sgp4Mobility->getLatitude(), sgp4Mobility->getLongitude(), sgp4Mobility->getAltitude());
+        longLatEndPosition = cCoordGeo(sgp4Mobility->getLatitude(), sgp4Mobility->getLongitude(), sgp4Mobility->getAltitude());
         SatellitePosition= sgp4Mobility->getSatellitePosition();
         //return new SatelliteApskScalarTransmission(transmitter, packet, startTime, endTime, preambleDuration, headerDuration, dataDuration, d, endPosition, startOrientation, endOrientation, modulation, headerLength, dataLength, transmissionCenterFrequency, transmissionBandwidth, transmissionBitrate, transmissionPower, longLatStartPosition, longLatEndPosition);
 
@@ -86,18 +107,45 @@ const ITransmission *SatelliteApskScalarTransmitter::createTransmission(const IR
         cEci SP(longLatStartPosition, dateTime);
         SatellitePosition = SP;
         EV << "\nGroundstation LAT: " << lutMobility->getLUTPositionY() << " LON: " << lutMobility->getLUTPositionX() << " altitude  " << SatelliteAltitude ;
-    } else
-    {  //other
+    } 
+    else if (veins::VeinsInetMobility *veinsMobility = dynamic_cast<veins::VeinsInetMobility *>(mobility)) {
+        Satellite::PositionConverter* posConverter = 
+            dynamic_cast<Satellite::PositionConverter*>(getSimulation()->getSystemModule()->getSubmodule("Pos"));
+        
+        if (posConverter && veinsMobility->getParentModule() && !veinsMobility->isTerminated()) {
+            inet::Coord vehPos = veinsMobility->getCurrentPosition();
+            double vehLat = posConverter->convertPosYToLatitude(vehPos.y);
+            double vehLon = posConverter->convertPosXToLongitude(vehPos.x);
+
+            longLatStartPosition = cCoordGeo(vehLat, vehLon, 0);
+            longLatEndPosition = cCoordGeo(vehLat, vehLon, 0);
+            cEci SP(longLatStartPosition, dateTime);
+            SatellitePosition = SP;
+        }
+        else {  
+            // Fallback se PositionConverter non disponibile
+            longLatStartPosition = cCoordGeo(35.45279, 137.74062, 0);
+            longLatEndPosition = cCoordGeo(35.45279, 137.74062, 0);
+            cEci SP(longLatStartPosition, dateTime);
+            SatellitePosition = SP;
+        }
+    }
+    else{  
         longLatStartPosition = cCoordGeo(35.45279, 137.74062, 0);
         longLatEndPosition = cCoordGeo(35.45279, 137.74062, 0);
         cEci SP(longLatStartPosition, dateTime);
         SatellitePosition = SP;
         EV << "\nnoone? ";
-
     }
 
-    const ITransmission* IT = new SatelliteApskScalarTransmission(transmitter, packet, startTime, endTime, preambleDuration, headerDuration, dataDuration,
-                    startPosition, endPosition, startOrientation, endOrientation, modulation, headerLength, dataLength, transmissionCenterFrequency, transmissionBandwidth, transmissionBitrate, transmissionPower, longLatStartPosition, longLatEndPosition);
+    const ITransmission* IT = 
+        new SatelliteApskScalarTransmission(
+            transmitter, packet, startTime, endTime, preambleDuration, headerDuration, dataDuration,
+            startPosition, endPosition, startOrientation, endOrientation, modulation, headerLength, 
+            dataLength, transmissionCenterFrequency, transmissionBandwidth, transmissionBitrate, 
+            transmissionPower, longLatStartPosition, longLatEndPosition
+        );
+            
     int teansmitterID = IT->getTransmitterId();
 
     EV << " ID: " << teansmitterID << "\n";

@@ -7,8 +7,8 @@ package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 // ==============================================================================
 // CUSTOM IMPORTS
 // ==============================================================================
-import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X;
-//import SatelliteVehicleHybridSample.HybridSCSV5GFusion.src.SatelliteTDMAController;
+// import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X4G;
+import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X5G;
 
 // ==============================================================================
 // SCS IMPORTS
@@ -37,7 +37,6 @@ import inet_leosatellites.networklayer.configurator.ipv4.SatelliteNetworkConfigu
 // SIMU5G IMPORTS
 // ==============================================================================
 import simu5g.nodes.Upf;
-// import simu5g.nodes.NR.gNodeB;
 import simu5g.nodes.eNodeB;
 import simu5g.nodes.PgwStandard;
 import simu5g.common.binder.Binder;
@@ -64,20 +63,15 @@ import org.car2x.veins.visualizer.roads.RoadsCanvasVisualizer;
 // HYBRID FUSION NETWORK
 // Satellite-Vehicle 5G/LTE Hybrid Network with Dual Connectivity
 // ==============================================================================
-network HybridFusionNet
+network HybridFusionNet4G
 {
     parameters:
         int numOfSats = default(1); // Number of satellites
         int numOfMCCs = default(1); // Number of Mission Control Centers
-        int numOfServiceLinkChannels = default(1); // Number of Service Link Channels (FDMA)
-        // int numOfCars = default(0); // Number of GroundStations (if needed)
-        // int numOfUECar = default(4);
-        // int numUe = default(4);
-        // int numUeD2DTx = default(0);
-        // int numUeD2DRx = default(0);
+        int numOfServiceLinkChannels = default(1); // Number of Service Link Channels
 
         @display("bgi=veinsAndJapan1080,s;bgb=2160,1080");
-        //! @display("bgi=veinsAndWorldMap,s;bgb=3660,1080");
+        // @display("bgi=veinsAndWorldMap,s;bgb=3660,1080");
    
     submodules:
         // ======================================================================
@@ -116,7 +110,8 @@ network HybridFusionNet
         // VEINS INTEGRATION MODULES
         // ======================================================================
         manager: VeinsInetManager { 
-            @display("p=0,0;i=onedot"); 
+            @display("p=0,0;i=onedot");
+			moduleType = "SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X4G";
         }
         
         roadsCanvasVisualizer: RoadsINETCanvasVisualizer { 
@@ -147,11 +142,7 @@ network HybridFusionNet
         // ======================================================================
         // MOBILE NODES (Hybrid Vehicles)
         // ======================================================================
-        node[0]: HybridCarV2X;
-
-        //tdmaManager: SatelliteTDMAController {
-            //@display("p=100,100;is=s"); // Posizione del controller sulla mappa (può essere nascosto)
-        //}
+        node[0]: HybridCarV2X4G;
 
         // ======================================================================
         // SATELLITE NODES
@@ -196,10 +187,6 @@ network HybridFusionNet
             @display("p=800,1000");
         }
         
-        // gNB: gNodeB { // 5G Base Station
-        //     @display("p=2000,1000;is=s");
-        // }
-
         // ======================================================================
         // SATELLITE FEEDER LINK ROUTER
         // ======================================================================
