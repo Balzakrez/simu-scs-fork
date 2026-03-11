@@ -170,6 +170,7 @@ def pie_plot_usage(usage_summary, filepath, config_name):
     """
     Generates a pie chart showing global aggregate interface usage across all nodes.
     Cellular time and satellite time are summed across all nodes to produce two slices.
+    Slices with 0% are automatically excluded to avoid rendering '0.0%' labels.
     """
 
     cell_pct = usage_summary['Cell_%']
@@ -179,12 +180,20 @@ def pie_plot_usage(usage_summary, filepath, config_name):
 
     print("Generating pie chart...")
 
+    all_sizes   = [cell_pct.mean(), sat_pct.mean()]
+    all_labels  = ['Cellular', 'Satellite']
+    all_colors  = [GREEN, SKY_BLUE]
+    all_explode = [0.1, 0.0]
+
+    # Filter out zero-valued slices to avoid rendering '0.0%' labels
+    filtered = [
+        (s, l, c, e)
+        for s, l, c, e in zip(all_sizes, all_labels, all_colors, all_explode)
+        if s > 0
+    ]
+    sizes, labels, colors, explode = zip(*filtered) if filtered else ([], [], [], [])
+
     fig, ax = plt.subplots(figsize=FIG_SQUARE)
-    
-    sizes   = [cell_pct.mean(), sat_pct.mean()]
-    labels  = ['Cellular', 'Satellite']
-    colors  = [GREEN, SKY_BLUE]
-    explode = (0.1, 0)  # slightly explode the cellular slice for visual emphasis
 
     pie_result = ax.pie(
         sizes,
@@ -201,7 +210,7 @@ def pie_plot_usage(usage_summary, filepath, config_name):
         autotexts = pie_result[2]
         plt.setp(autotexts, size=14, weight='bold', color='white')
 
-    ax.set_title(f'Interface Usage Distribution\n{config_name}')
+    ax.set_title(f'Interface Usage - {config_name}')
 
     plt.tight_layout()
     save_plot(fig, filepath, config_name, f"pie_interface_usage_{config_name}.png")

@@ -27,7 +27,6 @@ protected:
    };
    // HistoryMap <SeqNum, ProbeEvent> to track probe events
    std::map<int, ProbeEvent> probeHistory; 
-   cModule *udpAppModule = nullptr; // Pointer to the UDP application module
 
    // InterfaceStats structure to hold computed statistics
    struct InterfaceStats {
@@ -83,7 +82,6 @@ protected:
    simsignal_t currentRTTSignal;
    simsignal_t currentJitterSignal;
    simsignal_t currentPDRSignal;
-   simsignal_t degradationCountSignal;
    simsignal_t qosScoreSignal;
   
    /* ************************************************** */

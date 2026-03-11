@@ -20,6 +20,9 @@
 
 **/analyze
 
+SatelliteTdmaController.cc
+SatelliteTdmaController.ned
+
 Makefile
 # demodump.xml
 

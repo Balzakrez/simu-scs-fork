@@ -144,6 +144,12 @@ def plot_roundtrip_pdr_per_node(filepath, config_name):
     mean_pdr = np.mean(pdr_values)
     print(f"\nGlobal Mean Round-trip PDR: {mean_pdr:.1f}%")
 
+    # Weighted PDR: sum(Rx_i) / sum(Tx_i)
+    total_sent_rt     = pdr_table[sent_col].sum()
+    total_received_rt = pdr_table[recv_col].sum()
+    weighted_pdr      = (total_received_rt / total_sent_rt * 100) if total_sent_rt > 0 else 0.0
+    print(f"Global Mean Round-trip PDR (weighted):   {weighted_pdr:.1f}%")
+
     # --- Plot ---
     fig, ax = plt.subplots(figsize=FIG_SINGLE)
 
@@ -159,8 +165,10 @@ def plot_roundtrip_pdr_per_node(filepath, config_name):
     ax.set_xlabel('Node Index')
     ax.set_ylabel('Round-trip PDR (%)')
     ax.set_title(
-        f'Round-trip PDR per node (RTT_Probe) — {config_name} (mean={mean_pdr:.1f}%)\n'
-        f'Bidirectional metric: probe sent by node, echo reply received back'
+        f'Round-trip PDR per node: {mean_pdr:.1f}% - {config_name}\n'
+        # f'Round-trip PDR per node (Global Mean={mean_pdr:.1f}%)\n'
+        # f'Round-trip PDR per node (RTT_Probe) — {config_name} (mean={mean_pdr:.1f}%)\n'
+        # f'Bidirectional metric: probe sent by node, echo reply received back'
     )
     ax.set_ylim(0, 105)
     ax.set_xlim(min(node_indices) - 1, max(node_indices) + 1)
@@ -171,10 +179,6 @@ def plot_roundtrip_pdr_per_node(filepath, config_name):
     save_plot(fig, filepath, config_name, "roundtrip")
 
 
-# ============================================================================
-# Metric 2: Classic uplink PDR — global (BackgroundLoad, app[0])
-# ============================================================================
-
 def plot_classic_uplink_pdr(filepath, config_name):
     """
     Computes and plots the classic uplink PDR for background traffic.
@@ -183,7 +187,10 @@ def plot_classic_uplink_pdr(filepath, config_name):
       - node[*].app[0] packetSent:count    (BackgroundLoad sent by each node)
       - server.app[0]  packetReceived:count (BackgroundLoad received at server)
 
-    PDR = total_received_at_server / total_sent_by_all_nodes * 100
+    Produces 3 separate figures:
+      1. Global PDR as a single bar
+      2. Pie chart of delivered vs lost packets
+      3. Packets sent per node (load distribution)
 
     LIMITATION: This metric is only available globally, not per node, because
     the server (UdpSink) aggregates all received packets without tracking the
@@ -206,7 +213,6 @@ def plot_classic_uplink_pdr(filepath, config_name):
         print(" [WARN] No packetReceived:count scalars found for server app[0]. Skipping.")
         return
 
-    # Extract per-node sent counts for the bar chart
     df_sent['NodeID'] = df_sent['module'].apply(extract_node_id)
     df_sent = df_sent[df_sent['NodeID'] != -1]
     if df_sent.empty:
@@ -215,6 +221,7 @@ def plot_classic_uplink_pdr(filepath, config_name):
 
     total_sent = df_sent['value'].sum()
     total_received = df_recv['value'].sum()
+    total_lost = total_sent - total_received
 
     if total_sent == 0:
         print(" [WARN] Total sent is 0. Cannot compute PDR.")
@@ -223,45 +230,95 @@ def plot_classic_uplink_pdr(filepath, config_name):
     global_pdr = (total_received / total_sent) * 100
     print(f"Total sent by all nodes:      {int(total_sent)}")
     print(f"Total received at server:     {int(total_received)}")
+    print(f"Total lost:                   {int(total_lost)}")
     print(f"Classic uplink PDR (global):  {global_pdr:.1f}%")
 
-    # Per-node sent distribution (to show load balance)
     df_sent_sorted = df_sent.sort_values('NodeID')
     node_indices = df_sent_sorted['NodeID'].tolist()
     sent_values = df_sent_sorted['value'].tolist()
 
-    # --- Plot: two subplots side by side ---
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=FIG_DOUBLE)
-
-    # Left: global PDR as a single gauge-style bar
+    # -------------------------------------------------------------------------
+    # Figure 1: Global PDR — single bar
+    # -------------------------------------------------------------------------
     bar_color = GREEN if global_pdr >= 95 else ORANGE if global_pdr >= 80 else VERMILLION
-    ax1.bar(['All nodes'], [global_pdr], color=bar_color, edgecolor='black', linewidth=0.8, width=0.4)
-    ax1.axhline(y=95, color=VERMILLION, linestyle='--', alpha=0.7, label='Threshold 95%')
+
+    fig1, ax1 = plt.subplots(figsize=FIG_SINGLE)
+    ax1.bar(['All nodes'], [global_pdr], color=bar_color, edgecolor='black',
+            linewidth=0.8, width=0.4)
+    ax1.axhline(y=95, color=VERMILLION, linestyle='--', alpha=0.7,
+                label='Quality threshold 95%')
     ax1.set_ylabel('Classic Uplink PDR (%)')
-    ax1.set_title(f'Classic Uplink PDR (global)\n{config_name}')
-    ax1.set_ylim(0, 105)
-    ax1.legend(loc='lower right')
-    ax1.grid(axis='y', linestyle='--', alpha=0.5)
-    # Annotate value on bar
-    ax1.text(0, global_pdr + 1.5, f'{global_pdr:.1f}%', ha='center', va='bottom')
-
-    # Right: packets sent per node (shows load distribution)
-    ax2.bar(node_indices, sent_values, color=BLUE, edgecolor='black',linewidth=0.5, width=0.8)
-    mean_sent = np.mean(sent_values)
-    ax2.axhline(y=mean_sent, color=ORANGE, linestyle='-', alpha=0.8, linewidth=2, label=f'Mean sent: {mean_sent:.0f}')
-    ax2.set_xlabel('Node Index')
-    ax2.set_ylabel('Packets Sent')
-    ax2.set_title(f'BackgroundLoad packets sent per node\n{config_name}')
-    ax2.legend(loc='upper right')
-    ax2.grid(axis='y', linestyle='--', alpha=0.5)
-
-    plt.suptitle(
+    ax1.set_title(
+        # f'Classic Uplink PDR: {global_pdr:.1f}%\n'
+        # f'Classic Uplink PDR (Global Mean: {global_pdr:.1f}%)\n'
         f'Classic Uplink PDR — {config_name}\n'
-        f'Unidirectional metric: node→server only (UdpSink does not reply)', y=0.98
+        # f'Unidirectional metric: node -> server'
+    )
+    ax1.set_ylim(0, 105)
+    ax1.legend(loc='lower left')
+    ax1.grid(axis='y', linestyle='--', alpha=0.5)
+    ax1.text(0, global_pdr + 1.5, f'{global_pdr:.1f}%', ha='center', va='bottom', fontsize=12, fontweight='bold')
+    plt.tight_layout()
+    save_plot(fig1, filepath, config_name, "classic_uplink_global")
+
+    # -------------------------------------------------------------------------
+    # Figure 2: Pie chart — delivered vs lost
+    # -------------------------------------------------------------------------
+    fig2, ax2 = plt.subplots(figsize=FIG_SINGLE)
+    pie_values = [total_received, total_lost]
+    pie_labels = [
+        f'Delivered\n{int(total_received)} ({global_pdr:.1f}%)',
+        f'Lost\n{int(total_lost)} ({100 - global_pdr:.1f}%)'
+    ]
+    pie_colors = [GREEN, VERMILLION]
+    explode = (0.1, 0)  # slightly explode the cellular slice for visual emphasis
+
+    pie_result = ax2.pie(
+        pie_values,
+        explode=explode,
+        labels=pie_labels,
+        colors=pie_colors,
+        autopct='%1.1f%%',
+        shadow=True,
+        startangle=90,
+    )
+
+    # Style the percentage labels inside the slices
+    if len(pie_result) > 2:
+        autotexts = pie_result[2]
+        plt.setp(autotexts, size=14, weight='bold', color='white')
+
+    ax2.set_title(
+        f'BackgroundLoad delivery breakdown\n'
+        # f'BackgroundLoad delivery breakdown — {config_name}\n'
+        f'Total packets sent: {int(total_sent)}'
     )
     plt.tight_layout()
+    save_plot(fig2, filepath, config_name, "classic_uplink_pie")
 
-    save_plot(fig, filepath, config_name, "classic_uplink")
+    # -------------------------------------------------------------------------
+    # Figure 3: Packets sent per node — load distribution
+    # -------------------------------------------------------------------------
+    mean_sent = np.mean(sent_values)
+
+    fig3, ax3 = plt.subplots(figsize=FIG_SINGLE)
+    ax3.bar(node_indices, sent_values, color=BLUE, edgecolor='black',
+            linewidth=0.5, width=0.8)
+    ax3.axhline(y=mean_sent, color=ORANGE, linestyle='-', alpha=0.8,
+                linewidth=2, label=f'Mean: {mean_sent:.0f} pkts')
+    ax3.set_xlabel('Node Index')
+    ax3.set_ylabel('Packets Sent')
+    ax3.set_title(
+        f'Packets sent per node\n'
+        # f'Packets sent per node — {config_name}\n'
+        # f'Load distribution across vehicles'
+    )
+    ax3.set_xlim(min(node_indices) - 1, max(node_indices) + 1)
+    ax3.legend(loc='upper right')
+    ax3.grid(axis='y', linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    save_plot(fig3, filepath, config_name, "classic_uplink_sent")
+
 
 
 # ============================================================================

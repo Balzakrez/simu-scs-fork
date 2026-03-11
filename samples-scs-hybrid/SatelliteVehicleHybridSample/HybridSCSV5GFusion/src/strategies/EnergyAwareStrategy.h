@@ -19,8 +19,11 @@ using namespace inet::power;
 
 class EnergyAwareStrategy : public ISwitchingStrategy, public cListener {
 private:
+
+    int consecutiveDegradations = 0;
+    int minDegradationCount;
     double criticalEnergyThreshold;
-    
+
     // Cost models (energy cost per byte or per second of usage)
     double satelliteEnergyCostPerByte; // Joules per byte
     double cellularEnergyCostPerByte; // Joules per byte
@@ -65,7 +68,6 @@ private:
     };
     // HistoryMap <SeqNum, ProbeEvent> to track UDP RTT probe events
     std::map<int, ProbeEvent> probeHistory;
-    cModule *udpAppModule = nullptr; // Pointer to the UDP application module
     
     // Interface statistics
     struct InterfaceStats {
@@ -76,15 +78,11 @@ private:
     };
     InterfaceStats currentInterfaceStatistics;
     
-    // TrafficStats structure to hold traffic statistics
-    struct TrafficStats {
-        double totalBytes = 0.0;
-        simtime_t startTime = SIMTIME_ZERO;
-    };
-    // Throughput tracking on RX
-    TrafficStats satelliteRX;
-    TrafficStats cellularRX;
-    
+    double satelliteTotalRxBytesAccum = 0.0;
+    double satelliteTotalTxBytesAccum = 0.0;
+    double cellularTotalRxBytesAccum  = 0.0;
+    double cellularTotalTxBytesAccum  = 0.0;
+
     // Signals
     simsignal_t currentRTTSignal;
     simsignal_t currentPDRSignal;
@@ -170,16 +168,27 @@ public:
     double computeEnergyEfficiency();
 
     /**
-     * Computes a QoS score based on RTT and PDR.
+     * Computes a QoS score for the given interface statistics.
+     * @param stats The interface statistics to use for computing the QoS score.
      * @return The computed QoS score.
      */
-    double computeQoSScore();
+    double computeQoSScore(const InterfaceStats &stats);
 
     /**
      * Checks satellite visibility based on mobility and position information.
      * @return True if the satellite is currently visible, false otherwise.
      */
     bool isSatelliteVisible();
+
+    /**
+     * Performs the actual interface switch based on the decision.
+     */
+    void performDecision();
+
+    /**
+     * Emits the current statistics and scores for logging and analysis.
+     */
+    void emitStatistics();
 
     /**
      * Extracts sequence number from packet name (e.g. "RTT_Probe-42" -> 42).

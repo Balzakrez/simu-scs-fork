@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-plot_jitter.py - Jitter analysis script for hybrid TN-NTN vehicular simulation results.
+plot_jitter.py - Jitter analysis script for cellular-only vehicular simulation results.
 
-Analyzes the currentJitter signal emitted periodically by QoSBasedStrategy via
-HybridInterfaceManager. Jitter is computed as the mean absolute difference between
-consecutive RTT samples over the current measurement window (cutOffInterval):
+Derives jitter from rcvdPkLifetime vectors measured at vehicle nodes from RTT_Probe
+echo exchanges, using the same algorithm as QoSBasedStrategy::calculateAvgJitter():
 
-    jitter = sum(|RTT[i] - RTT[i-1]|) / (N - 1)
+    jitter(i) = |RTT(i) - RTT(i-1)|
+    avg_jitter = sum(jitter) / (N - 1)
 
-This is the same jitter value used internally for QoS scoring and switching decisions.
-Only available for runs using switchingMode = "qos-based".
+This ensures that jitter values are directly comparable to those computed by
+QoSBasedStrategy in hybrid scenarios, enabling meaningful cross-scenario analysis.
+
+Signal source:
+  - node[*].app[1] (UdpBasicApp) sends RTT_Probe packets to server:7000
+  - server.app[1]  (UdpEchoApp)  echoes them back
+  - rcvdPkLifetime at node[*].app[1] captures the full RTT
 
 Usage:
     python plot_jitter.py <path-to-results.vec>
@@ -30,7 +35,7 @@ from utils import apply_style, FIG_SINGLE, BLUE, GREEN, ORANGE, VERMILLION
 def extract_node_id(module_str):
     """
     Extracts the integer node index from a module path string.
-    E.g. "Network.node[3].interfaceManager" -> 3
+    E.g. "Network.node[3].app[1]" -> 3
     Returns -1 if no match is found.
     """
     match = re.search(r"node\[(\d+)\]", module_str)
@@ -39,10 +44,28 @@ def extract_node_id(module_str):
     return -1
 
 
+def calculate_jitter(rtt_vector):
+    """
+    Derives jitter from an RTT sample vector using the same algorithm as
+    QoSBasedStrategy::calculateAvgJitter():
+
+        jitter(i) = |RTT(i) - RTT(i-1)|
+        avg_jitter = sum(jitter) / (N - 1)
+
+    Input values are expected in seconds; output is in milliseconds.
+    Returns 0.0 if fewer than 2 samples are available.
+    """
+    samples = np.array(rtt_vector) * 1000.0  # Convert s -> ms
+    if len(samples) < 2:
+        return 0.0
+    diffs = np.abs(np.diff(samples))
+    return float(np.sum(diffs) / len(diffs))
+
+
 def save_plot(fig, filepath, config_name, suffix):
     """Saves the figure to the same directory as the input results file."""
     dir_name = filepath.rsplit(os.sep, 1)[0]
-    output_filename = os.path.join(dir_name, f"plot_jitter_{suffix}_{config_name}.png")
+    output_filename = os.path.join(dir_name, f"plot_simu5g_jitter_{suffix}_{config_name}.png")
     fig.savefig(output_filename, dpi=150)
     plt.close(fig)
     print(f"[OK] Plot saved: {output_filename}")
@@ -52,30 +75,27 @@ def save_plot(fig, filepath, config_name, suffix):
 # Jitter Analysis
 # ============================================================================
 
-def analyze_jitter(filepath, config_name):
+def analyze_simu5g_jitter(filepath, config_name):
     """
-    Loads currentJitter vectors emitted by QoSBasedStrategy (via HybridInterfaceManager),
-    computes per-node mean jitter, and generates a bar chart.
+    Loads rcvdPkLifetime vectors from node app[1] (RTT_Probe echo receiver),
+    derives per-node jitter via consecutive RTT differences, and generates a
+    mean jitter bar chart.
 
-    The signal is emitted every qosCheckInterval and reflects jitter computed
-    over RTT_Probe samples within the most recent cutOffInterval window.
-    Values are in seconds and are converted to milliseconds for readability.
+    The jitter formula mirrors QoSBasedStrategy::calculateAvgJitter() so that
+    results are directly comparable to hybrid scenario outputs from plot_jitter.py.
     """
     print(f"Loading file: {filepath}...")
     results.set_inputs(filepath)
 
-    # currentJitter is registered and emitted by QoSBasedStrategy
-    # via HybridInterfaceManager (the owning cModule).
-    # Broad filter used to avoid module name casing issues.
-    JITTER_FILTER = "*currentJitter:vector*"
+    RTT_FILTER = "module=~*node[*].app[1] AND name=~*rcvdPkLifetime:vector*"
 
-    print("Extracting jitter vectors...")
-    df = results.get_vectors(JITTER_FILTER, include_attrs=True) 
+    print("Extracting RTT vectors to derive jitter...")
+    df = results.get_vectors(RTT_FILTER, include_attrs=True)
 
     if df.empty:
-        print("[WARN] No currentJitter vectors found.")
-        print("[WARN] Verify that 'currentJitter' is recorded in the .ini file")
-        print("[WARN] and that QoSBasedStrategy is the active switching mode.")
+        print("[WARN] No rcvdPkLifetime vectors found for node[*].app[1].")
+        print("[WARN] Verify that app[1] is configured as the RTT_Probe sender")
+        print("[WARN] and that rcvdPkLifetime statistics are enabled in the .ini file.")
         return
 
     print(f"Found {len(df)} vectors.")
@@ -88,18 +108,27 @@ def analyze_jitter(filepath, config_name):
         return
     df = df.sort_values('NodeID')
 
-    # Convert jitter from seconds to milliseconds
-    df['Jitter_ms'] = df['vecvalue'].apply(lambda x: np.array(x) * 1000.0)
+    # Derive per-node mean jitter from RTT samples
+    df['Mean_Jitter'] = df['vecvalue'].apply(calculate_jitter)
+    df['Sample_Count'] = df['vecvalue'].apply(len)
 
-    # Compute per-node mean jitter
-    df['Mean_Jitter'] = df['Jitter_ms'].apply(np.mean)
+    # Drop nodes with insufficient samples
+    df = df[df['Sample_Count'] >= 2]
+    if df.empty:
+        print("[WARN] All nodes have insufficient RTT samples to compute jitter (< 2 samples).")
+        return
+
+    # Print debug table
+    print(f"\n{'Node':<8} {'Samples':<10} {'Mean Jitter (ms)':<20}")
+    print("-" * 38)
+    for _, row in df.iterrows():
+        print(f"{int(row['NodeID']):<8} {int(row['Sample_Count']):<10} {row['Mean_Jitter']:<20.2f}")
 
     # Global mean across all nodes (mean of per-node means)
     global_mean_jitter = df['Mean_Jitter'].mean()
-    print(f"Global Mean Jitter: {global_mean_jitter:.2f} ms")
+    print(f"\nGlobal Mean Jitter: {global_mean_jitter:.2f} ms")
 
-    # Global mean weighted by count (more accurate overall mean across all samples)
-    df['Sample_Count'] = df['Jitter_ms'].apply(len)
+    # Global mean weighted by sample count
     true_global_mean_jitter = (df['Mean_Jitter'] * df['Sample_Count']).sum() / df['Sample_Count'].sum()
     print(f"Global Mean Jitter (weighted): {true_global_mean_jitter:.2f} ms")
 
@@ -112,9 +141,9 @@ def analyze_jitter(filepath, config_name):
     means    = df['Mean_Jitter'].tolist()
 
     # Color bars by jitter quality thresholds:
-    # < 10ms -> green  (excellent, negligible variation)
-    # < 30ms -> orange (acceptable for most applications)
-    # >= 30ms -> red   (poor, likely interface switching artifacts or congestion)
+    # < 10ms  -> green  (excellent, negligible variation)
+    # < 30ms  -> orange (acceptable for most applications)
+    # >= 30ms -> red    (poor, likely congestion or switching artifacts)
     colors = [
         GREEN if m < 10 else ORANGE if m < 30 else VERMILLION
         for m in means
@@ -125,8 +154,8 @@ def analyze_jitter(filepath, config_name):
     ax.bar(node_ids, means, color=colors, edgecolor='black', width=0.8, alpha=0.8)
 
     # Reference threshold lines matching the color thresholds above
-    ax.axhline(10, color=GREEN, linestyle='--', alpha=0.5, label='Excellent (< 10 ms)')
-    ax.axhline(30, color=VERMILLION,   linestyle='--', alpha=0.5, label='Poor threshold (30 ms)')
+    ax.axhline(10, color=GREEN,      linestyle='--', alpha=0.5, label='Excellent (< 10 ms)')
+    ax.axhline(30, color=VERMILLION, linestyle='--', alpha=0.5, label='Poor threshold (30 ms)')
 
     # Global mean line
     ax.axhline(y=global_mean_jitter, color=BLUE, linestyle='-', linewidth=2,
@@ -135,8 +164,9 @@ def analyze_jitter(filepath, config_name):
     ax.set_xlabel('Node Index')
     ax.set_ylabel('Average Jitter (ms)')
     ax.set_title(
-        f'Average Jitter per Node - {config_name}\n'
-        f'(Global Mean: {global_mean_jitter:.1f} ms)'
+        f'Average Jitter per Node: {global_mean_jitter:.1f} ms - {config_name}'
+        # f'(Global Mean: {global_mean_jitter:.1f} ms)'
+        # f'Average Jitter per Node - {config_name}\n'
     )
     ax.set_xlim(min(node_ids) - 1, max(node_ids) + 1)
     ax.legend(loc='upper right')
@@ -167,7 +197,7 @@ if __name__ == '__main__':
     print(f"Configuration:   {config_name}\n")
 
     try:
-        analyze_jitter(filepath, config_name)
+        analyze_simu5g_jitter(filepath, config_name)
     except Exception as e:
         print(f"\n[ERR] Unexpected error: {e}")
         import traceback

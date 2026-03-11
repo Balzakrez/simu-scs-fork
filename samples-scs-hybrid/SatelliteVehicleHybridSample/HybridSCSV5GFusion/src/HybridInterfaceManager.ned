@@ -37,7 +37,6 @@ simple HybridInterfaceManager
         double weightRTT = default(0.4); // weight for RTT in decision making
         double weightPDR = default(0.3); // weight for PDR in decision making
         double weightJitter = default(0.2); // weight for Jitter in decision making
-        double weightThroughput = default(0.1); // weight for Throughput in decision making
 
         // ===== Energy-Aware Strategy Parameters =====
         double criticalEnergyThreshold @unit(J) = default(30J);
@@ -150,7 +149,7 @@ simple HybridInterfaceManager
         );
 
         // ====================================================
-        // QoS-Based Strategy Signals 
+        // QoS-Based Strategy Signals
         @signal[currentJitterSignal](type=double);
         @statistic[currentJitter](
             source=currentJitterSignal;
@@ -159,14 +158,6 @@ simple HybridInterfaceManager
             record=vector,stats,last;
         );
     
-        @signal [currentThroughputSignal](type=double);
-        @statistic[currentThroughput](
-            source=currentThroughputSignal;
-            title="Current Throughput"; 
-            unit=bps; 
-            record=vector,stats,last;
-        );
-        
         @signal [qosScoreSignal](type=double);
         @statistic [qosScore](
             source=qosScoreSignal;
@@ -174,21 +165,14 @@ simple HybridInterfaceManager
             record=vector,stats,last;
         );
         
-        @signal [degradationCountSignal](type=long);
-        @statistic [degradationCount](
-            source=degradationCountSignal;
-            title="Degradation Count"; 
-            record=vector,stats,last;
-        );
-
         // ====================================================
-        //  Cumulative Statistics Signals (QoS-Based)
+        //  Cumulative Statistics Signals
         @signal[satelliteCumulativeThroughput](type=double);
         @statistic[satelliteCumulativeThroughput](
             source=satelliteCumulativeThroughput;
             title="Satellite Cumulative Throughput";
             unit=bps;
-            record=last;  // Last value
+            record=last;
         );
         
         @signal[satelliteCumulativeRTT](type=double);

@@ -65,8 +65,8 @@ def analyze_switch_counts(filepath, config_name):
     ax.set_xlabel('Node Index')
     ax.set_ylabel('Number of Switches')
     ax.set_title(
-        f'Switch Count per Node [{config_name}]\n'
-        f'Total Network Switches: {int(total_network_switches)}'
+        # f'Switch Count per Node [{config_name}]\n'
+        f'Total Switches: {int(total_network_switches)} - {config_name}'
     )
     
     ax.set_xlim(min(node_ids) - 1, max(node_ids) + 1)

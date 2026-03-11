@@ -15,7 +15,7 @@ BLACK      = "#000000"
 # Figure sizes — A4 single-column thesis (width ~6 in = ~15.2 cm)
 FIG_SINGLE = (8, 4.5)    # single-panel plots
 FIG_DOUBLE = (10, 3.5)   # two-subplot side-by-side
-FIG_SQUARE = (4.5, 4.5)  # pie chart
+FIG_SQUARE = (5.5, 5.5)  # pie chart
 
 def apply_style():
     plt.rcParams.update({

@@ -7,8 +7,8 @@ Additionally, it can set all vehicles to depart at time 0 (commented out).
 import xml.etree.ElementTree as ET
 import sys
 
-input_file = "mmArea1net.rou.xml"       
-output_file = "mmArea1net_ordered.rou.xml" 
+input_file = "mountains.rou.xml"       
+output_file = "mountains_ordered.rou.xml" 
 
 try:
     print(f"Reading {input_file}...")

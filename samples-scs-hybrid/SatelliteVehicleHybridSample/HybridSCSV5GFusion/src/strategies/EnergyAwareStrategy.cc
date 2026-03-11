@@ -8,8 +8,6 @@ EnergyAwareStrategy::EnergyAwareStrategy(HybridInterfaceManager *mgr)
     : ISwitchingStrategy(mgr), evaluationTimer(nullptr), lastSwitchTime(SIMTIME_ZERO) {
     evaluationTimer = new cMessage("evaluationTimer");
     currentInterfaceStatistics = {.avgRTT = 0.0, .avgPDR = 0.0, .avgJitter = 0.0, .sampleCount = 0};
-    satelliteRX = {.totalBytes = 0.0, .startTime = SIMTIME_ZERO};
-    cellularRX = {.totalBytes = 0.0, .startTime = SIMTIME_ZERO};
 }
 
 EnergyAwareStrategy::~EnergyAwareStrategy() {
@@ -27,6 +25,7 @@ void EnergyAwareStrategy::initialize(int stage) {
         // Emit signals for initial statistics
         manager->emit(currentRTTSignal, 0.0); 
         manager->emit(currentPDRSignal, 1.0);
+        manager->emit(currentJitterSignal, 0.0);
         manager->emit(residualEnergySignal, energyStorage->getResidualEnergyCapacity().get());
         manager->emit(qosScoreSignal, 1.0);
         manager->emit(energyEfficiencySignal, 1.0);
@@ -49,6 +48,9 @@ void EnergyAwareStrategy::initializeParameters() {
     // Cost models
     satelliteEnergyCostPerByte = manager->par("satelliteEnergyCostPerByte").doubleValue();
     cellularEnergyCostPerByte = manager->par("cellularEnergyCostPerByte").doubleValue();
+
+    // Degradation detection
+    minDegradationCount = manager->par("minDegradationCount").intValue();
     
     // Qos thresholds 
     minAcceptablePDR = manager->par("minAcceptablePDR").doubleValue();
@@ -100,40 +102,45 @@ void EnergyAwareStrategy::subscribeToApplicationSignals() {
     int numApps = host->par("numApps");
     for (int i = 0; i < numApps; i++) {
         cModule *app = host->getSubmodule("app", i);
-        if (!app) break; // Skip if no more apps
+        if (!app) throw cRuntimeError("EnergyBasedStrategy: No app module found at index %d", i);
         const char *appType = app->getClassName();
         if (strstr(appType, "UdpBasicApp") != nullptr || strstr(appType, "UdpSink") != nullptr) {
             simsignal_t packetSentSignalId = cComponent::registerSignal("packetSent");
             simsignal_t packetReceivedSignalId = cComponent::registerSignal("packetReceived");
             app->subscribe(packetSentSignalId, this);
             app->subscribe(packetReceivedSignalId, this);
-            udpAppModule = app;
             EV_INFO << "Subscribed to UdpApp signals" << endl;
         }
-    }
-    if (!udpAppModule) {
-        throw cRuntimeError("EnergyAwareStrategy: No UdpBasicApp found!");
     }
 }
 
 void EnergyAwareStrategy::finish() {
     updateInterfaceStats();
-    double residual = energyStorage->getResidualEnergyCapacity().get();
-    manager->emit(residualEnergySignal, residual);
-    manager->emit(qosScoreSignal, computeQoSScore());
-    manager->emit(energyEfficiencySignal, computeEnergyEfficiency());
+
+    emitStatistics();
+
+    // Emit final utility score
     double utilityScore = computeUtilityScore();
     manager->emit(utilityScoreSignal, utilityScore);
+    manager->emit(qosScoreSignal, computeQoSScore(currentInterfaceStatistics));
+    manager->emit(energyEfficiencySignal, computeEnergyEfficiency());
+    
+    // Total bytes transferred on each interface
+    double satTotalBytes  = satelliteTotalTxBytesAccum + satelliteTotalRxBytesAccum;
+    double cellTotalBytes = cellularTotalTxBytesAccum  + cellularTotalRxBytesAccum;
+    manager->emit(manager->registerSignal("satelliteTotalBytes"), satTotalBytes);
+    manager->emit(manager->registerSignal("cellularTotalBytes"), cellTotalBytes);
+    
     // Energy consumption statistics (estimated from bytes transferred)
-    double satEnergyConsumed = satelliteRX.totalBytes * satelliteEnergyCostPerByte;
-    double cellEnergyConsumed = cellularRX.totalBytes * cellularEnergyCostPerByte;
+    double satEnergyConsumed = satTotalBytes * satelliteEnergyCostPerByte;
+    double cellEnergyConsumed = cellTotalBytes * cellularEnergyCostPerByte;
+    double totalEnergyConsumed = satEnergyConsumed + cellEnergyConsumed;
     manager->emit(manager->registerSignal("satelliteEnergyConsumed"), satEnergyConsumed);
     manager->emit(manager->registerSignal("cellularEnergyConsumed"), cellEnergyConsumed);
-    manager->emit(manager->registerSignal("totalEnergyConsumed"), satEnergyConsumed + cellEnergyConsumed);
-    manager->emit(manager->registerSignal("satelliteTotalBytes"), satelliteRX.totalBytes);
-    manager->emit(manager->registerSignal("cellularTotalBytes"), cellularRX.totalBytes);
+    manager->emit(manager->registerSignal("totalEnergyConsumed"), totalEnergyConsumed);
+    
     // Total bytes transferred across both interfaces
-    double totalBytes = satelliteRX.totalBytes + cellularRX.totalBytes;
+    double totalBytes = satTotalBytes + cellTotalBytes;
     manager->emit(manager->registerSignal("totalBytesTransferred"), totalBytes);
 }
 
@@ -150,7 +157,11 @@ void EnergyAwareStrategy::receiveSignal(cComponent *source, simsignal_t signalID
 
     const char *signalName = cComponent::getSignalName(signalID);
     bool isProbe = (std::string(pkt->getName()).find("RTT_Probe") == 0);
+    
     if (strcmp(signalName, "packetSent") == 0) {
+        double bytes = pkt->getByteLength();
+        if (currentInterfaceName == "satellite") { satelliteTotalTxBytesAccum += bytes; } 
+        else if (currentInterfaceName == "cellular") { cellularTotalTxBytesAccum += bytes; }
         if (isProbe) {
             int seqNum = extractSeqNumber(pkt->getName());
             if (seqNum >= 0) {
@@ -165,12 +176,9 @@ void EnergyAwareStrategy::receiveSignal(cComponent *source, simsignal_t signalID
         }
     }
     else if (strcmp(signalName, "packetReceived") == 0) {
-        // Track bytes per interface for energy consumption statistics
-        TrafficStats &currTrafficStats = (currentInterfaceName == "satellite") ? satelliteRX : cellularRX;
-        currTrafficStats.totalBytes += pkt->getByteLength(); // Add received bytes to current traffic stats
-        if (currTrafficStats.startTime == SIMTIME_ZERO) {
-            currTrafficStats.startTime = simTime();
-        }
+        double bytes = pkt->getByteLength();
+        if (currentInterfaceName == "satellite") { satelliteTotalRxBytesAccum += bytes; } 
+        else if (currentInterfaceName == "cellular") { cellularTotalRxBytesAccum += bytes; }
         // If this a echo reply for an RTT probe, update the probe history
         if (isProbe) {
             int seqNum = extractSeqNumber(pkt->getName());
@@ -189,13 +197,17 @@ double EnergyAwareStrategy::calculateAvgRTT() {
     int sent = 0;
     // Collect RTT samples from probe events for the specified interface
     for (const auto &entry : probeHistory) {
-        sent++;
-        if (entry.second.received && entry.second.usedInterface == currentInterfaceName) {
-            totalRTT += (entry.second.rxTime - entry.second.txTime).dbl();
-            count++;
+        if (entry.second.usedInterface == currentInterfaceName) {
+            sent++;
+            if (entry.second.received) {
+                totalRTT += (entry.second.rxTime - entry.second.txTime).dbl();
+                count++;
+            }
         }
     }
-    if (sent > 0 && count == 0) {
+    // False positive case: we sent probes but received none, likely indicating very poor conditions (e.g., blackout), 
+    // return a high RTT to reflect this in the strategy's decision-making
+    if (sent > 0 && count == 0) { 
         return maxAcceptableRTT * 2.0; 
     }
     return (count > 0) ? (totalRTT / count) : 0.0;
@@ -244,10 +256,6 @@ void EnergyAwareStrategy::updateInterfaceStats() {
         if (entry.second.usedInterface == currentInterfaceName) currSampleCount++;
     }
     currentInterfaceStatistics.sampleCount = currSampleCount;
-    // Emit updated stats
-    manager->emit(currentRTTSignal, avgRTT);
-    manager->emit(currentPDRSignal, avgPDR);
-    manager->emit(currentJitterSignal, avgJitter);
 }
 
 void EnergyAwareStrategy::cleanOldEvents() {
@@ -290,22 +298,29 @@ bool EnergyAwareStrategy::isSatelliteVisible() {
 }
 
 double EnergyAwareStrategy::computeEnergyEfficiency() {
-    double costPerByte = (currentInterfaceName == "satellite") ? satelliteEnergyCostPerByte : cellularEnergyCostPerByte;
+    double currCostPerByte = (currentInterfaceName == "satellite") ? satelliteEnergyCostPerByte : cellularEnergyCostPerByte;
     double minCost = std::min(satelliteEnergyCostPerByte, cellularEnergyCostPerByte);
-    // The most expensive interface receives a low score (based on a proportional fraction ≈ 0.2), 
-    // while the most efficient interfaces receive a higher score (1.0). 
-    return (costPerByte > 0) ? (minCost / costPerByte) : 0.0;
+    double staticEfficiency = (currCostPerByte > 0) ? (minCost / currCostPerByte) : 0.0;
+
+    double residual = energyStorage->getResidualEnergyCapacity().get();
+    double nominal = energyStorage->getNominalEnergyCapacity().get();
+
+    double stateOfCharge = (nominal > 0) ? (residual / nominal) : 1.0;
+    stateOfCharge = std::max(0.0, std::min(1.0, stateOfCharge));
+
+    // return staticEfficiency * stateOfCharge;
+    return staticEfficiency + (1.0 - staticEfficiency) * stateOfCharge;
 }
 
-double EnergyAwareStrategy::computeQoSScore() {  
-    if (currentInterfaceStatistics.sampleCount < 2) return 0.0; // Insufficient samples
-    if(currentInterfaceStatistics.avgPDR == 0.0) return 0.0; // If PDR is 0, QoS is effectively 0 regardless of other metrics
+double EnergyAwareStrategy::computeQoSScore(const InterfaceStats &stats) {  
+    if (stats.sampleCount < 2) return 0.0; // Insufficient samples
+    if(stats.avgPDR == 0.0) return 0.0; // If PDR is 0, QoS is effectively 0 regardless of other metrics
     // Normalize PDR: higher is better -> higher score
-    double pdrScore = std::min(1.0, currentInterfaceStatistics.avgPDR / minAcceptablePDR);
+    double pdrScore = std::min(1.0, stats.avgPDR / minAcceptablePDR);
     // Normalize RTT: lower is better -> higher score
-    double rttScore = 1.0 - std::min(1.0, currentInterfaceStatistics.avgRTT / maxAcceptableRTT);
+    double rttScore = 1.0 - std::min(1.0, stats.avgRTT / maxAcceptableRTT);
     // Normalize Jitter: lower is better -> higher score
-    double jitterScore = 1.0 - std::min(1.0, currentInterfaceStatistics.avgJitter / maxAcceptableJitter);
+    double jitterScore = 1.0 - std::min(1.0, stats.avgJitter / maxAcceptableJitter);
     // Weighted average of QoS metrics
     double totalQosWeight = weightRTT + weightPDR + weightJitter;
     // Combined QoS score
@@ -314,56 +329,103 @@ double EnergyAwareStrategy::computeQoSScore() {
 
 double EnergyAwareStrategy::computeUtilityScore() {
     double energyEfficiency = computeEnergyEfficiency();
-    double qosScore = computeQoSScore();
-    double totalUtilityWeight = weightEnergy + weightQos; // Sum must be 1.0
+    double qosScore = computeQoSScore(currentInterfaceStatistics);
+    double totalUtilityWeight = weightEnergy + weightQos; 
     return (weightEnergy * energyEfficiency + weightQos * qosScore) / totalUtilityWeight;
 }
 
-void EnergyAwareStrategy::evaluateAndDecide() {
-    // 1.  Update statistics  based on current history
-    updateInterfaceStats();
-    // 2. Emit current energy level
+
+void EnergyAwareStrategy::emitStatistics() {
+    manager->emit(currentRTTSignal, currentInterfaceStatistics.avgRTT);
+    manager->emit(currentJitterSignal, currentInterfaceStatistics.avgJitter);
+    manager->emit(currentPDRSignal, currentInterfaceStatistics.avgPDR);
     double residual = energyStorage->getResidualEnergyCapacity().get();
     manager->emit(residualEnergySignal, residual);
-    // 3. Emit current utility score for the active interface
-    double currUtilityScore = computeUtilityScore();
-    manager->emit(utilityScoreSignal, currUtilityScore);
-    // 4. Clean old events outside of the measurement window to keep stats relevant and bounded in memory
+}
+
+void EnergyAwareStrategy::evaluateAndDecide() {
+    // 1. Update statistics based on current history and traffic stats
+    updateInterfaceStats();
+
+    // 2. Record statistics of updated metric values for current interface
+    emitStatistics();
+
+    // 3. Clean old events outside of the measurement window to keep stats relevant and bounded in memory
     cleanOldEvents();
 
-    
-    std::string bestInterface = currentInterfaceName; // Default to current
-    
-    // Priority 1: Critical energy -> use cellular
-    if (residual < criticalEnergyThreshold) { 
-        bestInterface = "cellular"; 
-    }
-    // Priority 2: Check cooldown: if recently switched we skip switching
-    else if (simTime() - lastSwitchTime < minHoldTime) {
-        EV_INFO << "  In cooldown period, skipping switch" << endl;
+    double residual = energyStorage->getResidualEnergyCapacity().get();
+    // Emergency check: if energy is critically low, switch to cellular immediately
+    if (residual < criticalEnergyThreshold && currentInterfaceName != "cellular") {
+        EV_WARN << "Critical energy (" << residual << "J), forcing cellular." << endl;
+        manager->performSwitch(false);
+        currentInterfaceName = "cellular";
+        lastSwitchTime = simTime();
+        consecutiveDegradations = 0; 
         return;
     }
-    // Priority 3: Check satellite visibility: if satellite is not visible -> use cellular
-    else if (!isSatelliteVisible()) { 
-        bestInterface = "cellular"; 
-    }
-    // Priority 4: Utility-based decision (requires sufficient samples)
-    else if (currentInterfaceStatistics.sampleCount >= 2) {
-        if (currUtilityScore < minUtilityScore) {
-            bestInterface = (currentInterfaceName == "satellite") ? "cellular" : "satellite";
-        }
-    }
-    // Priority 5: Default -> stay on current interface
-    if (bestInterface != currentInterfaceName) {
-        bool switchToSat = (bestInterface == "satellite");
-        manager->performSwitch(switchToSat);
-        // Update current interface and last switch time
-        currentInterfaceName = bestInterface;
-        lastSwitchTime = simTime();
-        // probeHistory.clear(); // cleanOldEvents already cleans old events based on cutOffInterval
-    }
-  
+
+   // 4. Make decision based on updated statistics and thresholds
+   performDecision();
 }
+
+
+void EnergyAwareStrategy::performDecision() {
+
+    bool satVisible = isSatelliteVisible();
+
+    // Priority 1: Check reachability - if satellite is not visible, switch to cellular immediately (if not already on it)
+    if (currentInterfaceName == "satellite" && !satVisible) {
+        manager->performSwitch(false);
+        currentInterfaceName = "cellular";
+        lastSwitchTime = simTime();
+        consecutiveDegradations = 0;
+        return;
+    }
+
+    // Priority 2: If we don't have enough samples to make a decision, skip evaluation
+    if (currentInterfaceStatistics.sampleCount < 2) {
+        EV_DETAIL << "Insufficient samples, skipping evaluation." << endl;
+        return;
+    }
+
+    // Comute and emit current score for the active interface
+    double currentUtilityScore = computeUtilityScore();
+    manager->emit(utilityScoreSignal, currentUtilityScore);
+    manager->emit(qosScoreSignal, computeQoSScore(currentInterfaceStatistics));
+    manager->emit(energyEfficiencySignal, computeEnergyEfficiency());
+
+    // Priority 3: If score is below threshold, count degradations and switch if needed
+    if (currentUtilityScore < minUtilityScore) {
+        consecutiveDegradations++;
+        // Check minimum degradation count
+        if (consecutiveDegradations < minDegradationCount) {
+            EV_DETAIL << "Waiting for " << (minDegradationCount - consecutiveDegradations)
+                      << " more degradations before switching." << endl;
+            return;
+        }
+        // Check if minimum hold time has passed since last switch (cooldown)
+        if (simTime() - lastSwitchTime < minHoldTime) {
+            EV_DETAIL << "In cooldown period." << endl;
+            return;
+        }
+        std::string otherInterface = (currentInterfaceName == "satellite") ? "cellular" : "satellite";
+        if (otherInterface == "satellite" && !satVisible) {
+            EV_DETAIL << "Satellite not visible, cannot switch." << endl;
+            return;
+        }
+        // Perform the switch
+        manager->performSwitch(otherInterface == "satellite");
+        // Update current interface
+        currentInterfaceName = otherInterface;
+        // Update last switch time and reset
+        lastSwitchTime = simTime();
+        consecutiveDegradations = 0;
+    } 
+    else {
+        consecutiveDegradations = 0;
+    }
+}
+
 
 int EnergyAwareStrategy::extractSeqNumber(const std::string &pktName) {
     size_t pos = pktName.rfind('-');
@@ -376,19 +438,3 @@ int EnergyAwareStrategy::extractSeqNumber(const std::string &pktName) {
     }
     return -1;
 }
-
-// void EnergyAwareStrategy::receiveSignal(cComponent *source, simsignal_t signalID, long pingId, cObject *details){
-//     const char *signalName = cComponent::getSignalName(signalID);
-//     simtime_t currentTime = simTime();   
-//     if (strcmp(signalName, "pingTxSeq") == 0) {
-//         PingEvent evt{.txTime = currentTime, .rxTime = SIMTIME_ZERO, .responded = false, .pingInterface = currentInterfaceName};
-//         pingHistory[pingId] = evt;
-//     }
-//     else if (strcmp(signalName, "pingRxSeq") == 0) {
-//         auto it = pingHistory.find(pingId);
-//         if (it != pingHistory.end()) {
-//             it->second.responded = true;
-//             it->second.rxTime = currentTime;
-//         }
-//     }
-// }

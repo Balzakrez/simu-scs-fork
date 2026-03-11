@@ -54,7 +54,6 @@ void QoSBasedStrategy::initializeParameters() {
    currentRTTSignal = manager->registerSignal("currentRTTSignal");
    currentJitterSignal = manager->registerSignal("currentJitterSignal");
    currentPDRSignal = manager->registerSignal("currentPDRSignal");
-   degradationCountSignal = manager->registerSignal("degradationCountSignal");
    qosScoreSignal = manager->registerSignal("qosScoreSignal");
 }
 
@@ -68,7 +67,6 @@ void QoSBasedStrategy::initialize(int stage) {
       manager->emit(currentJitterSignal, 0.0);
       manager->emit(currentPDRSignal, 1.0); 
       manager->emit(qosScoreSignal, 1.0); 
-      manager->emit(degradationCountSignal, 0);
 
       // Set initial interface state based on manager's satellite state
       currentInterfaceName = manager->getSatelliteState() ? "satellite" : "cellular";
@@ -86,20 +84,18 @@ void QoSBasedStrategy::subscribeToApplicationSignals() {
    int numApps = host->par("numApps");
    for (int i = 0; i < numApps; i++) {
       cModule *app = host->getSubmodule("app", i);
-      if(!app) break; // Skip if no more apps
+      if(!app) throw cRuntimeError("QoSBasedStrategy: No app module found at index %d", i);
       const char *appType = app->getClassName();   
       if (strstr(appType, "UdpBasicApp") != nullptr || strstr(appType, "UdpSink") != nullptr) {
          simsignal_t packetSentSignalId = cComponent::registerSignal("packetSent");
          simsignal_t packetReceivedSignalId = cComponent::registerSignal("packetReceived");
          app->subscribe(packetSentSignalId, this);
          app->subscribe(packetReceivedSignalId, this);
-         udpAppModule = app;  
+      }
+      else{
+         throw cRuntimeError("QoSBasedStrategy: Unsupported app type '%s' at index %d. Expected UdpBasicApp or UdpSink", appType, i);
       }
    }
-   if (!udpAppModule) {
-      throw cRuntimeError("QoSBasedStrategy: No UdpBasicApp found!");
-   }
-
 }
 
 void QoSBasedStrategy::finish() {
@@ -186,9 +182,10 @@ double QoSBasedStrategy::calculateAvgRTT() {
          }
       }
    }
-   //! To avoid blackout 
+   // False positive case: we sent probes but received none, likely indicating very poor conditions (e.g., blackout), 
+   // return a high RTT to reflect this in the strategy's decision-making
    if(sent > 0 && count == 0){
-      return maxAcceptableRTT * 2.0; // If we sent probes but received none, return a high RTT to reflect poor conditions (e.g., 2x the max acceptable delay)
+      return maxAcceptableRTT * 2.0;
    } 
    return (count > 0) ? (totalRTT / count) : 0.0; // Return 0.0 if no samples
 }
@@ -312,19 +309,31 @@ void QoSBasedStrategy::evaluateAndDecide() {
 }
 
 void QoSBasedStrategy::performDecision() {
-   // Compute QoS Score and emit signal
-   double currentScore = computeQoSScore(currentInterfaceStatistics);
-   manager->emit(qosScoreSignal, currentScore);
-   // Skip evaluation if insufficient samples
+
+   bool satVisible = isSatelliteVisible();
+
+   // Priority 1: Check reachability - if satellite is not visible, switch to cellular immediately (if not already on it)
+   if (currentInterfaceName == "satellite" && !satVisible) {
+      manager->performSwitch(false);
+      currentInterfaceName = "cellular";
+      lastSwitchTime = simTime();
+      consecutiveDegradations = 0;
+      return;
+   }
+
+   // Priority 2: If we don't have enough samples to make a decision, skip evaluation
    if (currentInterfaceStatistics.sampleCount < 2) {
       EV_DETAIL << "Insufficient samples (" << currentInterfaceStatistics.sampleCount << "), skipping evaluation" << endl;
       return;
    }
-   // Check if the currentScore is less than the minimum QoS score threshold
+
+   // Comute and emit current score for the active interface
+   double currentScore = computeQoSScore(currentInterfaceStatistics);
+   manager->emit(qosScoreSignal, currentScore);
+
+   // Priority 3: If score is below threshold, count degradations and switch if needed
    if (currentScore < minQosScore) {
       consecutiveDegradations++;
-      manager->emit(degradationCountSignal, consecutiveDegradations);
-
       // Check minimum degradation count
       if (consecutiveDegradations < minDegradationCount) { // Skip if not enough degradations
          EV_DETAIL << "    Waiting for " << (minDegradationCount - consecutiveDegradations) 
@@ -337,52 +346,22 @@ void QoSBasedStrategy::performDecision() {
          return;
       }
       std::string otherInterface = (currentInterfaceName == "satellite") ? "cellular" : "satellite";
-      if(otherInterface == "satellite" && !isSatelliteVisible()){
+      if(otherInterface == "satellite" && !satVisible){
          EV_DETAIL << "    Satellite not visible, cannot switch to satellite interface." << endl;
          return;
       }
+      // Perform the switch
       bool switchToSatellite = (otherInterface == "satellite");
       manager->performSwitch(switchToSatellite);
+     
       // Update current interface
       currentInterfaceName = otherInterface;
+      
       // Update last switch time and reset
       lastSwitchTime = simTime();
       consecutiveDegradations = 0;
-      // probeHistory.clear(); // cleanOldEvents already cleans old events based on cutOffInterval
    } 
    else {
       consecutiveDegradations = 0;
-      manager->emit(degradationCountSignal, 0);
    }
 }
-
-
-// double QoSBasedStrategy::calculateThroughputForInterface(const std::string &interface) {
-//    simtime_t currentTime = simTime();
-//    TrafficStats &stats = (interface == "satellite") ? satelliteTraffic : cellularTraffic;
-//    // Check if we have a valid time window to calculate throughput
-//    if (stats.startTime >= currentTime || stats.startTime == SIMTIME_ZERO) {
-//       return 0.0;
-//    }
-//    simtime_t elapsedTime = currentTime - stats.startTime;
-//    double totalBytes = stats.totalRxBytes + stats.totalTxBytes; // Consider both RX and TX for throughput
-//    return (totalBytes * 8.0) / elapsedTime.dbl();
-// }
-
-// void QoSBasedStrategy::receiveSignal(cComponent *source, simsignal_t signalID, long pingId, cObject *details) {
-//    const char *signalName = cComponent::getSignalName(signalID);
-//    simtime_t currentTime = simTime();
-//    if (strcmp(signalName, "pingTxSeq") == 0){ // Tx
-//       PingEvent evt {.txTime = currentTime, .responded = false, .pingInterface = this->currentInterfaceName };
-//       pingHistory[pingId] = evt;
-//       EV_DETAIL << "Ping TX seq=" << pingId << " , Interface=" << this->currentInterfaceName << endl;
-//    }
-//    else if (strcmp(signalName, "pingRxSeq") == 0) { // Rx
-//       auto it = pingHistory.find(pingId);
-//       if(it != pingHistory.end()){
-//          it->second.responded = true;
-//          it->second.rxTime = currentTime;
-//          EV_DETAIL << "Ping RX seq=" << pingId << " , Interface=" <<this->currentInterfaceName << endl;
-//       }
-//    } 
-// }

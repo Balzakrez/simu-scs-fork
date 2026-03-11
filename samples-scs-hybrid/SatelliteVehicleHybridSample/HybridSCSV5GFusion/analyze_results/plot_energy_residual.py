@@ -2,11 +2,11 @@
 """
 plot_energy_residual.py - Energy analysis for EnergyAwareStrategy simulation results.
 
-Produces three plots:
+Produces four plots (saved as separate images):
   1. Residual Energy over time     — one line per node + bold mean line
   2. Energy Efficiency over time   — one line per node + bold mean line
-                                     (1.0 = cellular, 0.2 = satellite)
-  3. Energy Consumption Breakdown  — bar chart: satellite vs cellular (scalars)
+  3. Energy Cost by Interface      — bar chart (scalars)
+  4. Data Volume by Interface      — bar chart (scalars)
 
 Signals (from EnergyAwareStrategy):
   Vectors : residualEnergySignal, energyEfficiencySignal   (.vec)
@@ -68,7 +68,6 @@ def plot_residual_energy(vecfile, config_name, out_dir, critical_threshold):
     print("\n--- Plot 1: Residual Energy over time ---")
     results.set_inputs(vecfile)
 
-    # df = results.get_vectors("module=~*interfaceManager* AND name=~*residualEnergy*")
     df = results.get_vectors("module=~*energyStorage* AND name=~*residualEnergy*")
     if df.empty:
         print("  [WARN] No residualEnergy vectors found. Skipping.")
@@ -80,16 +79,14 @@ def plot_residual_energy(vecfile, config_name, out_dir, critical_threshold):
 
     fig, ax = plt.subplots(figsize=FIG_SINGLE)
 
-    # One thin line per node (same color, very transparent)
     for _, row in df.iterrows():
         ax.plot(np.array(row["vectime"]), np.array(row["vecvalue"]),
                 linewidth=0.6, alpha=0.25, color=BLUE)
 
-    # Bold mean line
     times, mean = compute_mean_line(df)
     if mean is not None and times is not None:
         ax.plot(times, mean, color=BLUE, linewidth=2.0, linestyle="-",
-                label=f"Mean residual energy ({len(df)} nodes)")
+                label=f"Mean Residual Energy ({len(df)} nodes)")
 
     if critical_threshold > 0:
         ax.axhline(y=critical_threshold, color=VERMILLION, linestyle="--",
@@ -98,7 +95,7 @@ def plot_residual_energy(vecfile, config_name, out_dir, critical_threshold):
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Residual Energy (J)")
     ax.set_title(f"Residual Energy — {config_name}")
-    ax.legend()
+    ax.legend(loc="lower right")
     plt.tight_layout()
 
     save_fig(fig, os.path.join(out_dir, f"plot_energy_residual_{config_name}.png"))
@@ -134,10 +131,10 @@ def plot_energy_efficiency(vecfile, config_name, out_dir):
     times, mean = compute_mean_line(df)
     if mean is not None and times is not None:
         ax.plot(times, mean, color=ORANGE, linewidth=2.0, linestyle="-",
-                label=f"Mean energy efficiency ({len(df)} nodes)")
+                label=f"Mean Energy Efficiency ({len(df)} nodes)")
 
-    ax.axhline(y=1.0, color=GREEN,  linestyle=":",  linewidth=1.4,label="Cellular  (score = 1.0)")
-    ax.axhline(y=0.2, color=SKY_BLUE,   linestyle="-.", linewidth=1.4,label="Satellite  (score = 0.2)")
+    ax.axhline(y=1.0, color=GREEN,    linestyle=":",  linewidth=1.4, label="Cellular  (score = 1.0)")
+    ax.axhline(y=0.2, color=SKY_BLUE, linestyle="-.", linewidth=1.4, label="Satellite  (score = 0.2)")
 
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Energy Efficiency (0–1)")
@@ -150,11 +147,11 @@ def plot_energy_efficiency(vecfile, config_name, out_dir):
 
 
 # ============================================================================
-# Plot 3 – Final Energy Consumption Breakdown (scalars)
+# Plot 3 & 4 – Energy Cost and Data Volume (two separate figures)
 # ============================================================================
 
 def plot_energy_breakdown(scafile, config_name, out_dir):
-    print("\n--- Plot 3: Energy Consumption Breakdown ---")
+    print("\n--- Plot 3 & 4: Energy Consumption Breakdown ---")
     results.set_inputs(scafile)
 
     SCALARS = [
@@ -186,13 +183,12 @@ def plot_energy_breakdown(scafile, config_name, out_dir):
     print(f"  Total     : {total_energy:.4f} J")
 
     labels   = ["Satellite", "Cellular"]
-    colors = [SKY_BLUE, GREEN]  # [Satellite, Cellular]
+    colors   = [SKY_BLUE, GREEN]
     energies = [sat_energy, cell_energy]
     bytes_mb = [sat_bytes / 1e6, cell_bytes / 1e6]
 
-    fig, (ax_e, ax_b) = plt.subplots(1, 2, figsize=FIG_DOUBLE)
-
-    # Energy bars
+    # --- Figure 3: Energy Cost ---
+    fig_e, ax_e = plt.subplots(figsize=FIG_SINGLE)
     bars = ax_e.bar(labels, energies, color=colors, edgecolor=BLACK,
                     linewidth=0.6, width=0.40)
     for bar, val in zip(bars, energies):
@@ -202,11 +198,14 @@ def plot_energy_breakdown(scafile, config_name, out_dir):
                   f"{val:.4f} J{pct}",
                   ha="center", va="bottom", fontsize=9)
     ax_e.set_ylabel("Estimated Energy (J)")
-    ax_e.set_title("Energy Cost by Interface")
+    ax_e.set_title(f"Energy Consumption by Interface — {config_name}")
     ax_e.set_ylim(0, max(energies) * 1.35 + 1e-9)
+    plt.tight_layout()
+    save_fig(fig_e, os.path.join(out_dir, f"plot_energy_cost_{config_name}.png"))
 
-    # Bytes bars
+    # --- Figure 4: Data Volume ---
     total_mb = sum(bytes_mb)
+    fig_b, ax_b = plt.subplots(figsize=FIG_SINGLE)
     bars2 = ax_b.bar(labels, bytes_mb, color=colors, edgecolor=BLACK,
                      linewidth=0.6, width=0.40)
     for bar, val in zip(bars2, bytes_mb):
@@ -216,12 +215,10 @@ def plot_energy_breakdown(scafile, config_name, out_dir):
                   f"{val:.2f} MB{pct}",
                   ha="center", va="bottom")
     ax_b.set_ylabel("Data Transferred (MB)")
-    ax_b.set_title("Data Volume by Interface")
+    ax_b.set_title(f"Data Volume by Interface — {config_name}")
     ax_b.set_ylim(0, max(bytes_mb) * 1.35 + 1e-9)
-
-    fig.suptitle(f"Energy Consumption Breakdown — {config_name}", fontweight="bold")
     plt.tight_layout()
-    save_fig(fig, os.path.join(out_dir, f"plot_energy_breakdown_{config_name}.png"))
+    save_fig(fig_b, os.path.join(out_dir, f"plot_energy_volume_{config_name}.png"))
 
 
 # ============================================================================
@@ -233,7 +230,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("filepath", help="Path to .vec or .sca results file")
-    parser.add_argument("--critical", type=float, default=30.0,
+    parser.add_argument("--critical", type=float, default=10.0,
                         help="Critical energy threshold in Joules (default: 30)")
     args = parser.parse_args()
 

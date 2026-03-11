@@ -7,8 +7,7 @@ package SatelliteVehicleHybridSample.HybridSCSV5GFusion;
 // ==============================================================================
 // CUSTOM IMPORTS
 // ==============================================================================
-// import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X4G;
-import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X5G;
+import SatelliteVehicleHybridSample.HybridSCSV5GFusion.HybridCarV2X4G;
 
 // ==============================================================================
 // SCS IMPORTS

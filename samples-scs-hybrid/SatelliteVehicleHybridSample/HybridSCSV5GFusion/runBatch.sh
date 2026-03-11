@@ -20,62 +20,51 @@ SUMO_BASE_PORT=9999
 # ==============================================================================
 
 declare -a SINGLE_ALL=(
-    "CellularOnlyBaseline"
-    "CellularOnlyWithTraffic"
-    "SatelliteOnlyBaseline"
-    "SatelliteOnlyWithTraffic"
 )
 
 
 #"QoSBasedBaseline"
 declare -a QOS_ALL=(
-    "QoSBasedBaseline"
-    "QoSBasedLatencySensitive"
-    "QoSBasedReliabilityFocused"
-    "QoSBasedThroughputOptimized"
-    "QoSBasedAggressive"
 )
 
 #"EnergyAwareBaseline"
 declare -a ENERGY_ALL=(
-    "EnergyAwareMinimizeEnergy"
-    "EnergyAwareMaximizeQoS"
-    "EnergyAwareBalanced"
-    "EnergyAwareLowBattery"
-    "EnergyAwareSwitchingWithTraffic"
+ 
 )
 
 # --- All 17 configurations ---
 declare -a SET_ALL=(
     
-    "CellularOnlyWithTraffic"
-    
+    # "CellularOnlyWithTraffic"
+
     # "SatelliteOnlyWithTraffic"
+    "SatelliteOnlyWithTraffic100ms"
+    # "SatelliteOnlyWithTraffic50ms"
+
+
+    # "SatelliteOnlyWithTrafficAndIgnoreAllInterference"
+    # "SatelliteOnlyWithTrafficAndSnirThreshold"
+    # "SatelliteOnlyWithTrafficAndErrorModel"
+    # "SatelliteOnlyWithUnlimitedQueue"
+    # "SatelliteOnlyWithUnlimitedQueueWithAck"
 
     # "TimeBasedBaseline"
-    # "TimeBasedSwitchingPing"
     # "TimeBasedSwitchingFast"
     # "TimeBasedSwitchingStartSat"
 
-    # "CoverageBasedBaseline"
     # "CoverageBasedWithTraffic"
 
     # "QoSBasedBaseline"
-    # "QoSBasedAggressive"
     # "QoSBasedLatencySensitive"
     # "QoSBasedReliabilityFocused"
-    # "QoSBasedThroughputOptimized"
+    # "QoSBasedAggressive0"
+    # "QoSBasedAggressive1"
+    # "QoSBasedAggressive2"
     
     # "EnergyAware_100E_00Q"
     # "EnergyAware_90E_10Q"
-    # "EnergyAware_80E_20Q"
-    # "EnergyAware_70E_30Q"
-    # "EnergyAware_60E_40Q"
     # "EnergyAware_50E_50Q"
-    # "EnergyAware_40E_60Q"
-    # "EnergyAware_30E_70Q"
     # "EnergyAware_20E_80Q"
-    # "EnergyAware_10E_90Q"
     # "EnergyAware_00E_100Q"
 )
 

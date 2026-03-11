@@ -148,8 +148,9 @@ def analyze_rtt(filepath, config_name):
     ax.set_xlabel('Node Index')
     ax.set_ylabel('Average RTT (ms)')
     ax.set_title(
-        f'Average Round Trip Time per Node - {config_name}\n'
-        f'(Global Mean: {global_mean_rtt:.1f} ms)'
+        f'Average RTT per Node: {global_mean_rtt:.1f} ms - {config_name}'
+        # f'Average Round Trip Time per Node \ - {config_name}\n'
+        # f'(Global Mean: {global_mean_rtt:.1f} ms)'
     )
     ax.set_xlim(min(node_ids) - 1, max(node_ids) + 1)
     ax.legend(loc='upper right')
